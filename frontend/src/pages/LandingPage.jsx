@@ -1,7 +1,23 @@
+import { useState, useEffect } from 'react';
 import { Search, Activity, Users, Building, ShieldAlert, ArrowRight, CheckCircle2, Zap, ShieldCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { analyticsAPI } from '../services/api';
 
 const LandingPage = () => {
+  const [platformStats, setPlatformStats] = useState(null);
+
+  useEffect(() => {
+    analyticsAPI.getPlatformStats()
+      .then(res => setPlatformStats(res.data.data))
+      .catch(() => {});
+  }, []);
+
+  const formatCount = (n) => {
+    if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M+`;
+    if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K+`;
+    return n.toString();
+  };
+
   return (
     <div className="flex flex-col min-h-[calc(100vh-4rem)]">
       {/* Hero Section */}
@@ -36,17 +52,23 @@ const LandingPage = () => {
           {/* Live Stats Ticker */}
           <div className="mt-12 flex flex-wrap justify-center gap-8 border-t border-slate-200/60 pt-8">
             <div className="flex flex-col items-center">
-              <span className="text-3xl font-bold text-slate-800 flex items-center gap-2"><Activity className="w-5 h-5 text-brand-500"/> 2.4M+</span>
+              <span className="text-3xl font-bold text-slate-800 flex items-center gap-2">
+                <Activity className="w-5 h-5 text-brand-500"/> {platformStats ? formatCount(platformStats.total_articles_analyzed) : '—'}
+              </span>
               <span className="text-sm font-medium text-slate-500">Articles Analyzed</span>
             </div>
             <div className="w-px h-12 bg-slate-200/60 hidden sm:block" />
             <div className="flex flex-col items-center">
-              <span className="text-3xl font-bold text-slate-800 flex items-center gap-2"><ShieldAlert className="w-5 h-5 text-red-500"/> 92.4%</span>
+              <span className="text-3xl font-bold text-slate-800 flex items-center gap-2">
+                <ShieldAlert className="w-5 h-5 text-red-500"/> {platformStats ? `${platformStats.detection_accuracy}%` : '—'}
+              </span>
               <span className="text-sm font-medium text-slate-500">Detection Accuracy</span>
             </div>
             <div className="w-px h-12 bg-slate-200/60 hidden sm:block" />
             <div className="flex flex-col items-center">
-              <span className="text-3xl font-bold text-slate-800 flex items-center gap-2"><Zap className="w-5 h-5 text-amber-500"/> ~2.1s</span>
+              <span className="text-3xl font-bold text-slate-800 flex items-center gap-2">
+                <Zap className="w-5 h-5 text-amber-500"/> {platformStats ? `~${platformStats.average_analysis_time}s` : '—'}
+              </span>
               <span className="text-sm font-medium text-slate-500">Avg. Analysis Time</span>
             </div>
           </div>

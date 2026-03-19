@@ -1,14 +1,20 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ShieldCheck, Bell, User, LogOut, Menu, X } from 'lucide-react';
 import { useState } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 
-const Navbar = ({ user, setUser }) => {
+const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
 
-  const handleLogout = () => {
-    setUser(null);
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login');
   };
+
+  const displayName = user ? (user.full_name || user.first_name || user.email) : '';
 
   const navLinks = user ? [
     { name: 'Dashboard', path: '/dashboard' },
@@ -26,15 +32,13 @@ const Navbar = ({ user, setUser }) => {
     <nav className="sticky top-0 z-50 glass">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 justify-between items-center">
-          {/* Logo */}
           <div className="flex px-2 lg:px-0">
-            <Link to="/" className="flex flex-shrink-0 items-center gap-2 group">
+            <Link to={user ? '/dashboard' : '/'} className="flex flex-shrink-0 items-center gap-2 group">
               <ShieldCheck className="w-8 h-8 text-brand-600 transition-transform group-hover:scale-110" />
               <span className="font-bold text-xl tracking-tight text-slate-900">VerifyAI</span>
             </Link>
           </div>
-          
-          {/* Desktop Menu */}
+
           <div className="hidden lg:ml-6 lg:flex lg:space-x-8">
             {navLinks.map((link) => (
               <Link
@@ -51,7 +55,6 @@ const Navbar = ({ user, setUser }) => {
             ))}
           </div>
 
-          {/* Right Side - Auth / Buttons */}
           <div className="hidden lg:ml-6 lg:flex lg:items-center gap-4">
             {user ? (
               <>
@@ -59,19 +62,23 @@ const Navbar = ({ user, setUser }) => {
                   <span className="absolute top-1 right-1 block w-2 h-2 rounded-full bg-red-500 ring-2 ring-white" />
                   <Bell className="w-6 h-6" />
                 </Link>
-                
                 <div className="relative group">
                   <button className="flex items-center gap-2 rounded-full bg-slate-100 p-1 pr-3 hover:bg-slate-200 transition-colors">
                     <div className="w-8 h-8 rounded-full bg-brand-100 flex items-center justify-center text-brand-700 font-bold">
-                      {user.name ? user.name.charAt(0) : 'U'}
+                      {displayName.charAt(0).toUpperCase()}
                     </div>
-                    <span className="text-sm font-medium text-slate-700">{user.name || 'User'}</span>
+                    <span className="text-sm font-medium text-slate-700">{displayName}</span>
                   </button>
                   <div className="absolute right-0 mt-2 w-48 origin-top-right rounded-md glass shadow-lg ring-1 ring-black ring-opacity-5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
                     <div className="py-1">
                       <Link to="/settings" className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2">
                         <User className="w-4 h-4" /> Profile
                       </Link>
+                      {(user.role === 'admin' || user.is_superuser) && (
+                        <Link to="/admin/health" className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+                          Admin Panel
+                        </Link>
+                      )}
                       <button onClick={handleLogout} className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
                         <LogOut className="w-4 h-4" /> Sign out
                       </button>
@@ -80,16 +87,15 @@ const Navbar = ({ user, setUser }) => {
                 </div>
               </>
             ) : (
-               <div className="flex gap-4">
-                  <Link to="/login" className="text-slate-600 hover:text-brand-600 font-medium px-3 py-2 transition-colors">Log in</Link>
-                  <Link to="/register" className="bg-brand-600 text-white hover:bg-brand-700 px-4 py-2 rounded-lg font-medium transition-colors shadow-md hover:shadow-lg">
-                    Sign up
-                  </Link>
-               </div>
+              <div className="flex gap-4">
+                <Link to="/login" className="text-slate-600 hover:text-brand-600 font-medium px-3 py-2 transition-colors">Log in</Link>
+                <Link to="/register" className="bg-brand-600 text-white hover:bg-brand-700 px-4 py-2 rounded-lg font-medium transition-colors shadow-md hover:shadow-lg">
+                  Sign up
+                </Link>
+              </div>
             )}
           </div>
 
-          {/* Mobile menu button */}
           <div className="flex items-center justify-center lg:hidden">
             <button
               onClick={() => setIsOpen(!isOpen)}
@@ -101,7 +107,6 @@ const Navbar = ({ user, setUser }) => {
         </div>
       </div>
 
-      {/* Mobile Menu */}
       {isOpen && (
         <div className="lg:hidden glass border-t border-slate-200/50">
           <div className="space-y-1 pb-3 pt-2">
@@ -121,17 +126,17 @@ const Navbar = ({ user, setUser }) => {
             ))}
           </div>
           <div className="border-t border-slate-200 pb-4 pt-4">
-             {user ? (
-                <div className="flex flex-col gap-2 px-4">
-                  <Link to="/settings" onClick={() => setIsOpen(false)} className="text-base font-medium text-slate-600 hover:text-slate-800">Profile & Settings</Link>
-                  <button onClick={() => { handleLogout(); setIsOpen(false); }} className="text-left text-base font-medium text-red-600 hover:text-red-800">Sign out</button>
-                </div>
-             ) : (
-                <div className="flex flex-col gap-2 px-4">
-                  <Link to="/login" onClick={() => setIsOpen(false)} className="block text-center rounded-md bg-slate-100 px-4 py-2 text-base font-medium text-slate-700 hover:bg-slate-200">Log in</Link>
-                  <Link to="/register" onClick={() => setIsOpen(false)} className="block text-center rounded-md bg-brand-600 px-4 py-2 text-base font-medium text-white hover:bg-brand-700">Sign up</Link>
-                </div>
-             )}
+            {user ? (
+              <div className="flex flex-col gap-2 px-4">
+                <Link to="/settings" onClick={() => setIsOpen(false)} className="text-base font-medium text-slate-600 hover:text-slate-800">Profile & Settings</Link>
+                <button onClick={() => { handleLogout(); setIsOpen(false); }} className="text-left text-base font-medium text-red-600 hover:text-red-800">Sign out</button>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2 px-4">
+                <Link to="/login" onClick={() => setIsOpen(false)} className="block text-center rounded-md bg-slate-100 px-4 py-2 text-base font-medium text-slate-700 hover:bg-slate-200">Log in</Link>
+                <Link to="/register" onClick={() => setIsOpen(false)} className="block text-center rounded-md bg-brand-600 px-4 py-2 text-base font-medium text-white hover:bg-brand-700">Sign up</Link>
+              </div>
+            )}
           </div>
         </div>
       )}

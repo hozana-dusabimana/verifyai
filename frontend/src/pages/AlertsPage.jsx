@@ -1,166 +1,200 @@
-import { useState } from 'react';
-import { Bell, ShieldAlert, CheckCircle, Mail, HelpCircle, ArrowRight, Settings, Sliders, ChevronDown } from 'lucide-react';
-
-const mockAlerts = [
-  { id: 'al-01', title: 'Global Banking Collapse Imminent', score: 12, time: '14 mins ago', assigned: 'Unassigned', snippet: 'Top level executives at the central bank have secretly met to discuss seizing all citizen deposits by Friday...', status: 'open' },
-  { id: 'al-02', title: 'New Voting Machines Found Pre-Hacked', score: 8, time: '1 hour ago', assigned: 'Sarah Jenkins', snippet: 'A whistleblower has released documents showing that the new tabulators come with a built-in algorithm to flip 10% of votes...', status: 'open' },
-  { id: 'al-03', title: 'Miracle Cure for Cancer Suppressed by FDA', score: 22, time: '3 hours ago', assigned: 'Unassigned', snippet: 'The common dandelion root has been proven to cure stage 4 cancer in 48 hours, but big pharma is suppressing the study...', status: 'escalated' },
-];
+import { useState, useEffect, useCallback } from 'react';
+import { Bell, ShieldAlert, CheckCircle, Mail, ArrowRight, Sliders } from 'lucide-react';
+import { alertsAPI } from '../services/api';
 
 const AlertsPage = () => {
-  const [alerts, setAlerts] = useState(mockAlerts);
-  const [showSettings, setShowSettings] = useState(false);
+  const [alerts, setAlerts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [filterStatus, setFilterStatus] = useState('');
+  const [showPrefs, setShowPrefs] = useState(false);
+  const [prefs, setPrefs] = useState({
+    email_on_high_risk: true,
+    email_on_analysis_complete: false,
+    alert_threshold: 30,
+    email_frequency: 'immediate',
+  });
 
-  const handleAction = (id, action) => {
-    if (action === 'dismiss') {
-       setAlerts(alerts.filter(a => a.id !== id));
-    } else if (action === 'resolve') {
-       setAlerts(alerts.map(a => a.id === id ? { ...a, status: 'resolved' } : a));
-       setTimeout(() => setAlerts(prev => prev.filter(a => a.id !== id)), 1000); // remove after animation
-    } else if (action === 'escalate') {
-       setAlerts(alerts.map(a => a.id === id ? { ...a, status: 'escalated' } : a));
+  const fetchAlerts = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params = {};
+      if (filterStatus) params.status = filterStatus;
+      const res = await alertsAPI.list(params);
+      setAlerts(res.data.data || []);
+    } catch {
+      setAlerts([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [filterStatus]);
+
+  useEffect(() => { fetchAlerts(); }, [fetchAlerts]);
+
+  useEffect(() => {
+    alertsAPI.getSettings().then(res => {
+      if (res.data.data) setPrefs(res.data.data);
+    }).catch(() => {});
+  }, []);
+
+  const handleResolve = async (id) => {
+    try {
+      await alertsAPI.resolve(id);
+      setAlerts(prev => prev.map(a => a.id === id ? { ...a, status: 'resolved' } : a));
+    } catch { /* ignore */ }
+  };
+
+  const handleEscalate = async (id) => {
+    try {
+      await alertsAPI.escalate(id);
+      setAlerts(prev => prev.map(a => a.id === id ? { ...a, status: 'escalated' } : a));
+    } catch { /* ignore */ }
+  };
+
+  const handleDismiss = async (id) => {
+    try {
+      await alertsAPI.dismiss(id);
+      setAlerts(prev => prev.filter(a => a.id !== id));
+    } catch { /* ignore */ }
+  };
+
+  const handleSavePrefs = async () => {
+    try {
+      await alertsAPI.updateSettings(prefs);
+      alert('Notification preferences saved.');
+    } catch { /* ignore */ }
+  };
+
+  const statusColor = (status) => {
+    switch (status) {
+      case 'open': return 'bg-red-100 text-red-700 border-red-200';
+      case 'escalated': return 'bg-amber-100 text-amber-700 border-amber-200';
+      case 'resolved': return 'bg-emerald-100 text-emerald-700 border-emerald-200';
+      case 'dismissed': return 'bg-slate-100 text-slate-600 border-slate-200';
+      default: return 'bg-slate-100 text-slate-600 border-slate-200';
     }
   };
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4 mb-2">
+      <div className="flex justify-between items-end">
         <div>
-          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight flex items-center gap-3">
-            <Bell className="text-brand-600 w-8 h-8" /> Alert Center
-          </h1>
-          <p className="text-slate-500 font-medium mt-1">Manage high-risk content flags and system notifications.</p>
+          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Alert Center</h1>
+          <p className="text-slate-500 font-medium mt-1">High-risk content alerts and notifications.</p>
         </div>
-        <button 
-           onClick={() => setShowSettings(!showSettings)}
-           className="px-4 py-2 bg-white text-slate-700 hover:bg-slate-50 border border-slate-300 rounded-xl font-bold flex items-center gap-2 shadow-sm transition-all"
-        >
-          <Settings className="w-4 h-4" /> Preferences
+        <button onClick={() => setShowPrefs(!showPrefs)}
+          className="flex px-4 py-2 bg-slate-100 text-slate-700 rounded-xl font-medium hover:bg-slate-200 items-center gap-2">
+          <Sliders className="w-4 h-4" /> Preferences
         </button>
       </div>
 
-      {showSettings && (
-         <div className="glass rounded-3xl p-6 shadow-sm border border-brand-200 animate-in fade-in slide-in-from-top-4">
-            <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-               <Sliders className="w-5 h-5 text-brand-600" /> Notification Thresholds
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-               <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                     <span className="text-sm font-bold text-slate-700">Email Alerts</span>
-                     <label className="relative inline-flex items-center cursor-pointer">
-                       <input type="checkbox" className="sr-only peer" defaultChecked />
-                       <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-600"></div>
-                     </label>
-                  </div>
-                  <div>
-                     <label className="text-sm font-medium text-slate-500 mb-1 block">Trigger Threshold (Credibility &lt; %)</label>
-                     <input type="range" min="0" max="50" defaultValue="30" className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-500" />
-                     <div className="flex justify-between text-xs text-slate-400 mt-1 font-bold">
-                        <span>0%</span>
-                        <span className="text-brand-600">30%</span>
-                        <span>50%</span>
-                     </div>
-                  </div>
-               </div>
-               <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                     <span className="text-sm font-bold text-slate-700">Push Notifications</span>
-                     <label className="relative inline-flex items-center cursor-pointer">
-                       <input type="checkbox" className="sr-only peer" defaultChecked />
-                       <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-600"></div>
-                     </label>
-                  </div>
-                  <div className="flex items-center justify-between p-3 border border-slate-200 rounded-xl bg-slate-50">
-                     <div className="flex items-center gap-3">
-                        <Mail className="w-5 h-5 text-slate-500" />
-                        <span className="text-sm font-medium text-slate-700">Daily Digest Email</span>
-                     </div>
-                     <label className="relative inline-flex items-center cursor-pointer">
-                       <input type="checkbox" className="sr-only peer" />
-                       <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-600"></div>
-                     </label>
-                  </div>
-               </div>
+      {/* Notification Preferences */}
+      {showPrefs && (
+        <div className="glass rounded-2xl p-6 shadow-sm border border-brand-100">
+          <h3 className="font-bold text-slate-900 mb-4 flex items-center gap-2">
+            <Mail className="w-5 h-5 text-brand-600" /> Notification Preferences
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <label className="flex items-center gap-3 p-3 rounded-xl border border-slate-200 cursor-pointer hover:bg-slate-50">
+              <input type="checkbox" className="rounded text-brand-600" checked={prefs.email_on_high_risk}
+                onChange={(e) => setPrefs({ ...prefs, email_on_high_risk: e.target.checked })} />
+              <span className="text-sm font-medium text-slate-700">Email on high-risk detection</span>
+            </label>
+            <label className="flex items-center gap-3 p-3 rounded-xl border border-slate-200 cursor-pointer hover:bg-slate-50">
+              <input type="checkbox" className="rounded text-brand-600" checked={prefs.email_on_analysis_complete}
+                onChange={(e) => setPrefs({ ...prefs, email_on_analysis_complete: e.target.checked })} />
+              <span className="text-sm font-medium text-slate-700">Email on analysis complete</span>
+            </label>
+            <div className="p-3 rounded-xl border border-slate-200">
+              <label className="text-sm font-medium text-slate-700">Alert Threshold</label>
+              <input type="number" min="0" max="100" className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                value={prefs.alert_threshold} onChange={(e) => setPrefs({ ...prefs, alert_threshold: parseInt(e.target.value) || 0 })} />
             </div>
-         </div>
+            <div className="p-3 rounded-xl border border-slate-200">
+              <label className="text-sm font-medium text-slate-700">Email Frequency</label>
+              <select className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                value={prefs.email_frequency} onChange={(e) => setPrefs({ ...prefs, email_frequency: e.target.value })}>
+                <option value="immediate">Immediate</option>
+                <option value="daily">Daily Digest</option>
+                <option value="weekly">Weekly Digest</option>
+              </select>
+            </div>
+          </div>
+          <button onClick={handleSavePrefs} className="mt-4 px-6 py-2.5 bg-brand-600 text-white rounded-xl font-bold hover:bg-brand-700 shadow-md">
+            Save Preferences
+          </button>
+        </div>
       )}
 
-      {/* Alert Cards */}
-      <div className="grid grid-cols-1 gap-6">
-         {alerts.length === 0 ? (
-            <div className="glass rounded-3xl p-12 text-center flex flex-col items-center shadow-sm">
-               <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-4">
-                  <CheckCircle className="w-8 h-8" />
-               </div>
-               <h3 className="text-lg font-bold text-slate-900 mb-2">You're all caught up!</h3>
-               <p className="text-slate-500 font-medium">No active high-risk alerts require your attention right now.</p>
-            </div>
-         ) : alerts.map((alert) => (
-            <div 
-               key={alert.id} 
-               className={`glass rounded-2xl shadow-sm border-l-4 p-6 transition-all duration-300 ${
-                  alert.status === 'resolved' ? 'border-l-emerald-500 opacity-50 translate-x-full' :
-                  alert.status === 'escalated' ? 'border-l-amber-500 bg-amber-50/10' :
-                  'border-l-red-500'
-               }`}
-            >
-               <div className="flex flex-col lg:flex-row gap-6">
-                  
-                  {/* Left Column: Visual Score */}
-                  <div className="flex flex-col items-center justify-center w-24 flex-shrink-0 border-r border-slate-200 pr-6 lg:border-r-0 lg:pr-0">
-                     <span className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Score</span>
-                     <div className="relative flex items-center justify-center w-16 h-16 rounded-full bg-red-50 border-4 border-red-100">
-                        <span className="text-2xl font-extrabold text-red-600">{alert.score}</span>
-                     </div>
-                  </div>
-
-                  {/* Middle Column: Details */}
-                  <div className="flex-1">
-                     <div className="flex flex-wrap items-center gap-3 mb-2">
-                        <h3 className="text-xl font-bold text-slate-900">{alert.title}</h3>
-                        <span className={`text-xs font-bold px-2 py-1 rounded-full border ${
-                           alert.status === 'escalated' ? 'bg-amber-100 text-amber-800 border-amber-200' : 'bg-red-100 text-red-800 border-red-200'
-                        }`}>
-                           {alert.status.toUpperCase()}
-                        </span>
-                     </div>
-                     <p className="text-sm font-medium text-slate-600 italic border-l-2 border-slate-300 pl-3 mb-4 line-clamp-2">"{alert.snippet}"</p>
-                     
-                     <div className="flex flex-wrap items-center gap-4 text-xs font-bold text-slate-500">
-                        <span><ShieldAlert className="w-4 h-4 inline mr-1 text-slate-400"/> Triggered: {alert.time}</span>
-                        <span>Assignee: {alert.assigned}</span>
-                     </div>
-                  </div>
-
-                  {/* Right Column: Actions */}
-                  <div className="flex flex-row lg:flex-col gap-3 justify-center border-t border-slate-200 pt-4 lg:border-t-0 lg:pt-0 lg:border-l lg:pl-6 shrink-0 flex-wrap">
-                     <button 
-                        onClick={() => handleAction(alert.id, 'resolve')}
-                        disabled={alert.status === 'resolved'}
-                        className="px-4 py-2 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-colors flex-1 lg:flex-none"
-                     >
-                        <CheckCircle className="w-4 h-4"/> Mark Reviewed
-                     </button>
-                     <button 
-                        onClick={() => handleAction(alert.id, 'escalate')}
-                        disabled={alert.status === 'escalated' || alert.status === 'resolved'}
-                        className="px-4 py-2 bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-colors flex-1 lg:flex-none"
-                     >
-                        <HelpCircle className="w-4 h-4"/> Escalate
-                     </button>
-                     <button 
-                        onClick={() => handleAction(alert.id, 'dismiss')}
-                        className="px-4 py-2 bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-colors w-full"
-                     >
-                        Dismiss
-                     </button>
-                  </div>
-
-               </div>
-            </div>
-         ))}
+      {/* Filter */}
+      <div className="flex gap-2">
+        {['', 'open', 'escalated', 'resolved', 'dismissed'].map((s) => (
+          <button key={s} onClick={() => setFilterStatus(s)}
+            className={`px-4 py-2 rounded-xl text-sm font-bold transition-colors ${
+              filterStatus === s ? 'bg-brand-600 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+            }`}>
+            {s ? s.charAt(0).toUpperCase() + s.slice(1) : 'All'}
+          </button>
+        ))}
       </div>
+
+      {/* Alerts List */}
+      {loading ? (
+        <div className="flex items-center justify-center py-16">
+          <div className="animate-spin rounded-full h-8 w-8 border-2 border-brand-500 border-t-transparent" />
+        </div>
+      ) : alerts.length > 0 ? (
+        <div className="space-y-4">
+          {alerts.map((alert) => (
+            <div key={alert.id} className="glass rounded-2xl p-6 shadow-sm border-l-4 border-l-red-500 hover:shadow-md transition-shadow">
+              <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <ShieldAlert className="w-5 h-5 text-red-500 flex-shrink-0" />
+                    <h3 className="font-bold text-slate-900">{alert.article_title || 'Untitled Alert'}</h3>
+                  </div>
+                  <p className="text-sm text-slate-600 mb-3">{alert.message}</p>
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <span className={`px-2.5 py-1 rounded-full text-xs font-bold border ${statusColor(alert.status)}`}>
+                      {alert.status}
+                    </span>
+                    <span className="text-xs text-slate-500">
+                      Score: <strong className="text-red-600">{alert.credibility_score != null ? Math.round(alert.credibility_score) : '-'}%</strong>
+                    </span>
+                    <span className="text-xs text-slate-500 capitalize">Severity: {alert.severity}</span>
+                    <span className="text-xs text-slate-400">{new Date(alert.created_at).toLocaleString()}</span>
+                  </div>
+                </div>
+                <div className="flex gap-2 flex-shrink-0">
+                  {alert.status === 'open' && (
+                    <>
+                      <button onClick={() => handleResolve(alert.id)}
+                        className="px-3 py-1.5 bg-emerald-100 text-emerald-700 rounded-lg text-xs font-bold hover:bg-emerald-200 flex items-center gap-1">
+                        <CheckCircle className="w-3.5 h-3.5" /> Resolve
+                      </button>
+                      <button onClick={() => handleEscalate(alert.id)}
+                        className="px-3 py-1.5 bg-amber-100 text-amber-700 rounded-lg text-xs font-bold hover:bg-amber-200 flex items-center gap-1">
+                        <ArrowRight className="w-3.5 h-3.5" /> Escalate
+                      </button>
+                    </>
+                  )}
+                  {alert.status !== 'dismissed' && (
+                    <button onClick={() => handleDismiss(alert.id)}
+                      className="px-3 py-1.5 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold hover:bg-slate-200">
+                      Dismiss
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="glass rounded-2xl p-12 shadow-sm text-center">
+          <Bell className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+          <p className="text-slate-500 font-medium">No alerts found.</p>
+          <p className="text-slate-400 text-sm mt-1">Alerts are auto-created when content scores below the risk threshold.</p>
+        </div>
+      )}
     </div>
   );
 };

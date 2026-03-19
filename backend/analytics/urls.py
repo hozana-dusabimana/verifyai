@@ -11,4 +11,5 @@ urlpatterns = [
     path('reports/generate', views.ReportGenerateView.as_view(), name='report-generate'),
     path('reports/<uuid:report_id>', views.ReportDetailView.as_view(), name='report-detail'),
     path('reports', views.ReportListView.as_view(), name='report-list'),
+    path('analytics/platform-stats', views.PlatformStatsView.as_view(), name='platform-stats'),
 ]
