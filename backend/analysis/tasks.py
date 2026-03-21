@@ -40,17 +40,34 @@ def run_analysis_pipeline(self, result_id):
     try:
         # Stage 1: Input Validation
         _update_stage(result, 1, 'Input Validation')
-        if len(content) < 50:
-            raise ValueError('Content too short. Minimum 50 characters required.')
-        if len(content) > 50000:
-            raise ValueError('Content too long. Maximum 50,000 characters allowed.')
 
-        # Stage 2: Content Fetching (if URL)
+        # Stage 2: Content Fetching (if URL or file)
         _update_stage(result, 2, 'Content Fetching')
         if result.article.input_type == 'url' and result.article.original_url:
             # In production: use Newspaper3k to fetch and extract article
-            # For now, we use the content as-is if provided
-            pass
+            # For now, use the URL as placeholder content for simulation
+            content = content or result.article.original_url
+        elif result.article.input_type == 'file' and result.article.uploaded_file:
+            try:
+                file_path = result.article.uploaded_file.path
+                if file_path.endswith('.pdf'):
+                    import PyPDF2
+                    with open(file_path, 'rb') as f:
+                        reader = PyPDF2.PdfReader(f)
+                        content = ' '.join(page.extract_text() or '' for page in reader.pages)
+                else:
+                    with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                        content = f.read()
+                result.article.content = content
+                result.article.save(update_fields=['content'])
+            except Exception as e:
+                raise ValueError(f'Failed to extract content from file: {e}')
+
+        if result.article.input_type == 'text':
+            if len(content) < 50:
+                raise ValueError('Content too short. Minimum 50 characters required.')
+        if len(content) > 50000:
+            raise ValueError('Content too long. Maximum 50,000 characters allowed.')
 
         # Stage 3: Preprocessing
         _update_stage(result, 3, 'Preprocessing')

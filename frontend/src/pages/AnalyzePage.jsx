@@ -74,7 +74,7 @@ const AnalyzePage = () => {
       } else {
         submitData = {
           input_type: activeTab === 'url' ? 'url' : 'text',
-          ...(activeTab === 'url' ? { url: inputVal, content: inputVal } : { content: inputVal }),
+          ...(activeTab === 'url' ? { url: inputVal } : { content: inputVal }),
           source_name: sourceName,
           author,
           publication_date: pubDate || undefined,
