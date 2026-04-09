@@ -7,3 +7,9 @@ db.sqlite3
 media/
 staticfiles/
 *.log
+# ML model files (too large for git — retrain locally)
+ml_engine/models_store/*.joblib
+ml_engine/models_store/*.pt
+ml_engine/models_store/*.json
+ml_engine/models_store/*.pkl
+ml_engine/datasets/

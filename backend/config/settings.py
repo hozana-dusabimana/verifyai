@@ -178,6 +178,9 @@ DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'noreply@verifyai.com')
 # Alert threshold
 ALERT_CREDIBILITY_THRESHOLD = int(os.getenv('ALERT_CREDIBILITY_THRESHOLD', '30'))
 
+# ML Engine
+ML_MODELS_DIR = BASE_DIR / 'ml_engine' / 'models_store'
+
 # Google OAuth2
 GOOGLE_OAUTH2_CLIENT_ID = os.getenv('GOOGLE_OAUTH2_CLIENT_ID', '')
 GOOGLE_OAUTH2_CLIENT_SECRET = os.getenv('GOOGLE_OAUTH2_CLIENT_SECRET', '')

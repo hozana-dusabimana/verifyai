@@ -133,6 +133,11 @@ export const adminAPI = {
   getAlertRules: () => api.get('/admin/alerts/rules'),
   updateAlertRules: (data) => api.put('/admin/alerts/rules', data),
   getMetrics: () => api.get('/admin/metrics'),
+  // ML Engine
+  getMLModels: () => api.get('/ml/models'),
+  getMLHealth: () => api.get('/ml/health'),
+  retrainModels: (datasetId) => api.post('/ml/retrain', { dataset_id: datasetId }),
+  mlPredict: (text, title) => api.post('/ml/predict', { text, title }),
 };
 
 export default api;

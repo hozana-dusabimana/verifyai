@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate, Routes, Route } from 'react-router-dom';
-import { Activity, Users, Database, FileText, CheckCircle, Search, Upload, AlertTriangle, RefreshCw } from 'lucide-react';
+import { Activity, Users, Database, FileText, CheckCircle, Search, Upload, AlertTriangle, RefreshCw, Brain, Cpu, BarChart3, Zap } from 'lucide-react';
 import { adminAPI, usersAPI } from '../../services/api';
 
 // ─── System Health ─────────────────────────────────────────────────
@@ -274,6 +274,165 @@ function AuditPanel() {
   );
 }
 
+// ─── ML Models Panel ──────────────────────────────────────────────
+function MLModelsPanel() {
+  const [modelInfo, setModelInfo] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [retraining, setRetraining] = useState(false);
+  const [testText, setTestText] = useState('');
+  const [testResult, setTestResult] = useState(null);
+  const [testing, setTesting] = useState(false);
+
+  const fetchModels = async () => {
+    setLoading(true);
+    try {
+      const res = await adminAPI.getMLModels();
+      setModelInfo(res.data.data);
+    } catch { /* ignore */ }
+    finally { setLoading(false); }
+  };
+
+  useEffect(() => { fetchModels(); }, []);
+
+  const handleRetrain = async () => {
+    if (!confirm('Start model retraining? This may take several minutes.')) return;
+    setRetraining(true);
+    try {
+      await adminAPI.retrainModels();
+      alert('Retraining started. Check back in a few minutes.');
+    } catch { alert('Failed to start retraining.'); }
+    finally { setRetraining(false); }
+  };
+
+  const handleTest = async (e) => {
+    e.preventDefault();
+    if (!testText.trim()) return;
+    setTesting(true);
+    setTestResult(null);
+    try {
+      const res = await adminAPI.mlPredict(testText);
+      setTestResult(res.data.data);
+    } catch (err) {
+      alert(err.response?.data?.error || 'Prediction failed.');
+    }
+    finally { setTesting(false); }
+  };
+
+  if (loading) return <div className="flex justify-center py-16"><div className="animate-spin rounded-full h-8 w-8 border-2 border-brand-500 border-t-transparent" /></div>;
+
+  const models = modelInfo?.models_available || {};
+  const metrics = modelInfo?.metrics || {};
+  const weights = modelInfo?.ensemble_weights || {};
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-extrabold text-slate-900 flex items-center gap-2"><Brain className="w-6 h-6 text-brand-600" /> ML Models</h2>
+        <div className="flex gap-2">
+          <button onClick={fetchModels} className="flex items-center gap-2 px-4 py-2 bg-slate-100 rounded-xl text-sm font-bold hover:bg-slate-200">
+            <RefreshCw className="w-4 h-4" /> Refresh
+          </button>
+          <button onClick={handleRetrain} disabled={retraining}
+            className="flex items-center gap-2 px-4 py-2 bg-brand-600 text-white rounded-xl text-sm font-bold hover:bg-brand-700 disabled:opacity-50 shadow-md">
+            <Zap className="w-4 h-4" /> {retraining ? 'Starting...' : 'Retrain Models'}
+          </button>
+        </div>
+      </div>
+
+      {/* Model Status */}
+      <div className={`rounded-2xl p-4 border ${modelInfo?.all_ready ? 'bg-emerald-50 border-emerald-200' : 'bg-amber-50 border-amber-200'}`}>
+        <p className={`text-sm font-bold ${modelInfo?.all_ready ? 'text-emerald-700' : 'text-amber-700'}`}>
+          {modelInfo?.all_ready ? 'All models are trained and ready for inference.' : 'Some models are missing. Please train models before running analyses.'}
+        </p>
+      </div>
+
+      {/* Model Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {[
+          { key: 'naive_bayes', name: 'Naive Bayes', icon: <BarChart3 className="w-5 h-5" />, weight: weights.naive_bayes },
+          { key: 'lstm', name: 'LSTM', icon: <Cpu className="w-5 h-5" />, weight: weights.lstm },
+          { key: 'distilbert', name: 'DistilBERT', icon: <Brain className="w-5 h-5" />, weight: weights.distilbert },
+        ].map(m => {
+          const available = models[m.key];
+          const met = metrics[m.key] || {};
+          return (
+            <div key={m.key} className="glass rounded-2xl p-5 border border-slate-200">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 bg-brand-50 rounded-lg text-brand-600">{m.icon}</div>
+                  <div>
+                    <p className="font-bold text-slate-900">{m.name}</p>
+                    <p className="text-xs text-slate-500">Weight: {((m.weight || 0) * 100).toFixed(0)}%</p>
+                  </div>
+                </div>
+                <span className={`w-3 h-3 rounded-full ${available ? 'bg-emerald-500' : 'bg-red-400'}`} />
+              </div>
+              {met.accuracy !== undefined ? (
+                <div className="space-y-2">
+                  {[
+                    { label: 'Accuracy', value: met.accuracy },
+                    { label: 'Precision', value: met.precision },
+                    { label: 'Recall', value: met.recall },
+                    { label: 'F1 Score', value: met.f1_score },
+                  ].map(s => (
+                    <div key={s.label} className="flex justify-between items-center">
+                      <span className="text-xs text-slate-500">{s.label}</span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-24 bg-slate-200 rounded-full h-1.5">
+                          <div className="bg-brand-500 h-1.5 rounded-full" style={{ width: `${(s.value || 0) * 100}%` }} />
+                        </div>
+                        <span className="text-xs font-bold text-slate-700 w-12 text-right">{((s.value || 0) * 100).toFixed(1)}%</span>
+                      </div>
+                    </div>
+                  ))}
+                  {met.training_time && (
+                    <p className="text-xs text-slate-400 mt-2">Trained in {met.training_time}s</p>
+                  )}
+                </div>
+              ) : (
+                <p className="text-xs text-slate-400">No metrics available</p>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Quick Test */}
+      <div className="glass rounded-2xl p-6 border border-slate-200">
+        <h3 className="text-lg font-bold text-slate-900 mb-4">Quick Model Test</h3>
+        <form onSubmit={handleTest} className="space-y-4">
+          <textarea className="w-full h-24 border border-slate-300 rounded-xl p-3 text-sm resize-none" placeholder="Enter text to test against the ML models..."
+            value={testText} onChange={e => setTestText(e.target.value)} />
+          <button type="submit" disabled={testing || !testText.trim()}
+            className="px-6 py-2.5 bg-brand-600 text-white rounded-xl text-sm font-bold hover:bg-brand-700 disabled:opacity-50">
+            {testing ? 'Analyzing...' : 'Test Prediction'}
+          </button>
+        </form>
+        {testResult && (
+          <div className="mt-4 p-4 bg-slate-50 rounded-xl space-y-2">
+            <div className="flex items-center gap-3">
+              <span className={`px-3 py-1 rounded-full text-sm font-bold ${
+                testResult.classification === 'FAKE' ? 'bg-red-100 text-red-700' :
+                testResult.classification === 'REAL' ? 'bg-emerald-100 text-emerald-700' :
+                'bg-amber-100 text-amber-700'
+              }`}>{testResult.classification}</span>
+              <span className="text-sm font-bold text-slate-700">Credibility: {testResult.credibility_score}%</span>
+            </div>
+            <div className="grid grid-cols-3 gap-2 text-xs">
+              <div className="bg-white p-2 rounded-lg border"><span className="text-slate-500">NB:</span> <span className="font-bold">{(testResult.naive_bayes_score * 100).toFixed(1)}%</span></div>
+              <div className="bg-white p-2 rounded-lg border"><span className="text-slate-500">LSTM:</span> <span className="font-bold">{(testResult.lstm_score * 100).toFixed(1)}%</span></div>
+              <div className="bg-white p-2 rounded-lg border"><span className="text-slate-500">BERT:</span> <span className="font-bold">{(testResult.distilbert_score * 100).toFixed(1)}%</span></div>
+            </div>
+            <div className="text-xs text-slate-600">
+              {testResult.flagging_reasons?.map((r, i) => <p key={i} className="mt-1">- {r}</p>)}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Admin Dashboard ──────────────────────────────────────────
 const AdminDashboard = () => {
   const location = useLocation();
@@ -290,6 +449,7 @@ const AdminDashboard = () => {
       {currentPath === 'users' && <UsersPanel />}
       {currentPath === 'datasets' && <DatasetsPanel />}
       {currentPath === 'audit' && <AuditPanel />}
+      {currentPath === 'models' && <MLModelsPanel />}
     </div>
   );
 };

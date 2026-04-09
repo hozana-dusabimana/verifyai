@@ -201,3 +201,78 @@ class AdminMetricsView(APIView):
             'open_alerts': Alert.objects.filter(status='open').count(),
             'escalated_alerts': Alert.objects.filter(status='escalated').count(),
         })
+
+
+class MLModelsView(APIView):
+    """List models with accuracy metrics."""
+    permission_classes = [IsAuthenticated, IsAdmin]
+
+    def get(self, request):
+        from ml_engine.inference import get_model_info
+        return _success(get_model_info())
+
+
+class MLRetrainView(APIView):
+    """Trigger model retraining with specified dataset."""
+    permission_classes = [IsAuthenticated, IsAdmin]
+
+    def post(self, request):
+        dataset_id = request.data.get('dataset_id')
+        dataset_path = None
+
+        if dataset_id:
+            try:
+                dataset = Dataset.objects.get(id=dataset_id)
+                dataset_path = dataset.file.path
+            except Dataset.DoesNotExist:
+                return _error('Dataset not found.', status.HTTP_404_NOT_FOUND)
+
+        # Trigger async retraining
+        from analysis.tasks_ml import run_model_training
+        task = run_model_training.delay(dataset_path)
+
+        log_audit(
+            request.user, 'model_retrain_triggered',
+            resource_type='ml_model',
+            request=request,
+            metadata={'dataset_id': dataset_id, 'task_id': task.id},
+        )
+
+        return _success({
+            'task_id': task.id,
+            'message': 'Model retraining started. This may take several minutes.',
+        })
+
+
+class MLHealthView(APIView):
+    """ML engine status and model verification."""
+
+    def get(self, request):
+        from ml_engine.inference import get_model_info
+        info = get_model_info()
+        return _success({
+            'status': 'ready' if info['all_ready'] else 'models_missing',
+            'models': info['models_available'],
+            'metrics': info['metrics'],
+        })
+
+
+class MLPredictView(APIView):
+    """Run ensemble classification on text (internal/testing)."""
+    permission_classes = [IsAuthenticated, IsAdmin]
+
+    def post(self, request):
+        text = request.data.get('text', '')
+        title = request.data.get('title', '')
+
+        if not text or len(text) < 20:
+            return _error('Text must be at least 20 characters.')
+
+        from ml_engine.inference import predict_ensemble, get_model_info
+
+        info = get_model_info()
+        if not info['all_ready']:
+            return _error('ML models not trained yet. Please train models first.')
+
+        prediction = predict_ensemble(text, title)
+        return _success(prediction)
