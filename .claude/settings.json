@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(PYTHONIOENCODING=utf-8 PYTHONUTF8=1 ./venv/Scripts/python.exe -m ml_engine.train)"
+      "Bash(PYTHONIOENCODING=utf-8 PYTHONUTF8=1 ./venv/Scripts/python.exe -m ml_engine.train)",
+      "WebSearch"
     ]
   }
 }

@@ -401,6 +401,77 @@ The platform is designed to run on standard web servers without GPU requirements
 
 ---
 
+## News Submission Format
+
+For accurate classification, submitted articles should follow a journalistic format. The models were trained on clean news text — stylistic noise (emojis, bullets, banners) can skew predictions.
+
+### Recommended Structure
+
+```
+Title: <short, factual headline (5-15 words)>
+
+Body: <2-6 sentences of plain prose. Include named sources,
+specific figures, dates, and locations where possible.>
+```
+
+### Guidelines
+
+| Do | Avoid |
+|----|-------|
+| Plain prose sentences | Bullet points, numbered lists |
+| Named officials and organizations | Anonymous "they say" claims |
+| Specific numbers, dates, places | Vague quantifiers ("many", "a lot") |
+| Neutral reporting tone | ALL CAPS, `!!!`, clickbait phrases |
+| Minimum 50 characters of body | Emojis, decorative symbols (`→`, `•`, `👉`) |
+| At least one verifiable fact | Source-identifying banners ("Featured image", "Getty Images") |
+
+### Example — Correctly Formatted Real News
+
+**Title:** Trump announces US naval blockade of Iran after peace talks fail
+
+**Body:**
+> US President Donald Trump announced a naval blockade of Iran effective immediately, directing the military to seek and interdict any vessel that paid Iran's toll to cross the Strait of Hormuz. The blockade on traffic entering and leaving Iranian ports began at 10 a.m. ET on Monday, after weekend ceasefire talks in Islamabad, Pakistan collapsed. Vice President JD Vance, who led the American delegation, said the two sides failed to reach a deal, citing disagreement over nuclear weapon development. Brent crude has risen roughly 40% since the war began, with prices approaching $100 a barrel on Monday.
+
+### Example — Poorly Formatted Input (will degrade prediction)
+
+```
+SHOCKING!!! Global economy hit by Iran conflict 👉
+- Growth dropped ~3.1%
+- Inflation rising
+- Energy disruptions
+This is confirmed real news!!!
+```
+
+Why this fails: clickbait punctuation, emoji, bullet formatting, and promotional phrasing ("confirmed real news") trigger sensationalism and fake-pattern features, even when the underlying facts are true.
+
+### Input Normalization
+
+The preprocessor automatically strips URLs, HTML tags, emojis, bullet symbols, hashtags, and `@mentions` before inference. You don't need to clean these yourself — but avoiding them in the submission gives the models the clearest possible signal.
+
+### Sample URLs for Testing
+
+When submitting via URL, the backend fetches the page with **newspaper3k** (BeautifulSoup fallback) and extracts title + body before running inference. The page must be publicly accessible; paywalled or JS-heavy pages may extract poorly.
+
+**Established outlets — any recent article should classify as REAL:**
+
+- https://www.reuters.com/world/
+- https://apnews.com/
+- https://www.bbc.com/news
+- https://www.theguardian.com/world
+- https://www.npr.org/sections/world/
+- https://www.aljazeera.com/news/
+- https://www.cnbc.com/world/
+
+**Direct article examples:**
+
+- https://www.nbcnews.com/world/iran/live-blog/live-updates-us-iran-fail-reach-deal-peace-talks-day-negotiations-rcna315918
+- https://www.cnn.com/2026/04/13/world/live-news/iran-us-war-trump-hormuz
+- https://www.cnbc.com/2026/04/12/trump-iran-war-strait-of-hormuz.html
+
+**Tip:** If the scraper fails to extract an article (short text length, missing body), the submission will return an error before inference. In that case, copy the article text manually and submit as plain text instead.
+
+---
+
 ## Troubleshooting
 
 ### Models Not Found Error
