@@ -11,7 +11,7 @@ import joblib
 import torch
 import torch.nn as nn
 
-from .preprocessing import preprocess_text, compute_sensationalism_score, compute_headline_body_consistency, extract_top_keywords
+from .preprocessing import preprocess_text, clean_text, compute_sensationalism_score, compute_headline_body_consistency, extract_top_keywords
 from .features import compute_sentiment
 
 MODELS_DIR = os.path.join(os.path.dirname(__file__), 'models_store')
@@ -143,8 +143,9 @@ def predict_distilbert(text):
     model, tokenizer, max_len = _load_distilbert()
     device = _get_device()
 
+    normalized = clean_text(text)[:1000]
     encoding = tokenizer(
-        text[:1000],  # Truncate for efficiency
+        normalized,
         truncation=True, padding='max_length',
         max_length=max_len, return_tensors='pt'
     )
@@ -168,16 +169,18 @@ def predict_ensemble(text, title=''):
     lstm_score = predict_lstm(text)
     bert_score = predict_distilbert(text)
 
-    # Weighted ensemble: NB 20%, LSTM 35%, DistilBERT 45%
-    ensemble_fake_prob = (nb_score * 0.20) + (lstm_score * 0.35) + (bert_score * 0.45)
+    # Weighted ensemble: NB 50%, LSTM 20%, DistilBERT 30%
+    # NB is upweighted because LSTM/BERT learned Reuters-style artifacts from
+    # the ISOT training set and mislabel short, informal real news as fake.
+    ensemble_fake_prob = (nb_score * 0.50) + (lstm_score * 0.20) + (bert_score * 0.30)
 
     # Credibility score
     credibility_score = round((1 - ensemble_fake_prob) * 100, 2)
 
     # Classification
-    if credibility_score <= 30:
+    if credibility_score <= 15:
         classification = 'FAKE'
-    elif credibility_score <= 60:
+    elif credibility_score <= 50:
         classification = 'UNCERTAIN'
     else:
         classification = 'REAL'
@@ -300,9 +303,9 @@ def get_model_info():
         'all_ready': all(models_available.values()),
         'metrics': metrics,
         'ensemble_weights': {
-            'naive_bayes': 0.20,
-            'lstm': 0.35,
-            'distilbert': 0.45,
+            'naive_bayes': 0.50,
+            'lstm': 0.20,
+            'distilbert': 0.30,
         },
     }
 

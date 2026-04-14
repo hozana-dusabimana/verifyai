@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(powershell -c \"Get-NetTCPConnection -LocalPort 8000 -ErrorAction SilentlyContinue | Select-Object LocalAddress,LocalPort,OwningProcess | Format-Table -AutoSize\")",
+      "Bash(powershell -c \"Get-Process -Id 18744,22436 -ErrorAction SilentlyContinue | Select-Object Id,ProcessName,Path | Format-List\")",
+      "Bash(powershell -c 'Get-Process -Id 18744,22436 | ForEach-Object { $_.Id; \\(Get-CimInstance Win32_Process -Filter \"ProcessId = $\\($_.Id\\)\"\\).CommandLine }')",
+      "Bash(powershell -c \"Stop-Process -Id 18744 -Force; Start-Sleep -Milliseconds 500; Get-NetTCPConnection -LocalPort 8000 -ErrorAction SilentlyContinue | Select-Object LocalAddress,LocalPort,OwningProcess | Format-Table -AutoSize\")"
+    ]
+  }
+}

@@ -50,18 +50,31 @@ CLICKBAIT_PATTERNS = [
 ]
 
 
+_EMOJI_RE = re.compile(
+    "["
+    "\U0001F300-\U0001FAFF"
+    "\U0001F600-\U0001F64F"
+    "\U00002600-\U000027BF"
+    "\U0001F900-\U0001F9FF"
+    "]+",
+    flags=re.UNICODE,
+)
+
+_BULLET_CHARS = "•·●○◦▪▫■□►▶➤➜→⇒✓✗✘✔★☆►"
+
+
 def clean_text(text):
-    """Basic text cleaning: remove URLs, HTML tags, special chars."""
+    """Basic text cleaning: remove URLs, HTML tags, emojis, bullets, stylistic markers."""
     if not text or not isinstance(text, str):
         return ''
 
-    # Remove URLs
     text = re.sub(r'https?://\S+|www\.\S+', '', text)
-    # Remove HTML tags
     text = re.sub(r'<[^>]+>', '', text)
-    # Remove email addresses
     text = re.sub(r'\S+@\S+', '', text)
-    # Remove extra whitespace
+    text = _EMOJI_RE.sub(' ', text)
+    text = text.translate(str.maketrans(_BULLET_CHARS, ' ' * len(_BULLET_CHARS)))
+    text = re.sub(r'#\w+', ' ', text)
+    text = re.sub(r'@\w+', ' ', text)
     text = re.sub(r'\s+', ' ', text).strip()
 
     return text
