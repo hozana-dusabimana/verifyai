@@ -141,7 +141,97 @@ When a user submits an article (text, URL, or file), the system runs a Celery as
 
 ---
 
-## Setup & Installation
+## Run with Docker (Recommended)
+
+The fastest way to run the full stack — no Python, Node, MariaDB, or Redis install required on the host. You only need **Docker Desktop** (or Docker Engine + Compose v2).
+
+### Layout
+
+The compose stack is split per-folder so you can run pieces in isolation:
+
+| File | Services |
+|------|----------|
+| [backend/docker-compose.yml](backend/docker-compose.yml) | `db` (MariaDB), `redis`, `backend` (Django), `celery` (worker) |
+| [frontend/docker-compose.yml](frontend/docker-compose.yml) | `frontend` (Vite dev server) |
+| [docker-compose.yml](docker-compose.yml) (root) | Includes both of the above — runs everything together |
+
+### Start everything
+
+From the project root:
+
+```bash
+docker compose up --build
+```
+
+This builds the images on first run and starts:
+
+| Service | Container | Host port | Notes |
+|---------|-----------|-----------|-------|
+| Frontend (Vite) | `verifyai-frontend` | `5174` | Hot reload enabled |
+| Backend (Django) | `verifyai-backend` | `8001` | Migrations run automatically on start |
+| Celery worker | `verifyai-celery` | — | Processes async analysis jobs |
+| MariaDB 10.11 | `verifyai-db` | `3308` | Persisted in `db_data` volume |
+| Redis 7 | `verifyai-redis` | internal only | Persisted in `redis_data` volume |
+
+Open the app at **http://localhost:5174** — the Vite dev server proxies API calls to the backend container at `http://backend:8000`.
+
+### Common commands
+
+```bash
+# Start in the background
+docker compose up -d --build
+
+# View logs (follow)
+docker compose logs -f backend
+docker compose logs -f celery
+
+# Run a Django management command (e.g. create a superuser)
+docker compose exec backend python manage.py createsuperuser
+
+# Open a shell in the backend container
+docker compose exec backend bash
+
+# Train the ML models inside the container
+docker compose exec backend python -m ml_engine.train
+
+# Stop everything (keeps data)
+docker compose down
+
+# Stop and wipe the database / Redis / model caches
+docker compose down -v
+```
+
+### Run only one side
+
+```bash
+# Backend + DB + Redis + Celery only
+docker compose -f backend/docker-compose.yml up --build
+
+# Frontend only (expects backend to be reachable)
+docker compose -f frontend/docker-compose.yml up --build
+```
+
+### Volumes
+
+| Volume | Purpose |
+|--------|---------|
+| `db_data` | MariaDB data files |
+| `redis_data` | Redis persistence |
+| `hf_cache` | HuggingFace model cache (avoids re-downloading DistilBERT base) |
+| `nltk_data` | NLTK corpora (punkt, stopwords, wordnet) |
+| `frontend_node_modules` | Frontend `node_modules` (kept out of host bind mount) |
+
+### Notes & gotchas
+
+- **First build is slow** (~5–10 min) because it installs PyTorch CPU and the ML stack. Subsequent builds use the layer cache.
+- **ML models are not bundled in the image.** After the stack is up, run the training command above (or upload pre-trained weights to `backend/ml_engine/models_store/` — the directory is bind-mounted from the host).
+- The backend container **runs migrations automatically** on every start (`migrate --noinput`).
+- Default DB credentials in compose are dev-only (`verifyai` / `verifyai`). **Change them before deploying.**
+- The host MariaDB port is `3308` to avoid conflicting with XAMPP's MySQL on `3306`.
+
+---
+
+## Manual Setup (without Docker)
 
 ### Prerequisites
 
