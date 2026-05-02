@@ -1,0 +1,99 @@
+services:
+  db:
+    image: mariadb:10.11
+    container_name: verifyai-db
+    restart: unless-stopped
+    environment:
+      MARIADB_DATABASE: verifyai
+      MARIADB_USER: verifyai
+      MARIADB_PASSWORD: verifyai
+      MARIADB_ROOT_PASSWORD: verifyai_root
+    ports:
+      - "3308:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    container_name: verifyai-redis
+    restart: unless-stopped
+    expose:
+      - "6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  backend:
+    build:
+      context: .
+    container_name: verifyai-backend
+    restart: unless-stopped
+    environment:
+      SECRET_KEY: dev-secret-change-me
+      DEBUG: "True"
+      ALLOWED_HOSTS: "localhost,127.0.0.1,backend"
+      DB_ENGINE: django.db.backends.mysql
+      DB_NAME: verifyai
+      DB_USER: verifyai
+      DB_PASSWORD: verifyai
+      DB_HOST: db
+      DB_PORT: "3306"
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_TASK_ALWAYS_EAGER: "False"
+      CORS_ALLOWED_ORIGINS: "http://localhost:5173,http://localhost:5174,http://localhost:3000"
+      FRONTEND_URL: http://localhost:5174
+      EMAIL_BACKEND: django.core.mail.backends.console.EmailBackend
+    ports:
+      - "8001:8000"
+    volumes:
+      - .:/app
+      - hf_cache:/root/.cache/huggingface
+      - nltk_data:/root/nltk_data
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: sh -c "python manage.py migrate --noinput && python manage.py runserver 0.0.0.0:8000"
+
+  celery:
+    build:
+      context: .
+    container_name: verifyai-celery
+    restart: unless-stopped
+    environment:
+      SECRET_KEY: dev-secret-change-me
+      DEBUG: "True"
+      DB_ENGINE: django.db.backends.mysql
+      DB_NAME: verifyai
+      DB_USER: verifyai
+      DB_PASSWORD: verifyai
+      DB_HOST: db
+      DB_PORT: "3306"
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_TASK_ALWAYS_EAGER: "False"
+    volumes:
+      - .:/app
+      - hf_cache:/root/.cache/huggingface
+      - nltk_data:/root/nltk_data
+    depends_on:
+      backend:
+        condition: service_started
+      redis:
+        condition: service_healthy
+    command: celery -A config worker -l info
+
+volumes:
+  db_data:
+  redis_data:
+  hf_cache:
+  nltk_data:
