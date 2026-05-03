@@ -595,6 +595,12 @@ This is expected. For faster training, use a GPU-enabled machine and install `to
 
 ---
 
+## Standards & References
+
+VerifyAI's methodology is informed by international fact-checking codes (IFCN, EFCSN), content-provenance specifications (C2PA), journalism trust frameworks (JTI, NewsGuard), and EU regulation (DSA). See [STANDARDS.md](STANDARDS.md) for the full list of organisations, codes, and academic benchmarks the project aligns with.
+
+---
+
 ## License
 
 This project is developed for educational and research purposes.
