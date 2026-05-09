@@ -68,6 +68,7 @@ export const usersAPI = {
   deleteAPIKey: (id) => api.delete(`/users/me/apikeys/${id}`),
   // Admin
   listUsers: (params) => api.get('/users', { params }),
+  createUser: (data) => api.post('/users/create', data),
   updateUserRole: (userId, role) => api.put(`/users/${userId}/role`, { role }),
   deactivateUser: (userId) => api.delete(`/users/${userId}`),
 };
@@ -104,6 +105,14 @@ export const alertsAPI = {
   updateSettings: (data) => api.put('/alerts/settings', data),
 };
 
+// ─── Organization (Government + Admin) ───────────────────────────────
+export const orgAPI = {
+  listMembers: (params) => api.get('/org/members', { params }),
+  createMember: (data) => api.post('/org/members/create', data),
+  updateMemberRole: (userId, role) => api.put(`/org/members/${userId}/role`, { role }),
+  deactivateMember: (userId) => api.delete(`/org/members/${userId}`),
+};
+
 // ─── Analytics ────────────────────────────────────────────────────────
 export const analyticsAPI = {
   getSummary: (params) => api.get('/analytics/summary', { params }),
@@ -112,6 +121,10 @@ export const analyticsAPI = {
   getKeywords: () => api.get('/analytics/keywords'),
   getTopics: () => api.get('/analytics/topics'),
   getPlatformStats: () => api.get('/analytics/platform-stats'),
+  // Org-scoped (Government / Admin)
+  getOrgSummary: () => api.get('/analytics/org-summary'),
+  getOrgFeed: () => api.get('/analytics/org-feed'),
+  orgAlertAction: (alertId, action) => api.put(`/analytics/org-alert/${alertId}`, { action }),
 };
 
 // ─── Reports ──────────────────────────────────────────────────────────

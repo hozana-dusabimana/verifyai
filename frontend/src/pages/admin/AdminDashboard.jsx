@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
-import { useLocation, useNavigate, Routes, Route } from 'react-router-dom';
-import { Activity, Users, Database, FileText, CheckCircle, Search, Upload, AlertTriangle, RefreshCw, Brain, Cpu, BarChart3, Zap } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { useLocation, Routes, Route } from 'react-router-dom';
+import { Activity, Users, Database, FileText, CheckCircle, Search, Upload, AlertTriangle, RefreshCw, Brain, Cpu, BarChart3, Zap, UserPlus } from 'lucide-react';
 import { adminAPI, usersAPI } from '../../services/api';
+import Modal from '../../components/Modal';
 
 // ─── System Health ─────────────────────────────────────────────────
 function HealthPanel() {
@@ -66,26 +67,140 @@ function HealthPanel() {
 }
 
 // ─── User Management ───────────────────────────────────────────────
+const ROLE_BADGES = {
+  admin:      'bg-purple-100 text-purple-800 border-purple-200',
+  government: 'bg-blue-100   text-blue-800   border-blue-200',
+  journalist: 'bg-amber-100  text-amber-800  border-amber-200',
+  citizen:    'bg-slate-100  text-slate-700  border-slate-200',
+};
+
+function CreateUserModal({ open, onClose, onCreated }) {
+  const [form, setForm] = useState({
+    first_name: '', last_name: '', email: '',
+    organization: '', role: 'government', password: '',
+  });
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleChange = (e) => setForm((p) => ({ ...p, [e.target.name]: e.target.value }));
+
+  const submit = async (e) => {
+    e.preventDefault();
+    if (form.password.length < 8) {
+      setError('Password must be at least 8 characters.');
+      return;
+    }
+    setError('');
+    setSubmitting(true);
+    try {
+      const res = await usersAPI.createUser(form);
+      onCreated(res.data.data);
+      onClose();
+    } catch (err) {
+      const data = err.response?.data?.error;
+      if (typeof data === 'object') {
+        setError(Object.entries(data).map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : v}`).join(' | '));
+      } else {
+        setError(data || 'Failed to create user.');
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <Modal
+      open={open}
+      onClose={onClose}
+      icon={UserPlus}
+      title="Create user"
+      subtitle="Provision an account with any role, including Government and Admin."
+    >
+      <form onSubmit={submit} className="p-6 space-y-4">
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-xl text-sm font-medium">{error}</div>
+          )}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-bold text-slate-600 mb-1 block">First name</label>
+              <input name="first_name" required value={form.first_name} onChange={handleChange}
+                className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none" />
+            </div>
+            <div>
+              <label className="text-xs font-bold text-slate-600 mb-1 block">Last name</label>
+              <input name="last_name" required value={form.last_name} onChange={handleChange}
+                className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none" />
+            </div>
+          </div>
+          <div>
+            <label className="text-xs font-bold text-slate-600 mb-1 block">Email</label>
+            <input name="email" type="email" required value={form.email} onChange={handleChange}
+              className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none" />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-bold text-slate-600 mb-1 block">Role</label>
+              <select name="role" value={form.role} onChange={handleChange}
+                className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm font-medium capitalize focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none bg-white">
+                <option value="citizen">Citizen</option>
+                <option value="journalist">Journalist</option>
+                <option value="government">Government</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-xs font-bold text-slate-600 mb-1 block">
+                Organization {(form.role === 'government' || form.role === 'journalist') && <span className="text-red-500">*</span>}
+              </label>
+              <input name="organization" value={form.organization} onChange={handleChange}
+                required={form.role === 'government' || form.role === 'journalist'}
+                className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none" />
+            </div>
+          </div>
+          <div>
+            <label className="text-xs font-bold text-slate-600 mb-1 block">Initial password (8+ chars)</label>
+            <input name="password" type="text" required minLength={8} value={form.password} onChange={handleChange}
+              className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm font-mono focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none" />
+            <p className="text-[11px] text-slate-500 mt-1">Share this with the user. They can change it after first login.</p>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+            <button type="button" onClick={onClose} className="px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-100 rounded-lg">Cancel</button>
+            <button type="submit" disabled={submitting}
+              className="px-4 py-2 text-sm font-bold text-white bg-brand-600 hover:bg-brand-700 rounded-lg shadow-sm disabled:opacity-50 inline-flex items-center gap-2">
+              {submitting ? 'Creating…' : <>Create user <UserPlus className="w-4 h-4" /></>}
+            </button>
+          </div>
+        </form>
+    </Modal>
+  );
+}
+
 function UsersPanel() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [showCreate, setShowCreate] = useState(false);
 
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async (term) => {
     setLoading(true);
     try {
-      const res = await usersAPI.listUsers({ search });
-      setUsers(res.data.data?.results || res.data.data || []);
-    } catch { setUsers([]); }
-    finally { setLoading(false); }
-  };
+      const res = await usersAPI.listUsers({ search: term });
+      const data = res.data?.data;
+      setUsers(Array.isArray(data) ? data : (data?.results || []));
+    } catch {
+      setUsers([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-  useEffect(() => { fetchUsers(); }, []);
+  useEffect(() => { fetchUsers(''); }, [fetchUsers]);
 
   const handleRoleChange = async (userId, role) => {
     try {
       await usersAPI.updateUserRole(userId, role);
-      setUsers(prev => prev.map(u => u.id === userId ? { ...u, role } : u));
+      setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, role } : u)));
     } catch { /* ignore */ }
   };
 
@@ -93,45 +208,102 @@ function UsersPanel() {
     if (!confirm('Deactivate this user?')) return;
     try {
       await usersAPI.deactivateUser(userId);
-      setUsers(prev => prev.map(u => u.id === userId ? { ...u, is_active: false } : u));
+      setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, is_active: false } : u)));
     } catch { /* ignore */ }
   };
 
+  const counts = users.reduce((acc, u) => {
+    acc[u.role] = (acc[u.role] || 0) + 1;
+    return acc;
+  }, {});
+
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-extrabold text-slate-900">User Management</h2>
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+        <div>
+          <h2 className="text-2xl font-extrabold text-slate-900">User Management</h2>
+          <p className="text-sm text-slate-500 mt-0.5">Provision and manage all platform accounts.</p>
+        </div>
+        <button onClick={() => setShowCreate(true)}
+          className="inline-flex items-center gap-2 px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl font-bold shadow-md hover:shadow-lg transition-all w-fit">
+          <UserPlus className="w-4 h-4" /> Create user
+        </button>
+      </div>
 
-      <form onSubmit={(e) => { e.preventDefault(); fetchUsers(); }} className="relative max-w-md">
+      {/* Role distribution chips */}
+      {!loading && users.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {['admin', 'government', 'journalist', 'citizen'].map((r) => (
+            <span key={r} className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border capitalize ${ROLE_BADGES[r]}`}>
+              {r} <span className="ml-1.5 px-1.5 rounded bg-white/60 tabular-nums">{counts[r] || 0}</span>
+            </span>
+          ))}
+          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border bg-white text-slate-700 border-slate-200">
+            Total <span className="ml-1.5 px-1.5 rounded bg-slate-100 tabular-nums">{users.length}</span>
+          </span>
+        </div>
+      )}
+
+      <form onSubmit={(e) => { e.preventDefault(); fetchUsers(search); }} className="relative max-w-md">
         <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-        <input type="text" placeholder="Search users..." className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 text-sm"
+        <input type="text" placeholder="Search by name, email, or organization…"
+          className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
           value={search} onChange={(e) => setSearch(e.target.value)} />
       </form>
 
       {loading ? (
-        <div className="flex justify-center py-16"><div className="animate-spin rounded-full h-8 w-8 border-2 border-brand-500 border-t-transparent" /></div>
+        <div className="flex justify-center py-16">
+          <div className="animate-spin rounded-full h-8 w-8 border-2 border-brand-500 border-t-transparent" />
+        </div>
+      ) : users.length === 0 ? (
+        <div className="glass rounded-2xl py-16 px-6 text-center">
+          <Users className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+          <p className="text-sm font-bold text-slate-800">No users found</p>
+          <p className="text-xs text-slate-500 mt-1 mb-4">
+            {search ? 'Try a different search term.' : 'Create the first user to get started.'}
+          </p>
+          {!search && (
+            <button onClick={() => setShowCreate(true)}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-sm font-bold">
+              <UserPlus className="w-4 h-4" /> Create user
+            </button>
+          )}
+        </div>
       ) : (
         <div className="glass rounded-2xl shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-slate-200">
               <thead className="bg-slate-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">User</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Role</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Joined</th>
-                  <th className="px-6 py-3 text-right text-xs font-semibold text-slate-500 uppercase">Actions</th>
+                  <th className="px-6 py-3 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">User</th>
+                  <th className="px-6 py-3 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">Organization</th>
+                  <th className="px-6 py-3 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">Role</th>
+                  <th className="px-6 py-3 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">Joined</th>
+                  <th className="px-6 py-3 text-right text-[11px] font-bold text-slate-500 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 bg-white">
                 {users.map((u) => (
-                  <tr key={u.id} className="hover:bg-slate-50/50">
+                  <tr key={u.id} className="hover:bg-slate-50/60 transition-colors">
                     <td className="px-6 py-4">
-                      <p className="text-sm font-bold text-slate-900">{u.full_name || u.email}</p>
-                      <p className="text-xs text-slate-500">{u.email}</p>
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-full bg-brand-100 flex items-center justify-center text-brand-700 font-bold text-sm flex-shrink-0">
+                          {(u.first_name?.[0] || u.email[0] || '?').toUpperCase()}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-bold text-slate-900 truncate">{u.full_name?.trim() || u.email}</p>
+                          <p className="text-xs text-slate-500 truncate">{u.email}</p>
+                        </div>
+                      </div>
                     </td>
+                    <td className="px-6 py-4 text-sm text-slate-700 max-w-[200px] truncate">{u.organization || '—'}</td>
                     <td className="px-6 py-4">
-                      <select className="rounded-lg border border-slate-300 py-1 px-2 text-xs font-bold capitalize"
-                        value={u.role} onChange={(e) => handleRoleChange(u.id, e.target.value)}>
+                      <select
+                        className={`rounded-lg border py-1 px-2 text-xs font-bold capitalize ${ROLE_BADGES[u.role] || 'border-slate-300'}`}
+                        value={u.role}
+                        onChange={(e) => handleRoleChange(u.id, e.target.value)}
+                      >
                         <option value="citizen">Citizen</option>
                         <option value="journalist">Journalist</option>
                         <option value="government">Government</option>
@@ -139,14 +311,20 @@ function UsersPanel() {
                       </select>
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`px-2 py-1 rounded-full text-xs font-bold ${u.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+                      <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-bold border ${u.is_active ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-red-50 text-red-700 border-red-200'}`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${u.is_active ? 'bg-emerald-500' : 'bg-red-500'}`} />
                         {u.is_active ? 'Active' : 'Inactive'}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-sm text-slate-500">{new Date(u.created_at).toLocaleDateString()}</td>
+                    <td className="px-6 py-4 text-sm text-slate-500 tabular-nums">{new Date(u.created_at).toLocaleDateString()}</td>
                     <td className="px-6 py-4 text-right">
                       {u.is_active && (
-                        <button onClick={() => handleDeactivate(u.id)} className="text-xs font-bold text-red-600 hover:text-red-700">Deactivate</button>
+                        <button
+                          onClick={() => handleDeactivate(u.id)}
+                          className="text-xs font-bold text-red-600 hover:text-red-700 px-2 py-1 rounded hover:bg-red-50"
+                        >
+                          Deactivate
+                        </button>
                       )}
                     </td>
                   </tr>
@@ -154,9 +332,14 @@ function UsersPanel() {
               </tbody>
             </table>
           </div>
-          {users.length === 0 && <p className="text-center text-slate-400 py-8 text-sm">No users found.</p>}
         </div>
       )}
+
+      <CreateUserModal
+        open={showCreate}
+        onClose={() => setShowCreate(false)}
+        onCreated={(newUser) => setUsers((prev) => [newUser, ...prev])}
+      />
     </div>
   );
 }

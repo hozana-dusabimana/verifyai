@@ -1,14 +1,21 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { ShieldCheck, LayoutDashboard, Search, History, BarChart2, Bell, Settings, User, LogOut, Menu, X, Shield, Activity, Users, Database, FileText, Brain } from 'lucide-react';
+import { ShieldCheck, LayoutDashboard, Search, History, BarChart2, Bell, Settings, User, LogOut, Menu, X, Shield, Activity, Users, Database, FileText, Brain, Building2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 const DashboardLayout = ({ children }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [lastPath, setLastPath] = useState('');
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+
+  // Close mobile sidebar on route change (compute during render — no effect needed)
+  if (location.pathname !== lastPath) {
+    setLastPath(location.pathname);
+    if (isMobileOpen) setIsMobileOpen(false);
+  }
 
   const handleLogout = async () => {
     await logout();
@@ -17,6 +24,7 @@ const DashboardLayout = ({ children }) => {
 
   const displayName = user ? (user.full_name || user.first_name || user.email) : 'User';
   const isAdmin = user?.role === 'admin' || user?.is_superuser;
+  const isGovernment = user?.role === 'government';
 
   const baseLinks = [
     { name: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard className="w-5 h-5 flex-shrink-0" /> },
@@ -35,17 +43,27 @@ const DashboardLayout = ({ children }) => {
     { name: 'ML Models', path: '/admin/models', icon: <Brain className="w-5 h-5 flex-shrink-0" /> },
   ];
 
+  const orgManagerLink = {
+    name: 'Org Members',
+    path: '/org/members',
+    icon: <Building2 className="w-5 h-5 flex-shrink-0 text-blue-600" />,
+  };
+
   const isAdminRoute = location.pathname.startsWith('/admin');
 
-  const navLinks = isAdminRoute
-    ? [...adminLinks, { name: 'Exit Admin', path: '/dashboard', icon: <Shield className="w-5 h-5 flex-shrink-0 text-slate-400" /> }]
-    : isAdmin
-      ? [...baseLinks, { name: 'Admin Console', path: '/admin/health', icon: <Shield className="w-5 h-5 flex-shrink-0 text-red-500" /> }]
-      : baseLinks;
-
-  useEffect(() => {
-    setIsMobileOpen(false);
-  }, [location.pathname]);
+  let navLinks;
+  if (isAdminRoute) {
+    navLinks = [...adminLinks, { name: 'Exit Admin', path: '/dashboard', icon: <Shield className="w-5 h-5 flex-shrink-0 text-slate-400" /> }];
+  } else {
+    navLinks = [...baseLinks];
+    // Government users get an Org Members entry between Alerts and Settings
+    if (isGovernment) {
+      navLinks.splice(navLinks.length - 1, 0, orgManagerLink);
+    }
+    if (isAdmin) {
+      navLinks.push({ name: 'Admin Console', path: '/admin/health', icon: <Shield className="w-5 h-5 flex-shrink-0 text-red-500" /> });
+    }
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 flex overflow-hidden">

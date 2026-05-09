@@ -1,6 +1,7 @@
 from collections import Counter
 from datetime import timedelta
 
+from django.contrib.auth import get_user_model
 from django.db.models import Avg, Count, Q
 from django.db.models.functions import TruncDate
 from django.utils import timezone
@@ -16,6 +17,15 @@ from analysis.models import AnalysisResult
 from alerts.models import Alert
 from .models import Report
 from .serializers import ReportSerializer, ReportGenerateSerializer
+
+User = get_user_model()
+
+
+def _org_users_qs(user):
+    """Users in caller's organization. Falls back to caller alone when org is empty."""
+    if not user.organization:
+        return User.objects.filter(id=user.id)
+    return User.objects.filter(organization__iexact=user.organization)
 
 
 def _success(data=None, status_code=status.HTTP_200_OK, meta=None):
@@ -249,3 +259,165 @@ class PlatformStatsView(APIView):
             'detection_accuracy': accuracy,
             'average_analysis_time': 2.1,
         })
+
+
+# ─── Org-scoped (Government / Admin) ──────────────────────────────────
+
+class OrgSummaryView(APIView):
+    """Aggregate stats across all users sharing the caller's organization."""
+    required_permission = 'view_org_analyses'
+    permission_classes = [IsAuthenticated, HasRolePermission]
+
+    def get(self, request):
+        org_users = _org_users_qs(request.user)
+        results = AnalysisResult.objects.filter(
+            article__user__in=org_users,
+            status=AnalysisResult.Status.COMPLETED,
+        )
+        stats = results.aggregate(
+            total=Count('id'),
+            avg_credibility=Avg('credibility_score'),
+            fake=Count('id', filter=Q(classification='FAKE')),
+            real=Count('id', filter=Q(classification='REAL')),
+            uncertain=Count('id', filter=Q(classification='UNCERTAIN')),
+        )
+
+        open_alerts = Alert.objects.filter(
+            user__in=org_users, status__in=['open', 'escalated'],
+        ).count()
+
+        thirty_ago = timezone.now() - timedelta(days=30)
+        active_users = AnalysisResult.objects.filter(
+            article__user__in=org_users,
+            created_at__gte=thirty_ago,
+        ).values('article__user').distinct().count()
+
+        return _success({
+            'organization': request.user.organization or '(personal)',
+            'org_total': stats['total'],
+            'org_average_credibility': round(stats['avg_credibility'] or 0, 2),
+            'org_fake_count': stats['fake'],
+            'org_real_count': stats['real'],
+            'org_uncertain_count': stats['uncertain'],
+            'open_alerts': open_alerts,
+            'active_users': active_users,
+        })
+
+
+class OrgFeedView(APIView):
+    """Bundled org feed: escalation queue, top FAKE sources, topic mix, 30-day fake heatmap."""
+    required_permission = 'view_org_analyses'
+    permission_classes = [IsAuthenticated, HasRolePermission]
+
+    def get(self, request):
+        org_users = _org_users_qs(request.user)
+        thirty_ago = timezone.now() - timedelta(days=30)
+
+        escalation_alerts = Alert.objects.select_related(
+            'analysis_result', 'analysis_result__article', 'user',
+        ).filter(
+            user__in=org_users,
+            status__in=['open', 'escalated'],
+        ).order_by('-created_at')[:20]
+
+        escalation_queue = []
+        for a in escalation_alerts:
+            article = a.analysis_result.article
+            escalation_queue.append({
+                'alert_id': str(a.id),
+                'analysis_id': str(a.analysis_result.id),
+                'title': article.title or 'Untitled',
+                'source_name': article.source_name or '-',
+                'submitted_by': a.user.full_name or a.user.email,
+                'severity': a.severity,
+                'status': a.status,
+                'credibility_score': a.analysis_result.credibility_score,
+                'classification': a.analysis_result.classification,
+                'created_at': a.created_at.isoformat(),
+            })
+
+        source_rows = AnalysisResult.objects.filter(
+            article__user__in=org_users,
+            classification='FAKE',
+            created_at__gte=thirty_ago,
+        ).exclude(article__source_name='').values(
+            'article__source_name',
+        ).annotate(
+            fake_count=Count('id'),
+            avg_credibility=Avg('credibility_score'),
+        ).order_by('-fake_count')[:10]
+
+        top_sources_by_fake = [
+            {
+                'source_name': r['article__source_name'],
+                'fake_count': r['fake_count'],
+                'average_credibility': round(r['avg_credibility'] or 0, 2),
+            }
+            for r in source_rows
+        ]
+
+        recent_results = AnalysisResult.objects.filter(
+            article__user__in=org_users,
+            status=AnalysisResult.Status.COMPLETED,
+            created_at__gte=thirty_ago,
+        ).select_related('article')[:1000]
+
+        topic_counter = Counter()
+        topics = ['politics', 'health', 'science', 'technology', 'economy',
+                  'sports', 'entertainment', 'climate', 'education', 'security']
+        for r in recent_results:
+            t = (r.article.title or '').lower()
+            for kw in topics:
+                if kw in t:
+                    topic_counter[kw] += 1
+
+        topic_distribution = [
+            {'topic': t, 'count': c} for t, c in topic_counter.most_common(10)
+        ]
+
+        heatmap_rows = AnalysisResult.objects.filter(
+            article__user__in=org_users,
+            classification='FAKE',
+            created_at__gte=thirty_ago,
+        ).annotate(date=TruncDate('created_at')).values('date').annotate(
+            fake_count=Count('id'),
+        ).order_by('date')
+
+        heatmap = [
+            {'date': r['date'].isoformat(), 'fake_count': r['fake_count']}
+            for r in heatmap_rows
+        ]
+
+        return _success({
+            'escalation_queue': escalation_queue,
+            'top_sources_by_fake': top_sources_by_fake,
+            'topic_distribution': topic_distribution,
+            'heatmap': heatmap,
+        })
+
+
+class OrgAlertActionView(APIView):
+    """Resolve or escalate any alert in caller's organization."""
+    required_permission = 'view_org_analyses'
+    permission_classes = [IsAuthenticated, HasRolePermission]
+
+    def put(self, request, alert_id):
+        action = request.data.get('action')
+        if action not in ('resolve', 'escalate'):
+            return _error("action must be 'resolve' or 'escalate'.")
+
+        org_users = _org_users_qs(request.user)
+        try:
+            alert = Alert.objects.get(id=alert_id, user__in=org_users)
+        except Alert.DoesNotExist:
+            return _error('Alert not found in your organization.', status.HTTP_404_NOT_FOUND)
+
+        if action == 'resolve':
+            alert.status = Alert.Status.RESOLVED
+            alert.resolved_at = timezone.now()
+            alert.save(update_fields=['status', 'resolved_at', 'updated_at'])
+        else:
+            alert.status = Alert.Status.ESCALATED
+            alert.save(update_fields=['status', 'updated_at'])
+
+        return _success({'detail': f'Alert {action}d.'})

@@ -1,116 +1,318 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, ArrowRight } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Link, Navigate, useNavigate, useLocation } from 'react-router-dom';
+import {
+  Mail, Lock, ArrowRight, Eye, EyeOff, ShieldCheck, AlertCircle,
+  CheckCircle2, KeyRound, Sparkles, Building2, Newspaper, Users,
+  ChevronDown, Award,
+} from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+
+const FEATURES = [
+  { icon: Sparkles, title: 'Three-model ensemble', body: 'Naive Bayes, LSTM and DistilBERT scored together for robust verdicts.' },
+  { icon: ShieldCheck, title: 'Explainable results', body: 'Every classification ships with the keywords, signals, and reasons behind it.' },
+  { icon: Award, title: 'Standards-aligned', body: 'Designed against IFCN, C2PA, JTI and DSA reference frameworks.' },
+];
+
+const DEMO_ACCOUNTS = [
+  { role: 'Admin',      email: 'admin@verifyai.demo',      password: 'AdminDemo!2026',  icon: ShieldCheck, accent: 'bg-purple-100 text-purple-700' },
+  { role: 'Government', email: 'gov@verifyai.demo',         password: 'GovDemo!2026',     icon: Building2,   accent: 'bg-blue-100 text-blue-700' },
+  { role: 'Journalist', email: 'journalist@verifyai.demo',  password: 'JournoDemo!2026',  icon: Newspaper,   accent: 'bg-amber-100 text-amber-700' },
+  { role: 'Citizen',    email: 'citizen@verifyai.demo',     password: 'CitizenDemo!2026', icon: Users,       accent: 'bg-slate-100 text-slate-700' },
+];
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [errorKind, setErrorKind] = useState('error'); // 'error' | 'lockout' | 'network'
+  const [info, setInfo] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showDemo, setShowDemo] = useState(false);
+
   const navigate = useNavigate();
+  const location = useLocation();
   const { login, user } = useAuth();
 
-  // Redirect if already logged in
-  if (user) {
-    navigate('/dashboard', { replace: true });
-    return null;
-  }
+  // Read flash message from registration redirect
+  useEffect(() => {
+    if (location.state?.message) {
+      setInfo(location.state.message);
+      // Clear the state so the message doesn't persist on refresh
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
+
+  // Redirect if already logged in (idiomatic, no flash)
+  if (user) return <Navigate to="/dashboard" replace />;
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
+    setErrorKind('error');
     setLoading(true);
     try {
       await login(email, password);
       navigate('/dashboard');
     } catch (err) {
+      const status = err.response?.status;
       const msg = err.response?.data?.error;
-      setError(typeof msg === 'string' ? msg : 'Invalid credentials.');
+      if (!err.response) {
+        setError('Cannot reach the server. Check your connection and try again.');
+        setErrorKind('network');
+      } else if (status === 403 && typeof msg === 'string' && msg.toLowerCase().includes('locked')) {
+        setError('Account temporarily locked after multiple failed attempts. Try again in 30 minutes or reset your password.');
+        setErrorKind('lockout');
+      } else {
+        setError(typeof msg === 'string' ? msg : 'Invalid email or password.');
+        setErrorKind('error');
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  return (
-    <div className="min-h-[calc(100vh-8rem)] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full glass p-10 rounded-3xl relative overflow-hidden shadow-2xl">
-        <div className="absolute -top-24 -right-24 w-48 h-48 bg-brand-400 rounded-full blur-[80px] opacity-40"></div>
-        <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-blue-400 rounded-full blur-[80px] opacity-40"></div>
+  const fillDemo = (acct) => {
+    setEmail(acct.email);
+    setPassword(acct.password);
+    setShowDemo(false);
+    setError('');
+  };
 
-        <div className="relative z-10">
-          <div className="text-center">
-            <h2 className="mt-2 text-3xl font-extrabold text-slate-900 tracking-tight">Welcome back</h2>
-            <p className="mt-2 text-sm text-slate-500 font-medium">Access your VerifyAI dashboard</p>
+  const inputCls =
+    'block w-full px-3 py-3 pl-10 border border-slate-300 rounded-xl text-slate-900 placeholder-slate-400 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-shadow shadow-sm';
+
+  return (
+    <div className="min-h-[calc(100vh-8rem)] flex lg:flex-row-reverse items-stretch -my-8 -mx-4 sm:-mx-6 lg:-mx-8">
+      {/* ─── Right (visually): Form card ──────────────────────── */}
+      <div className="flex-1 flex items-center justify-center px-4 sm:px-8 lg:px-16 py-12 bg-slate-50/40">
+        <div className="w-full max-w-md">
+          <div className="mb-8">
+            <p className="text-xs font-bold uppercase tracking-widest text-brand-600 mb-2">Sign in</p>
+            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Welcome back</h1>
+            <p className="text-sm text-slate-500 mt-1.5 font-medium">
+              Sign in to continue verifying content with VerifyAI.
+            </p>
           </div>
 
-          <form className="mt-8 space-y-6" onSubmit={handleLogin}>
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm font-medium">
-                {error}
+          <form onSubmit={handleLogin} className="space-y-4">
+            {info && (
+              <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-xl text-sm font-medium flex items-start gap-2">
+                <CheckCircle2 className="w-4 h-4 flex-shrink-0 mt-0.5 text-emerald-600" />
+                <span>{info}</span>
               </div>
             )}
-            <div className="flex flex-col gap-4">
+            {error && (
+              <div
+                className={`px-4 py-3 rounded-xl text-sm font-medium flex items-start gap-2 border ${
+                  errorKind === 'lockout'
+                    ? 'bg-amber-50 border-amber-200 text-amber-900'
+                    : errorKind === 'network'
+                      ? 'bg-slate-50 border-slate-200 text-slate-700'
+                      : 'bg-red-50 border-red-200 text-red-700'
+                }`}
+              >
+                <AlertCircle
+                  className={`w-4 h-4 flex-shrink-0 mt-0.5 ${
+                    errorKind === 'lockout' ? 'text-amber-600' : errorKind === 'network' ? 'text-slate-500' : 'text-red-600'
+                  }`}
+                />
+                <span>{error}</span>
+              </div>
+            )}
+
+            <div>
+              <label htmlFor="email" className="block text-xs font-bold text-slate-700 mb-1.5">
+                Email
+              </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-slate-400" />
+                  <Mail className="h-4 w-4 text-slate-400" />
                 </div>
                 <input
+                  id="email"
                   type="email"
                   autoComplete="email"
                   required
-                  className="appearance-none rounded-xl relative block w-full px-3 py-3.5 pl-10 border border-slate-300 placeholder-slate-400 text-slate-900 focus:outline-none focus:ring-brand-500 focus:border-brand-500 sm:text-sm bg-white/50 backdrop-blur-sm shadow-sm"
-                  placeholder="Email address"
+                  className={inputCls}
+                  placeholder="you@organization.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />
               </div>
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label htmlFor="password" className="block text-xs font-bold text-slate-700">
+                  Password
+                </label>
+                <Link to="/forgot-password" className="text-xs font-semibold text-brand-600 hover:text-brand-700">
+                  Forgot password?
+                </Link>
+              </div>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-slate-400" />
+                  <Lock className="h-4 w-4 text-slate-400" />
                 </div>
                 <input
-                  type="password"
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
                   autoComplete="current-password"
                   required
-                  className="appearance-none rounded-xl relative block w-full px-3 py-3.5 pl-10 border border-slate-300 placeholder-slate-400 text-slate-900 focus:outline-none focus:ring-brand-500 focus:border-brand-500 sm:text-sm bg-white/50 backdrop-blur-sm shadow-sm"
-                  placeholder="Password"
+                  className={`${inputCls} pr-10`}
+                  placeholder="Enter your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
+                <button
+                  type="button"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600"
+                  onClick={() => setShowPassword((s) => !s)}
+                  tabIndex={-1}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
               </div>
             </div>
 
-            <div className="flex items-center justify-between mt-4">
-              <div className="flex items-center">
-                <input type="checkbox" id="remember-me" className="h-4 w-4 text-brand-600 focus:ring-brand-500 border-slate-300 rounded cursor-pointer" />
-                <label htmlFor="remember-me" className="ml-2 block text-sm text-slate-600 font-medium cursor-pointer">Remember me</label>
-              </div>
-              <Link to="/forgot-password" className="text-sm font-medium text-brand-600 hover:text-brand-500 transition-colors">
-                Forgot password?
-              </Link>
+            <div className="flex items-center pt-1">
+              <input
+                type="checkbox"
+                id="remember-me"
+                className="h-4 w-4 text-brand-600 focus:ring-brand-500 border-slate-300 rounded cursor-pointer"
+              />
+              <label htmlFor="remember-me" className="ml-2 block text-sm text-slate-600 font-medium cursor-pointer">
+                Keep me signed in
+              </label>
             </div>
 
             <button
               type="submit"
-              disabled={loading}
-              className="group relative w-full flex justify-center py-3.5 px-4 border border-transparent text-sm font-bold rounded-xl text-white bg-brand-600 hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 shadow-md hover:shadow-lg transition-all items-center gap-2 disabled:opacity-50"
+              disabled={loading || !email || !password}
+              className="group w-full flex justify-center items-center gap-2 py-3 px-4 mt-2 text-sm font-bold rounded-xl text-white bg-brand-600 hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
-                <span className="flex items-center gap-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/20 border-t-white" />
-                  Signing in...
-                </span>
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/30 border-t-white" />
+                  Signing in…
+                </>
               ) : (
-                <>Sign in <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" /></>
+                <>
+                  Sign in <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
+                </>
               )}
             </button>
           </form>
 
+          {/* Demo accounts — capstone evaluation aid */}
+          <div className="mt-6">
+            <button
+              type="button"
+              onClick={() => setShowDemo((s) => !s)}
+              className="w-full flex items-center justify-between px-4 py-2.5 rounded-xl border border-dashed border-slate-300 text-xs font-bold text-slate-600 hover:bg-slate-50 hover:border-slate-400 transition-colors"
+            >
+              <span className="inline-flex items-center gap-2">
+                <KeyRound className="w-3.5 h-3.5" /> Demo accounts for evaluation
+              </span>
+              <ChevronDown className={`w-4 h-4 transition-transform ${showDemo ? 'rotate-180' : ''}`} />
+            </button>
+
+            {showDemo && (
+              <div className="mt-3 p-4 bg-slate-50/80 border border-slate-200 rounded-xl space-y-2">
+                <p className="text-[11px] text-slate-500 font-medium mb-2">
+                  Click any account to fill the form. Created automatically by the seed command.
+                </p>
+                {DEMO_ACCOUNTS.map((a) => {
+                  const Icon = a.icon;
+                  return (
+                    <button
+                      key={a.email}
+                      type="button"
+                      onClick={() => fillDemo(a)}
+                      className="w-full flex items-center gap-3 p-2.5 rounded-lg bg-white border border-slate-200 hover:border-brand-300 hover:shadow-sm transition-all text-left group"
+                    >
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${a.accent}`}>
+                        <Icon className="w-4 h-4" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-bold text-slate-800">{a.role}</p>
+                        <p className="text-[11px] text-slate-500 truncate font-mono">{a.email}</p>
+                      </div>
+                      <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-brand-600 group-hover:translate-x-0.5 transition-all" />
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
           <p className="mt-8 text-center text-sm text-slate-500 font-medium">
             New to VerifyAI?{' '}
-            <Link to="/register" className="font-bold text-brand-600 hover:text-brand-500 transition-colors">Create an account</Link>
+            <Link to="/register" className="font-bold text-brand-600 hover:text-brand-700 transition-colors">
+              Create an account
+            </Link>
           </p>
+        </div>
+      </div>
+
+      {/* ─── Left (visually): Brand panel (hidden on small screens) ── */}
+      <div className="hidden lg:flex lg:w-[42%] xl:w-[38%] flex-col justify-between p-12 relative overflow-hidden text-white bg-gradient-to-br from-brand-600 via-brand-700 to-brand-800">
+        {/* Subtle decorative glows that pick up the brand palette */}
+        <div className="absolute top-0 right-0 w-[28rem] h-[28rem] bg-brand-300/30 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-[24rem] h-[24rem] bg-brand-400/25 rounded-full blur-[110px] pointer-events-none" />
+        {/* Faint grid pattern overlay for texture */}
+        <div
+          className="absolute inset-0 opacity-[0.06] pointer-events-none"
+          style={{
+            backgroundImage:
+              'linear-gradient(white 1px, transparent 1px), linear-gradient(90deg, white 1px, transparent 1px)',
+            backgroundSize: '32px 32px',
+          }}
+        />
+
+        <div className="relative z-10">
+          <div className="flex items-center gap-2 mb-12">
+            <ShieldCheck className="w-7 h-7 text-white" />
+            <span className="text-xl font-extrabold tracking-tight">VerifyAI</span>
+          </div>
+
+          <h2 className="text-3xl xl:text-4xl font-extrabold leading-tight tracking-tight">
+            Verify what you read.<br />
+            <span className="text-brand-100">Trust what you share.</span>
+          </h2>
+          <p className="text-brand-50/85 text-base mt-4 leading-relaxed max-w-md">
+            AI-powered fact verification built for citizens, newsrooms, and governments.
+          </p>
+
+          <ul className="mt-12 space-y-5 max-w-md">
+            {FEATURES.map((f) => {
+              const Icon = f.icon;
+              return (
+                <li key={f.title} className="flex items-start gap-3.5">
+                  <div className="w-9 h-9 rounded-xl bg-white/15 border border-white/25 flex items-center justify-center flex-shrink-0 backdrop-blur-sm">
+                    <Icon className="w-4 h-4 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-white">{f.title}</p>
+                    <p className="text-xs text-brand-50/80 mt-0.5 leading-relaxed">{f.body}</p>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+
+        <div className="relative z-10 pt-8 border-t border-white/15">
+          <p className="text-[11px] uppercase tracking-widest text-brand-100/80 font-bold mb-2">Aligned with</p>
+          <div className="flex flex-wrap gap-2">
+            {['IFCN', 'C2PA', 'JTI', 'DSA'].map((s) => (
+              <span key={s} className="text-[11px] font-bold text-white bg-white/10 border border-white/20 px-2.5 py-1 rounded-md backdrop-blur-sm">
+                {s}
+              </span>
+            ))}
+          </div>
         </div>
       </div>
     </div>

@@ -60,6 +60,7 @@ class User(AbstractUser):
             'bulk_submission': [self.Role.JOURNALIST, self.Role.GOVERNMENT, self.Role.CITIZEN, self.Role.ADMIN],
             'api_keys': [self.Role.JOURNALIST, self.Role.GOVERNMENT, self.Role.CITIZEN, self.Role.ADMIN],
             'view_org_analyses': [self.Role.GOVERNMENT, self.Role.ADMIN],
+            'manage_org_members': [self.Role.GOVERNMENT, self.Role.ADMIN],
             'manage_users': [self.Role.ADMIN],
             'upload_datasets': [self.Role.ADMIN],
             'trigger_retrain': [self.Role.ADMIN],

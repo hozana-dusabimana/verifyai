@@ -23,6 +23,13 @@ urlpatterns = [
 
     # Admin user management
     path('users', views.AdminUserListView.as_view(), name='admin-user-list'),
+    path('users/create', views.AdminUserCreateView.as_view(), name='admin-user-create'),
     path('users/<uuid:user_id>/role', views.AdminUserRoleUpdateView.as_view(), name='admin-user-role'),
     path('users/<uuid:user_id>', views.AdminUserDeactivateView.as_view(), name='admin-user-deactivate'),
+
+    # Organization member management (Government + Admin)
+    path('org/members', views.OrgMemberListView.as_view(), name='org-member-list'),
+    path('org/members/create', views.OrgMemberCreateView.as_view(), name='org-member-create'),
+    path('org/members/<uuid:user_id>/role', views.OrgMemberRoleUpdateView.as_view(), name='org-member-role'),
+    path('org/members/<uuid:user_id>', views.OrgMemberDeactivateView.as_view(), name='org-member-deactivate'),
 ]

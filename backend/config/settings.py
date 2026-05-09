@@ -18,6 +18,13 @@ DEBUG = os.getenv('DEBUG', 'True').lower() == 'true'
 
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
+# Auto-seed the four demo users (Admin, Government, Journalist, Citizen) after `migrate`.
+# Defaults to True in DEBUG, False in production. Override with env var.
+AUTO_SEED_DEMO_USERS = os.getenv(
+    'AUTO_SEED_DEMO_USERS',
+    'true' if DEBUG else 'false',
+).lower() == 'true'
+
 # Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',

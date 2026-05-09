@@ -13,10 +13,10 @@ import HistoryPage from './pages/HistoryPage';
 import AnalyticsPage from './pages/AnalyticsPage';
 import AlertsPage from './pages/AlertsPage';
 import SettingsPage from './pages/SettingsPage';
+import OrgMembersPage from './pages/OrgMembersPage';
 import AdminDashboard from './pages/admin/AdminDashboard';
 
 function PublicLayout() {
-  const { user } = useAuth();
   return (
     <div className="min-h-screen bg-slate-50 relative overflow-hidden flex flex-col">
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-brand-200/50 rounded-full blur-[100px] pointer-events-none" />
@@ -54,6 +54,15 @@ function AdminLayout() {
   return <Outlet />;
 }
 
+function OrgManagerLayout() {
+  const { user, loading } = useAuth();
+  if (loading) return null;
+  if (!user) return <Navigate to="/login" replace />;
+  const allowed = user.role === 'government' || user.role === 'admin' || user.is_superuser;
+  if (!allowed) return <Navigate to="/dashboard" replace />;
+  return <Outlet />;
+}
+
 function App() {
   return (
     <AuthProvider>
@@ -76,6 +85,9 @@ function App() {
             <Route path="/analytics" element={<AnalyticsPage />} />
             <Route path="/alerts" element={<AlertsPage />} />
             <Route path="/settings" element={<SettingsPage />} />
+            <Route element={<OrgManagerLayout />}>
+              <Route path="/org/members" element={<OrgMembersPage />} />
+            </Route>
             <Route element={<AdminLayout />}>
               <Route path="/admin/*" element={<AdminDashboard />} />
             </Route>

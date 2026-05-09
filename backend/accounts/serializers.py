@@ -18,11 +18,18 @@ class RegisterSerializer(serializers.ModelSerializer):
             'organization', 'role', 'password', 'password_confirm',
         ]
 
+    SELF_REGISTERABLE_ROLES = {User.Role.CITIZEN, User.Role.JOURNALIST}
+
     def validate(self, attrs):
         if attrs['password'] != attrs.pop('password_confirm'):
             raise serializers.ValidationError({'password_confirm': 'Passwords do not match.'})
-        if attrs.get('role') == User.Role.ADMIN:
-            raise serializers.ValidationError({'role': 'Cannot register as admin.'})
+        role = attrs.get('role') or User.Role.CITIZEN
+        if role not in self.SELF_REGISTERABLE_ROLES:
+            raise serializers.ValidationError({
+                'role': 'Only Citizen and Journalist accounts can be self-registered. '
+                        'Government accounts are provisioned by an administrator.',
+            })
+        attrs['role'] = role
         return attrs
 
     def create(self, validated_data):

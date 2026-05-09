@@ -380,12 +380,93 @@ class APIKeyDeleteView(APIView):
 
 # ─── Admin: User Management ──────────────────────────────────────────
 
-class AdminUserListView(generics.ListAPIView):
+class AdminUserListView(APIView):
+    """List users with optional search and role/status filters. Admin only."""
     permission_classes = [IsAuthenticated, IsAdmin]
-    serializer_class = AdminUserSerializer
-    queryset = User.objects.all().order_by('-created_at')
-    filterset_fields = ['role', 'is_active', 'is_email_verified']
-    search_fields = ['email', 'first_name', 'last_name', 'organization']
+
+    def get(self, request):
+        from django.db.models import Q
+        from rest_framework.pagination import PageNumberPagination
+
+        qs = User.objects.all().order_by('-created_at')
+
+        search = request.query_params.get('search', '').strip()
+        if search:
+            qs = qs.filter(
+                Q(email__icontains=search)
+                | Q(first_name__icontains=search)
+                | Q(last_name__icontains=search)
+                | Q(organization__icontains=search)
+                | Q(username__icontains=search)
+            )
+
+        role = request.query_params.get('role')
+        if role:
+            qs = qs.filter(role=role)
+
+        is_active = request.query_params.get('is_active')
+        if is_active in ('true', 'false'):
+            qs = qs.filter(is_active=(is_active == 'true'))
+
+        paginator = PageNumberPagination()
+        paginator.page_size = int(request.query_params.get('page_size', 50))
+        page = paginator.paginate_queryset(qs, request)
+        serializer = AdminUserSerializer(page, many=True)
+        return _success(serializer.data, meta={
+            'count': paginator.page.paginator.count,
+            'next': paginator.get_next_link(),
+            'previous': paginator.get_previous_link(),
+        })
+
+
+class AdminUserCreateView(APIView):
+    """Admin endpoint to provision any user, including Government and Admin."""
+    permission_classes = [IsAuthenticated, IsAdmin]
+
+    def post(self, request):
+        data = request.data
+        required = ('email', 'password', 'first_name', 'last_name', 'role')
+        missing = [f for f in required if not data.get(f)]
+        if missing:
+            return _error({'missing_fields': missing})
+
+        email = data['email'].strip().lower()
+        if User.objects.filter(email__iexact=email).exists():
+            return _error({'email': 'A user with this email already exists.'},
+                          status.HTTP_409_CONFLICT)
+
+        role = data['role']
+        if role not in dict(User.Role.choices):
+            return _error({'role': f'Must be one of: {", ".join(dict(User.Role.choices).keys())}.'})
+
+        username = (data.get('username') or email.split('@')[0]).strip()
+        if User.objects.filter(username__iexact=username).exists():
+            # Auto-suffix collisions instead of failing
+            base, n = username, 1
+            while User.objects.filter(username__iexact=f'{base}{n}').exists():
+                n += 1
+            username = f'{base}{n}'
+
+        is_admin_role = (role == User.Role.ADMIN)
+        user = User(
+            email=email,
+            username=username,
+            first_name=data['first_name'].strip(),
+            last_name=data['last_name'].strip(),
+            organization=data.get('organization', '').strip(),
+            role=role,
+            is_active=True,
+            is_email_verified=True,  # admin-provisioned, no verification step
+            is_staff=is_admin_role,
+            is_superuser=is_admin_role,
+        )
+        try:
+            user.set_password(data['password'])
+            user.save()
+        except Exception as exc:
+            return _error(str(exc))
+
+        return _success(AdminUserSerializer(user).data, status_code=status.HTTP_201_CREATED)
 
 
 class AdminUserRoleUpdateView(APIView):
@@ -401,8 +482,13 @@ class AdminUserRoleUpdateView(APIView):
         except User.DoesNotExist:
             return _error('User not found.', status.HTTP_404_NOT_FOUND)
 
-        user.role = serializer.validated_data['role']
-        user.save(update_fields=['role'])
+        new_role = serializer.validated_data['role']
+        # Keep is_staff / is_superuser in sync with the admin role flag
+        user.role = new_role
+        is_admin = (new_role == User.Role.ADMIN)
+        user.is_staff = is_admin
+        user.is_superuser = is_admin
+        user.save(update_fields=['role', 'is_staff', 'is_superuser'])
         return _success(AdminUserSerializer(user).data)
 
 
@@ -415,6 +501,175 @@ class AdminUserDeactivateView(APIView):
         except User.DoesNotExist:
             return _error('User not found.', status.HTTP_404_NOT_FOUND)
 
+        if user.id == request.user.id:
+            return _error('You cannot deactivate your own account.', status.HTTP_400_BAD_REQUEST)
+
         user.is_active = False
         user.save(update_fields=['is_active'])
         return _success({'detail': 'User deactivated.'})
+
+
+# ─── Organization Member Management (Government + Admin) ─────────────
+
+ORG_MANAGEABLE_ROLES = (User.Role.CITIZEN, User.Role.JOURNALIST)
+
+
+def _org_qs(user):
+    """Return queryset of users sharing the caller's organization (case-insensitive)."""
+    if not user.organization:
+        return User.objects.none()
+    return User.objects.filter(organization__iexact=user.organization)
+
+
+def _require_org(user):
+    """Returns an error Response if caller has no organization, else None."""
+    if not user.organization or not user.organization.strip():
+        return _error(
+            'Your account has no organization set. Ask an administrator to assign one before managing members.',
+            status.HTTP_400_BAD_REQUEST,
+        )
+    return None
+
+
+class OrgMemberListView(APIView):
+    """List members of caller's organization."""
+    required_permission = 'manage_org_members'
+    permission_classes = [IsAuthenticated, HasRolePermission]
+
+    def get(self, request):
+        err = _require_org(request.user)
+        if err:
+            return err
+
+        qs = _org_qs(request.user).order_by('-created_at')
+
+        search = request.query_params.get('search', '').strip()
+        if search:
+            from django.db.models import Q
+            qs = qs.filter(
+                Q(email__icontains=search)
+                | Q(first_name__icontains=search)
+                | Q(last_name__icontains=search)
+                | Q(username__icontains=search)
+            )
+
+        return _success(
+            AdminUserSerializer(qs, many=True).data,
+            meta={'organization': request.user.organization, 'count': qs.count()},
+        )
+
+
+class OrgMemberCreateView(APIView):
+    """Government adds a new Citizen or Journalist to their organization."""
+    required_permission = 'manage_org_members'
+    permission_classes = [IsAuthenticated, HasRolePermission]
+
+    def post(self, request):
+        err = _require_org(request.user)
+        if err:
+            return err
+
+        data = request.data
+        required = ('email', 'password', 'first_name', 'last_name', 'role')
+        missing = [f for f in required if not data.get(f)]
+        if missing:
+            return _error({'missing_fields': missing})
+
+        role = data['role']
+        if role not in ORG_MANAGEABLE_ROLES:
+            return _error({
+                'role': f'Government can only create Citizen or Journalist members. '
+                        f'Got "{role}".',
+            })
+
+        email = data['email'].strip().lower()
+        if User.objects.filter(email__iexact=email).exists():
+            return _error({'email': 'A user with this email already exists.'},
+                          status.HTTP_409_CONFLICT)
+
+        username = (data.get('username') or email.split('@')[0]).strip()
+        if User.objects.filter(username__iexact=username).exists():
+            base, n = username, 1
+            while User.objects.filter(username__iexact=f'{base}{n}').exists():
+                n += 1
+            username = f'{base}{n}'
+
+        user = User(
+            email=email,
+            username=username,
+            first_name=data['first_name'].strip(),
+            last_name=data['last_name'].strip(),
+            organization=request.user.organization,  # always force caller's org
+            role=role,
+            is_active=True,
+            is_email_verified=True,
+        )
+        try:
+            user.set_password(data['password'])
+            user.save()
+        except Exception as exc:
+            return _error(str(exc))
+
+        return _success(AdminUserSerializer(user).data, status_code=status.HTTP_201_CREATED)
+
+
+class OrgMemberRoleUpdateView(APIView):
+    """Switch a member between Citizen and Journalist within the org."""
+    required_permission = 'manage_org_members'
+    permission_classes = [IsAuthenticated, HasRolePermission]
+
+    def put(self, request, user_id):
+        err = _require_org(request.user)
+        if err:
+            return err
+
+        new_role = request.data.get('role')
+        if new_role not in ORG_MANAGEABLE_ROLES:
+            return _error({'role': 'Role must be "citizen" or "journalist".'})
+
+        try:
+            user = _org_qs(request.user).get(id=user_id)
+        except User.DoesNotExist:
+            return _error('Member not found in your organization.', status.HTTP_404_NOT_FOUND)
+
+        if user.id == request.user.id:
+            return _error('You cannot change your own role.', status.HTTP_400_BAD_REQUEST)
+
+        if user.role not in ORG_MANAGEABLE_ROLES:
+            return _error(
+                f'Cannot demote a {user.role} member. Ask an administrator.',
+                status.HTTP_403_FORBIDDEN,
+            )
+
+        user.role = new_role
+        user.save(update_fields=['role'])
+        return _success(AdminUserSerializer(user).data)
+
+
+class OrgMemberDeactivateView(APIView):
+    """Deactivate a Citizen/Journalist member of the org."""
+    required_permission = 'manage_org_members'
+    permission_classes = [IsAuthenticated, HasRolePermission]
+
+    def delete(self, request, user_id):
+        err = _require_org(request.user)
+        if err:
+            return err
+
+        try:
+            user = _org_qs(request.user).get(id=user_id)
+        except User.DoesNotExist:
+            return _error('Member not found in your organization.', status.HTTP_404_NOT_FOUND)
+
+        if user.id == request.user.id:
+            return _error('You cannot deactivate your own account.', status.HTTP_400_BAD_REQUEST)
+
+        if user.role not in ORG_MANAGEABLE_ROLES:
+            return _error(
+                f'Cannot deactivate a {user.role} member. Ask an administrator.',
+                status.HTTP_403_FORBIDDEN,
+            )
+
+        user.is_active = False
+        user.save(update_fields=['is_active'])
+        return _success({'detail': 'Member deactivated.'})
