@@ -7,6 +7,4 @@ db.sqlite3
 media/
 staticfiles/
 *.log
-ml_engine/models_store/*.json
-ml_engine/models_store/*.pkl
 ml_engine/datasets/

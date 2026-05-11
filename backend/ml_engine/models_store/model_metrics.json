@@ -1,0 +1,23 @@
+{
+  "naive_bayes": {
+    "accuracy": 0.9655,
+    "precision": 0.9677,
+    "recall": 0.9651,
+    "f1_score": 0.9664,
+    "training_time": 42.0
+  },
+  "lstm": {
+    "accuracy": 0.9984,
+    "precision": 0.9976,
+    "recall": 0.9993,
+    "f1_score": 0.9985,
+    "training_time": 1985.6
+  },
+  "distilbert": {
+    "accuracy": 0.9995,
+    "precision": 0.999,
+    "recall": 1.0,
+    "f1_score": 0.9995,
+    "training_time": 6915.9
+  }
+}
