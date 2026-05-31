@@ -1,0 +1,71 @@
+# Production stack for VerifyAI on the shared CloudPanel box.
+#
+# Design (mirrors how the other tenants on this host are wired):
+#   * backend  -> network_mode: host, gunicorn binds 127.0.0.1:8010, talks to
+#                 host MySQL on 127.0.0.1:3306. The docker bridge gateway is
+#                 firewall-refused for MySQL on this box, so host networking is
+#                 required. Hard memory cap protects neighbouring tenants.
+#   * frontend -> static nginx on a bridge, published ONLY to 127.0.0.1:5180
+#                 (host networking would clash with CloudPanel's :80 nginx).
+#   * NO db / redis containers — host MySQL is reused; Celery runs eager
+#     (synchronous, single process) to stay RAM-frugal on this box.
+#
+# Ingress + TLS are owned by CloudPanel reverse-proxy sites, not this file.
+# All config comes from ./.env.prod (mode 600, gitignored, lives on the host).
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.prod
+    image: verifyai-backend
+    container_name: verifyai-backend
+    restart: unless-stopped
+    network_mode: host
+    env_file:
+      - ./.env.prod
+    # migrate -> collectstatic -> serve. Single worker + threads keeps exactly
+    # one copy of the torch models in memory.
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py collectstatic --noinput &&
+             exec gunicorn config.wsgi
+                 --bind 127.0.0.1:8010
+                 --workers 1 --threads 4 --timeout 180
+                 --access-logfile - --error-logfile -"
+    volumes:
+      - hf_cache:/root/.cache/huggingface
+      - nltk_data:/root/nltk_data
+      - media_data:/app/media
+    mem_limit: 1200m
+    memswap_limit: 2400m
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8010/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 90s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.prod
+      args:
+        VITE_API_URL: ${VITE_API_URL:-https://api-verifyai.isiri.rw/api/v1}
+    image: verifyai-frontend
+    container_name: verifyai-frontend
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5180:80"
+    mem_limit: 192m
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1/"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+volumes:
+  hf_cache:
+  nltk_data:
+  media_data:
