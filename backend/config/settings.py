@@ -80,20 +80,21 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
-# Database — MySQL via XAMPP
+# Database — MySQL in prod (XAMPP locally), SQLite for CI/tests.
+DB_ENGINE = os.getenv('DB_ENGINE', 'django.db.backends.mysql')
 DATABASES = {
     'default': {
-        'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.mysql'),
+        'ENGINE': DB_ENGINE,
         'NAME': os.getenv('DB_NAME', 'verifyai'),
         'USER': os.getenv('DB_USER', 'root'),
         'PASSWORD': os.getenv('DB_PASSWORD', ''),
         'HOST': os.getenv('DB_HOST', 'localhost'),
         'PORT': os.getenv('DB_PORT', '3306'),
-        'OPTIONS': {
-            'charset': 'utf8mb4',
-        },
     }
 }
+# charset is a MySQL-only connection option; SQLite's connect() rejects it.
+if 'mysql' in DB_ENGINE:
+    DATABASES['default']['OPTIONS'] = {'charset': 'utf8mb4'}
 
 # Custom user model
 AUTH_USER_MODEL = 'accounts.User'
