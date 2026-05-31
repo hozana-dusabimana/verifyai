@@ -1,0 +1,46 @@
+name: Deploy backend
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "backend/**"
+      - "docker-compose.prod.yml"
+      - ".github/workflows/deploy-backend.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-backend
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: 98.83.16.194
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          command_timeout: 40m
+          script: |
+            set -e
+            cd ~/verifyai
+            # Resilient sync — a stale/locked remote ref breaks a naive fetch.
+            git fetch --prune --force origin main || { git remote prune origin || true; git fetch --force origin main; }
+            git reset --hard FETCH_HEAD
+            # Rebuild ONLY the backend service.
+            docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build backend
+            docker image prune -f
+            # Wait for the container healthcheck to report healthy.
+            for i in $(seq 1 30); do
+              s=$(docker inspect -f '{{.State.Health.Status}}' verifyai-backend 2>/dev/null || echo starting)
+              echo "backend health: $s"
+              [ "$s" = "healthy" ] && break
+              sleep 5
+            done
+            # Health-check the PUBLIC https domain.
+            code=$(curl -s -o /dev/null -w '%{http_code}' https://api-verifyai.isiri.rw/health)
+            echo "public /health -> $code"
+            test "$code" = "200"

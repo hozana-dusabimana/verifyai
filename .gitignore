@@ -1,0 +1,8 @@
+# Secrets & keys — never commit
+private-key.md
+.env.prod
+.env.prod.local
+*.pem
+*.key
+deploy_key
+deploy_key.*

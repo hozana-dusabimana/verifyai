@@ -8,3 +8,5 @@ media/
 staticfiles/
 *.log
 ml_engine/datasets/
+
+private-key.md
