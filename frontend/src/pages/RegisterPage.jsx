@@ -7,10 +7,10 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 
 const FEATURES = [
-  'Three-model ensemble — Naive Bayes, LSTM & DistilBERT',
-  'Explainable credibility scores with the reasons behind them',
-  'Real-time alerts on low-credibility content',
-  'Aligned with IFCN, C2PA, JTI & DSA frameworks',
+  'Instantly check if a news article is real or fake',
+  'Understand every result with clear, plain-language reasons',
+  'Get alerted the moment something looks misleading',
+  'Independent, transparent fact-checking you can trust',
 ];
 
 const ROLES = [
@@ -198,22 +198,22 @@ const RegisterPage = () => {
           <div className="absolute -top-16 -right-16 w-64 h-64 bg-brand-300/20 rounded-full blur-[90px] pointer-events-none" />
 
           <div className="relative z-10">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-white/15 border border-white/25 flex items-center justify-center backdrop-blur-sm">
+            <Link to="/" className="inline-flex items-center gap-3 group" aria-label="VerifyAI home">
+              <div className="w-10 h-10 rounded-xl bg-white/15 border border-white/25 flex items-center justify-center backdrop-blur-sm group-hover:bg-white/25 transition-colors">
                 <ShieldCheck className="w-5 h-5 text-white" />
               </div>
               <div className="leading-tight">
                 <p className="text-white font-extrabold tracking-tight">VerifyAI</p>
                 <p className="text-brand-100/80 text-xs font-medium">AI-powered fact verification</p>
               </div>
-            </div>
+            </Link>
 
             <h2 className="mt-12 text-3xl xl:text-4xl font-extrabold text-white leading-tight tracking-tight">
               Join the fight<br />
               <span className="text-brand-100">against misinformation.</span>
             </h2>
             <p className="mt-3.5 text-brand-50/85 text-sm leading-relaxed max-w-sm">
-              Create an account to check articles, track credibility, and get explainable verdicts in seconds.
+              Create a free account to check any article and find out, in plain language, whether you can trust it.
             </p>
 
             <ul className="mt-9 space-y-4 max-w-sm">
@@ -240,10 +240,10 @@ const RegisterPage = () => {
             <Link to="/" className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-400 hover:text-slate-200 transition-colors">
               <ArrowLeft className="w-4 h-4" /> Back to home
             </Link>
-            <div className="lg:hidden inline-flex items-center gap-2 text-slate-200">
+            <Link to="/" className="lg:hidden inline-flex items-center gap-2 text-slate-200 hover:text-white transition-colors" aria-label="VerifyAI home">
               <ShieldCheck className="w-5 h-5 text-brand-400" />
               <span className="font-extrabold tracking-tight">VerifyAI</span>
-            </div>
+            </Link>
           </div>
 
           <div className="text-center mb-2">

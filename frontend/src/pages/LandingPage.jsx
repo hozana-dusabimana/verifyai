@@ -30,7 +30,7 @@ const LandingPage = () => {
             Truth. Detected.
           </h1>
           <p className="mt-4 text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed">
-            VerifyAI is the advanced AI-powered fake news detection system. We help journalists, governments, and citizens identify misinformation before it spreads.
+            Paste any news article and find out — in seconds — whether you can trust it. VerifyAI gives you a clear credibility score and explains why, in plain language anyone can understand.
           </p>
           
           <div className="mt-10 max-w-xl mx-auto flex sm:flex-row flex-col gap-4">
@@ -88,20 +88,20 @@ const LandingPage = () => {
             {[
               {
                 step: "01",
-                title: "Submit Content",
-                desc: "Paste text, URL, or upload a document directly to the platform.",
+                title: "Share an article",
+                desc: "Paste the text, drop in a link, or upload a file — whatever's easiest for you.",
                 color: "bg-blue-100 text-blue-600"
               },
               {
                 step: "02",
-                title: "AI Analysis",
-                desc: "Our ensemble ML pipeline uses NLP and DistilBERT to scrutinize the sentiment, tone, and facts.",
+                title: "We check it",
+                desc: "VerifyAI carefully reads the article — its wording, tone, and the claims it makes — to judge how trustworthy it really is.",
                 color: "bg-brand-100 text-brand-600"
               },
               {
                 step: "03",
-                title: "Review Results",
-                desc: "Get an actionable credibility score alongside plain-language explanations of any flagged content.",
+                title: "See the verdict",
+                desc: "Get an easy-to-read credibility score with a clear, plain-language explanation of anything that looks suspicious.",
                 color: "bg-emerald-100 text-emerald-600"
               }
             ].map((s, idx) => (
@@ -164,8 +164,8 @@ const LandingPage = () => {
                   <div className="text-4xl font-extrabold mb-8">{tier.price}</div>
                   <ul className="mb-8 space-y-4 text-slate-300">
                     <li className="flex items-center gap-3"><CheckCircle2 className="w-5 h-5 text-brand-400"/> {tier.limits}</li>
-                    <li className="flex items-center gap-3"><CheckCircle2 className="w-5 h-5 text-brand-400"/> Ensemble ML Pipeline</li>
-                    <li className="flex items-center gap-3"><CheckCircle2 className="w-5 h-5 text-brand-400"/> Detailed Explainability</li>
+                    <li className="flex items-center gap-3"><CheckCircle2 className="w-5 h-5 text-brand-400"/> Powerful AI-powered checks</li>
+                    <li className="flex items-center gap-3"><CheckCircle2 className="w-5 h-5 text-brand-400"/> Clear reasons for every result</li>
                   </ul>
                   <Link to="/register" className={`block text-center w-full py-3 rounded-xl font-bold transition-all ${tier.popular ? 'bg-brand-500 hover:bg-brand-600 text-white' : 'bg-slate-700 hover:bg-slate-600 text-white'}`}>
                     Get Started
@@ -184,7 +184,7 @@ const LandingPage = () => {
               Our Mission
             </p>
             <p className="mt-6 text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
-              At VerifyAI, we believe in a world where truth prevails. Our team of leading researchers, software engineers, and journalists collaborate to stay one step ahead of synthetic media and coordinated disinformation campaigns. We are an independent organization committed to building transparent, unbiased AI tools for the public good.
+              We believe everyone deserves to know what's true. VerifyAI is an independent project building honest, easy-to-use tools that help people tell real news from fake — and understand why. No hidden agenda, just clear answers you can trust.
             </p>
          </div>
       </section>
