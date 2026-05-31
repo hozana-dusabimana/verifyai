@@ -5,22 +5,21 @@ const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  // Start in "loading" only when a token exists (a profile fetch is pending).
+  // With no token there's nothing to load, so we avoid a synchronous setState
+  // inside the effect (react-hooks/set-state-in-effect).
+  const [loading, setLoading] = useState(() => !!localStorage.getItem('access_token'));
 
-  // On mount, check for existing token and load profile
+  // On mount, if a token exists, load the profile.
   useEffect(() => {
-    const token = localStorage.getItem('access_token');
-    if (token) {
-      usersAPI.getProfile()
-        .then((res) => setUser(res.data.data))
-        .catch(() => {
-          localStorage.removeItem('access_token');
-          localStorage.removeItem('refresh_token');
-        })
-        .finally(() => setLoading(false));
-    } else {
-      setLoading(false);
-    }
+    if (!localStorage.getItem('access_token')) return;
+    usersAPI.getProfile()
+      .then((res) => setUser(res.data.data))
+      .catch(() => {
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   const login = useCallback(async (email, password) => {
@@ -64,6 +63,9 @@ export function AuthProvider({ children }) {
   );
 }
 
+// This file intentionally exports the AuthProvider component plus the useAuth
+// hook (the standard context pattern); the hook export is fine for fast refresh.
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) throw new Error('useAuth must be used within AuthProvider');
