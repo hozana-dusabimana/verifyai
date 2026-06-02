@@ -1,9 +1,14 @@
 import { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { Download, TrendingUp, ShieldAlert, Tag, Globe } from 'lucide-react';
-import { analyticsAPI, reportsAPI } from '../services/api';
+import { Download, TrendingUp, ShieldAlert, Tag, Globe, FileText } from 'lucide-react';
+import { analyticsAPI } from '../services/api';
 
 const COLORS = ['#10b981', '#ef4444', '#f59e0b', '#3b82f6', '#8b5cf6'];
+
+const csvEscape = (v) => {
+  const s = v == null ? '' : String(v);
+  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+};
 
 const AnalyticsPage = () => {
   const [trendData, setTrendData] = useState([]);
@@ -37,14 +42,76 @@ const AnalyticsPage = () => {
     fetchAll();
   }, []);
 
-  const handleExportReport = async (format) => {
-    try {
-      await reportsAPI.generate({
-        title: `Analytics Report - ${new Date().toLocaleDateString()}`,
-        report_format: format,
-      });
-      alert(`${format.toUpperCase()} report generation queued.`);
-    } catch { /* ignore */ }
+  const exportCSV = () => {
+    const rows = [
+      ['VerifyAI Analytics Report'],
+      ['Generated', new Date().toLocaleString()],
+      [],
+      ['Detection trend (30 days)'],
+      ['Date', 'Real', 'Fake'],
+      ...trendData.map((t) => [t.name, t.real, t.fake]),
+      [],
+      ['Source credibility'],
+      ['Source', 'Articles', 'Avg credibility %'],
+      ...sources.map((s) => [s.source_name, s.article_count, Math.round(s.average_credibility)]),
+      [],
+      ['Topic distribution'],
+      ['Topic', 'Count'],
+      ...topics.map((t) => [t.topic, t.count]),
+      [],
+      ['Top keywords in fake articles'],
+      ['Keyword', 'Count'],
+      ...(keywords.fake_keywords || []).map((k) => [k.keyword, k.count]),
+      [],
+      ['Top keywords in real articles'],
+      ['Keyword', 'Count'],
+      ...(keywords.real_keywords || []).map((k) => [k.keyword, k.count]),
+    ];
+    const csv = rows.map((r) => r.map(csvEscape).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `verifyai_analytics_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const exportPDF = () => {
+    const tbl = (cols, data) =>
+      data.length === 0
+        ? '<p style="color:#64748b">No data.</p>'
+        : `<table><thead><tr>${cols.map((c) => `<th>${c}</th>`).join('')}</tr></thead><tbody>${
+            data.map((row) => `<tr>${row.map((c) => `<td>${c}</td>`).join('')}</tr>`).join('')
+          }</tbody></table>`;
+    const html = `<!doctype html><html><head><meta charset="utf-8"><title>VerifyAI Analytics Report</title>
+      <style>
+        body{font-family:system-ui,Arial,sans-serif;color:#0f172a;margin:32px;}
+        h1{font-size:22px;margin:0 0 4px;} .sub{color:#64748b;margin:0 0 24px;font-size:13px;}
+        h2{font-size:15px;margin:24px 0 8px;border-bottom:2px solid #e2e8f0;padding-bottom:4px;}
+        table{border-collapse:collapse;width:100%;font-size:12px;margin-bottom:8px;}
+        th,td{border:1px solid #e2e8f0;padding:6px 8px;text-align:left;} th{background:#f8fafc;}
+        @media print{button{display:none;}}
+      </style></head><body>
+      <h1>VerifyAI — Analytics Report</h1>
+      <p class="sub">Generated ${new Date().toLocaleString()}</p>
+      <h2>Detection trend (30 days)</h2>
+      ${tbl(['Date', 'Real', 'Fake'], trendData.map((t) => [t.name, t.real, t.fake]))}
+      <h2>Source credibility</h2>
+      ${tbl(['Source', 'Articles', 'Avg credibility %'], sources.map((s) => [s.source_name, s.article_count, Math.round(s.average_credibility)]))}
+      <h2>Topic distribution</h2>
+      ${tbl(['Topic', 'Count'], topics.map((t) => [t.topic, t.count]))}
+      <h2>Top keywords — fake articles</h2>
+      ${tbl(['Keyword', 'Count'], (keywords.fake_keywords || []).map((k) => [k.keyword, k.count]))}
+      <h2>Top keywords — real articles</h2>
+      ${tbl(['Keyword', 'Count'], (keywords.real_keywords || []).map((k) => [k.keyword, k.count]))}
+      <button onclick="window.print()" style="margin-top:24px;padding:8px 16px;font-weight:bold;cursor:pointer">Print / Save as PDF</button>
+      <script>window.onload=function(){setTimeout(function(){window.print();},300);};</script>
+      </body></html>`;
+    const w = window.open('', '_blank');
+    if (!w) { alert('Please allow pop-ups to export the PDF report.'); return; }
+    w.document.write(html);
+    w.document.close();
   };
 
   if (loading) {
@@ -63,10 +130,10 @@ const AnalyticsPage = () => {
           <p className="text-slate-500 font-medium mt-1">Insights from your content analysis activity.</p>
         </div>
         <div className="flex gap-2">
-          <button onClick={() => handleExportReport('pdf')} className="hidden sm:flex px-4 py-2 bg-brand-600 text-white rounded-xl font-medium shadow-md hover:bg-brand-700 items-center gap-2">
-            <Download className="w-4 h-4" /> Export PDF
+          <button onClick={exportPDF} className="hidden sm:flex px-4 py-2 bg-brand-600 text-white rounded-xl font-medium shadow-md hover:bg-brand-700 items-center gap-2">
+            <FileText className="w-4 h-4" /> Export PDF
           </button>
-          <button onClick={() => handleExportReport('csv')} className="hidden sm:flex px-4 py-2 bg-slate-100 text-slate-700 rounded-xl font-medium hover:bg-slate-200 items-center gap-2">
+          <button onClick={exportCSV} className="hidden sm:flex px-4 py-2 bg-slate-100 text-slate-700 rounded-xl font-medium hover:bg-slate-200 items-center gap-2">
             <Download className="w-4 h-4" /> Export CSV
           </button>
         </div>
