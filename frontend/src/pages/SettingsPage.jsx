@@ -398,11 +398,13 @@ const SettingsPage = () => {
     } catch { showErr('Failed to revoke key.'); }
   };
 
+  // Citizens are casual users — no programmatic API access.
+  const isCitizen = user?.role === 'citizen';
   const tabs = [
     { id: 'profile', label: 'Profile', icon: <User className="w-4 h-4" /> },
     { id: 'security', label: 'Security', icon: <Lock className="w-4 h-4" /> },
     { id: 'notifications', label: 'Notifications', icon: <Bell className="w-4 h-4" /> },
-    { id: 'apikeys', label: 'API Keys', icon: <Key className="w-4 h-4" /> },
+    ...(!isCitizen ? [{ id: 'apikeys', label: 'API Keys', icon: <Key className="w-4 h-4" /> }] : []),
   ];
 
   return (
@@ -518,7 +520,7 @@ const SettingsPage = () => {
         )}
 
         {/* API Keys Tab */}
-        {activeTab === 'apikeys' && <ApiKeysTab
+        {activeTab === 'apikeys' && !isCitizen && <ApiKeysTab
           apiKeys={apiKeys}
           newKeyName={newKeyName}
           setNewKeyName={setNewKeyName}
