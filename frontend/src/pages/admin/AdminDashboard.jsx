@@ -8,9 +8,33 @@ import {
   Activity, Users, Database, FileText, Search, Upload, AlertTriangle,
   RefreshCw, Brain, Cpu, BarChart3, Zap, UserPlus, Building2, Trash2,
   ChevronLeft, CheckCircle2, ShieldCheck, HardDrive, Server,
+  Download, SlidersHorizontal, Plus, Save,
 } from 'lucide-react';
 import { adminAPI, usersAPI } from '../../services/api';
 import Modal from '../../components/Modal';
+
+// Build a CSV string from an array of objects (or array of arrays) and trigger a download.
+function downloadCSV(filename, rows) {
+  if (!rows || rows.length === 0) return;
+  const esc = (v) => {
+    const s = v == null ? '' : String(v);
+    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+  let lines;
+  if (Array.isArray(rows[0])) {
+    lines = rows.map((r) => r.map(esc).join(','));
+  } else {
+    const headers = Object.keys(rows[0]);
+    lines = [headers.join(','), ...rows.map((r) => headers.map((h) => esc(r[h])).join(','))];
+  }
+  const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
 
 const statusDot = (status) => {
   const s = (status || '').toLowerCase();
@@ -638,6 +662,31 @@ function StatCardSmall({ label, value, color }) {
   );
 }
 
+function exportStats(stats) {
+  const cls = stats.classification || {};
+  const rows = [
+    ['Metric', 'Value'],
+    ['Window (days)', stats.window_days],
+    ['Total users', stats.total_users],
+    ['Active users', stats.active_users],
+    ['Total analyses', cls.total],
+    ['Fake', cls.fake],
+    ['Real', cls.real],
+    ['Uncertain', cls.uncertain],
+    ['Average credibility', cls.average_credibility],
+    [],
+    ['Users by role', 'Count'],
+    ...Object.entries(stats.users_by_role || {}),
+    [],
+    ['Top organizations', 'Analyses', 'Fake', 'Avg credibility'],
+    ...(stats.top_organizations || []).map((o) => [o.organization, o.total, o.fake, o.average_credibility]),
+    [],
+    ['Date', 'Real', 'Fake', 'Uncertain'],
+    ...(stats.trend || []).map((t) => [t.date, t.real_count, t.fake_count, t.uncertain_count]),
+  ];
+  downloadCSV('verifyai_statistics.csv', rows);
+}
+
 function StatisticsPanel() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -676,9 +725,14 @@ function StatisticsPanel() {
           <h2 className="text-2xl font-extrabold text-slate-900">Platform Statistics</h2>
           <p className="text-sm text-slate-500 mt-0.5">Last {stats.window_days} days · platform-wide.</p>
         </div>
-        <button onClick={fetchStats} className="flex items-center gap-2 px-4 py-2 bg-slate-100 rounded-xl text-sm font-bold hover:bg-slate-200">
-          <RefreshCw className="w-4 h-4" /> Refresh
-        </button>
+        <div className="flex gap-2">
+          <button onClick={() => exportStats(stats)} className="flex items-center gap-2 px-4 py-2 bg-slate-100 rounded-xl text-sm font-bold hover:bg-slate-200">
+            <Download className="w-4 h-4" /> Export CSV
+          </button>
+          <button onClick={fetchStats} className="flex items-center gap-2 px-4 py-2 bg-slate-100 rounded-xl text-sm font-bold hover:bg-slate-200">
+            <RefreshCw className="w-4 h-4" /> Refresh
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -809,9 +863,23 @@ function OrganizationsPanel() {
         <button onClick={() => setDetail(null)} className="inline-flex items-center gap-1.5 text-sm font-bold text-brand-600 hover:text-brand-700">
           <ChevronLeft className="w-4 h-4" /> All organizations
         </button>
-        <div>
-          <h2 className="text-2xl font-extrabold text-slate-900 flex items-center gap-2"><Building2 className="w-6 h-6 text-brand-600" /> {detail.organization}</h2>
-          <p className="text-sm text-slate-500 mt-0.5">{detail.member_count} members · their users, details & searches.</p>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h2 className="text-2xl font-extrabold text-slate-900 flex items-center gap-2"><Building2 className="w-6 h-6 text-brand-600" /> {detail.organization}</h2>
+            <p className="text-sm text-slate-500 mt-0.5">{detail.member_count} members · their users, details & searches.</p>
+          </div>
+          {detail.members?.length > 0 && (
+            <button
+              onClick={() => downloadCSV(`org_${detail.organization}_members.csv`, detail.members.map((m) => ({
+                name: m.full_name, email: m.email, role: m.role, active: m.is_active,
+                analyses: m.total_analyses, fake: m.fake_count, real: m.real_count,
+                avg_credibility: m.average_credibility, open_alerts: m.open_alerts,
+              })))}
+              className="flex items-center gap-2 px-4 py-2 bg-slate-100 rounded-xl text-sm font-bold hover:bg-slate-200 whitespace-nowrap"
+            >
+              <Download className="w-4 h-4" /> Export CSV
+            </button>
+          )}
         </div>
 
         {detailLoading ? (
@@ -860,9 +928,24 @@ function OrganizationsPanel() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-extrabold text-slate-900">Organizations</h2>
-        <p className="text-sm text-slate-500 mt-0.5">Government & newsroom organizations — drill in to see their users, details and searches.</p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h2 className="text-2xl font-extrabold text-slate-900">Organizations</h2>
+          <p className="text-sm text-slate-500 mt-0.5">Government & newsroom organizations — drill in to see their users, details and searches.</p>
+        </div>
+        {orgs.length > 0 && (
+          <button
+            onClick={() => downloadCSV('verifyai_organizations.csv', orgs.map((o) => ({
+              organization: o.organization, members: o.member_count,
+              government: o.government_count, journalists: o.journalist_count, citizens: o.citizen_count,
+              analyses: o.total_analyses, fake: o.fake_count,
+              avg_credibility: o.average_credibility, open_alerts: o.open_alerts,
+            })))}
+            className="flex items-center gap-2 px-4 py-2 bg-slate-100 rounded-xl text-sm font-bold hover:bg-slate-200 whitespace-nowrap"
+          >
+            <Download className="w-4 h-4" /> Export CSV
+          </button>
+        )}
       </div>
 
       {orgs.length === 0 ? (
@@ -1132,6 +1215,148 @@ function MLModelsPanel() {
   );
 }
 
+// ─── Alert Rules ───────────────────────────────────────────────────
+function AlertRulesPanel() {
+  const [rules, setRules] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [form, setForm] = useState({ name: '', credibility_threshold: 30, is_active: true });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  const fetchRules = async () => {
+    setLoading(true);
+    try {
+      const res = await adminAPI.getAlertRules();
+      setRules(res.data.data || []);
+    } catch { /* ignore */ }
+    finally { setLoading(false); }
+  };
+
+  useEffect(() => { fetchRules(); }, []);
+
+  const save = async (payload) => {
+    setSaving(true);
+    setError('');
+    try {
+      await adminAPI.updateAlertRules(payload);
+      await fetchRules();
+      return true;
+    } catch (err) {
+      const data = err.response?.data?.error;
+      setError(typeof data === 'object' ? JSON.stringify(data) : (data || 'Failed to save rule.'));
+      return false;
+    } finally { setSaving(false); }
+  };
+
+  const submit = async (e) => {
+    e.preventDefault();
+    if (!form.name.trim()) { setError('Rule name is required.'); return; }
+    const ok = await save({
+      name: form.name.trim(),
+      credibility_threshold: Number(form.credibility_threshold),
+      is_active: form.is_active,
+    });
+    if (ok) setForm({ name: '', credibility_threshold: 30, is_active: true });
+  };
+
+  const toggleActive = (rule) => save({
+    name: rule.name,
+    credibility_threshold: rule.credibility_threshold,
+    is_active: !rule.is_active,
+  });
+
+  const editRule = (rule) => setForm({
+    name: rule.name,
+    credibility_threshold: rule.credibility_threshold,
+    is_active: rule.is_active,
+  });
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-extrabold text-slate-900 flex items-center gap-2"><SlidersHorizontal className="w-6 h-6 text-brand-600" /> Alert Rules</h2>
+        <p className="text-sm text-slate-500 mt-0.5">Global thresholds that decide when an analysis raises an alert.</p>
+      </div>
+
+      <div className="rounded-xl bg-blue-50 border border-blue-200 px-4 py-3 text-xs text-blue-800">
+        An alert is raised when an analysis's <strong>credibility score</strong> falls at or below a rule's threshold. Lower threshold = fewer, higher-severity alerts.
+      </div>
+
+      {/* Add / update form */}
+      <form onSubmit={submit} className="glass rounded-2xl p-5 grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
+        <div className="sm:col-span-5">
+          <label className="text-xs font-bold text-slate-600 mb-1 block">Rule name</label>
+          <input value={form.name} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
+            placeholder="e.g. High-risk content"
+            className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none" />
+        </div>
+        <div className="sm:col-span-3">
+          <label className="text-xs font-bold text-slate-600 mb-1 block">Credibility threshold (%)</label>
+          <input type="number" min={0} max={100} value={form.credibility_threshold}
+            onChange={(e) => setForm((p) => ({ ...p, credibility_threshold: e.target.value }))}
+            className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none" />
+        </div>
+        <div className="sm:col-span-2">
+          <label className="text-xs font-bold text-slate-600 mb-1 block">Active</label>
+          <label className="inline-flex items-center gap-2 h-[38px]">
+            <input type="checkbox" checked={form.is_active}
+              onChange={(e) => setForm((p) => ({ ...p, is_active: e.target.checked }))}
+              className="w-4 h-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500" />
+            <span className="text-sm text-slate-600">{form.is_active ? 'On' : 'Off'}</span>
+          </label>
+        </div>
+        <div className="sm:col-span-2">
+          <button type="submit" disabled={saving}
+            className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg font-bold text-sm shadow-sm disabled:opacity-50">
+            {saving ? '…' : <><Save className="w-4 h-4" /> Save</>}
+          </button>
+        </div>
+        {error && <p className="sm:col-span-12 text-xs text-red-600 font-medium">{error}</p>}
+      </form>
+
+      {loading ? (
+        <div className="flex justify-center py-16"><div className="animate-spin rounded-full h-8 w-8 border-2 border-brand-500 border-t-transparent" /></div>
+      ) : rules.length > 0 ? (
+        <div className="glass rounded-2xl shadow-sm overflow-hidden">
+          <table className="min-w-full divide-y divide-slate-200">
+            <thead className="bg-slate-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-[11px] font-bold text-slate-500 uppercase">Rule</th>
+                <th className="px-6 py-3 text-right text-[11px] font-bold text-slate-500 uppercase">Threshold</th>
+                <th className="px-6 py-3 text-left text-[11px] font-bold text-slate-500 uppercase">Status</th>
+                <th className="px-6 py-3 text-right text-[11px] font-bold text-slate-500 uppercase">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 bg-white">
+              {rules.map((r) => (
+                <tr key={r.id} className="hover:bg-slate-50/60">
+                  <td className="px-6 py-4 text-sm font-bold text-slate-900">{r.name}</td>
+                  <td className="px-6 py-4 text-sm text-right tabular-nums">≤ {r.credibility_threshold}%</td>
+                  <td className="px-6 py-4">
+                    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-bold border ${r.is_active ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-600 border-slate-200'}`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${r.is_active ? 'bg-emerald-500' : 'bg-slate-400'}`} />
+                      {r.is_active ? 'Active' : 'Inactive'}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-right whitespace-nowrap">
+                    <button onClick={() => editRule(r)} className="text-xs font-bold text-brand-600 hover:text-brand-700 px-2 py-1 rounded hover:bg-brand-50">Edit</button>
+                    <button onClick={() => toggleActive(r)} className="text-xs font-bold text-slate-600 hover:text-slate-800 px-2 py-1 rounded hover:bg-slate-100">{r.is_active ? 'Disable' : 'Enable'}</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div className="glass rounded-2xl p-12 text-center">
+          <SlidersHorizontal className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+          <p className="text-slate-500">No alert rules yet. Add one above.</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Main Admin Dashboard ──────────────────────────────────────────
 const AdminDashboard = () => {
   const location = useLocation();
@@ -1149,6 +1374,7 @@ const AdminDashboard = () => {
       {currentPath === 'users' && <UsersPanel />}
       {currentPath === 'organizations' && <OrganizationsPanel />}
       {currentPath === 'datasets' && <DatasetsPanel />}
+      {currentPath === 'alert-rules' && <AlertRulesPanel />}
       {currentPath === 'audit' && <AuditPanel />}
       {currentPath === 'models' && <MLModelsPanel />}
     </div>

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { ShieldCheck, LayoutDashboard, Search, History, BarChart2, Bell, Settings, User, LogOut, Menu, X, Shield, Activity, Users, Database, FileText, Brain, Building2, PieChart } from 'lucide-react';
+import { ShieldCheck, LayoutDashboard, Search, History, BarChart2, Bell, Settings, User, LogOut, Menu, X, Shield, Activity, Users, Database, FileText, Brain, Building2, PieChart, SlidersHorizontal } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 const DashboardLayout = ({ children }) => {
@@ -41,6 +41,7 @@ const DashboardLayout = ({ children }) => {
     { name: 'User Management', path: '/admin/users', icon: <Users className="w-5 h-5 flex-shrink-0" /> },
     { name: 'Organizations', path: '/admin/organizations', icon: <Building2 className="w-5 h-5 flex-shrink-0" /> },
     { name: 'Dataset Manager', path: '/admin/datasets', icon: <Database className="w-5 h-5 flex-shrink-0" /> },
+    { name: 'Alert Rules', path: '/admin/alert-rules', icon: <SlidersHorizontal className="w-5 h-5 flex-shrink-0" /> },
     { name: 'Audit Logs', path: '/admin/audit', icon: <FileText className="w-5 h-5 flex-shrink-0" /> },
     { name: 'ML Models', path: '/admin/models', icon: <Brain className="w-5 h-5 flex-shrink-0" /> },
   ];
