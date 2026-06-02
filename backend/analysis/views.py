@@ -129,9 +129,23 @@ class AnalysisHistoryView(APIView):
     def get(self, request):
         from rest_framework.pagination import PageNumberPagination
 
-        results = AnalysisResult.objects.select_related('article').filter(
-            article__user=request.user,
+        results = AnalysisResult.objects.select_related('article', 'article__user')
+
+        # Scope: own analyses (default) or whole organization (government/admin).
+        scope = request.query_params.get('scope', 'own')
+        can_view_org = (
+            request.user.has_role_permission('view_org_analyses')
+            and bool(request.user.organization)
         )
+        if scope == 'org' and can_view_org:
+            from accounts.models import User
+            org_users = User.objects.filter(organization__iexact=request.user.organization)
+            results = results.filter(article__user__in=org_users)
+            member = request.query_params.get('member')
+            if member:
+                results = results.filter(article__user_id=member)
+        else:
+            results = results.filter(article__user=request.user)
 
         # Filters
         classification = request.query_params.get('classification')

@@ -79,6 +79,8 @@ class AnalysisHistorySerializer(serializers.ModelSerializer):
     title = serializers.CharField(source='article.title')
     source_name = serializers.CharField(source='article.source_name')
     input_type = serializers.CharField(source='article.input_type')
+    submitted_by = serializers.SerializerMethodField()
+    submitted_by_id = serializers.CharField(source='article.user_id', read_only=True)
 
     class Meta:
         model = AnalysisResult
@@ -86,4 +88,11 @@ class AnalysisHistorySerializer(serializers.ModelSerializer):
             'id', 'title', 'source_name', 'input_type',
             'credibility_score', 'classification', 'confidence',
             'status', 'created_at', 'completed_at',
+            'submitted_by', 'submitted_by_id',
         ]
+
+    def get_submitted_by(self, obj):
+        u = getattr(obj.article, 'user', None)
+        if not u:
+            return None
+        return u.full_name or u.email
