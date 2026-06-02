@@ -50,6 +50,42 @@ class Dataset(models.Model):
         return self.name
 
 
+class TrainingJob(models.Model):
+    """Tracks an ML model retraining run executed in a background thread."""
+
+    class Status(models.TextChoices):
+        PENDING = 'pending', 'Pending'
+        RUNNING = 'running', 'Running'
+        COMPLETED = 'completed', 'Completed'
+        FAILED = 'failed', 'Failed'
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
+    progress = models.IntegerField(default=0)  # 0–100
+    stage = models.CharField(max_length=100, blank=True)
+    message = models.TextField(blank=True)
+    metrics = models.JSONField(default=dict, blank=True)
+    error = models.TextField(blank=True)
+    dataset = models.ForeignKey(
+        Dataset, on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='training_jobs',
+    )
+    started_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='training_jobs',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    started_at = models.DateTimeField(null=True, blank=True)
+    finished_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = 'training_jobs'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'TrainingJob {self.id} — {self.status}'
+
+
 class AlertRule(models.Model):
     """Global alert threshold configuration."""
 

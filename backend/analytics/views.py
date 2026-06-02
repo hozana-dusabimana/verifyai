@@ -396,6 +396,121 @@ class OrgFeedView(APIView):
         })
 
 
+class OrgMembersPerformanceView(APIView):
+    """Per-member evaluation for the government management console."""
+    required_permission = 'view_org_analyses'
+    permission_classes = [IsAuthenticated, HasRolePermission]
+
+    def get(self, request):
+        org_users = _org_users_qs(request.user).order_by('role', '-created_at')
+        thirty_ago = timezone.now() - timedelta(days=30)
+
+        members = []
+        for u in org_users:
+            results = AnalysisResult.objects.filter(
+                article__user=u, status=AnalysisResult.Status.COMPLETED,
+            )
+            stats = results.aggregate(
+                total=Count('id'),
+                fake=Count('id', filter=Q(classification='FAKE')),
+                real=Count('id', filter=Q(classification='REAL')),
+                avg_credibility=Avg('credibility_score'),
+            )
+            recent_count = results.filter(created_at__gte=thirty_ago).count()
+            open_alerts = Alert.objects.filter(
+                user=u, status__in=['open', 'escalated'],
+            ).count()
+            last = results.order_by('-created_at').values_list('created_at', flat=True).first()
+
+            members.append({
+                'id': str(u.id),
+                'full_name': u.full_name or u.email,
+                'email': u.email,
+                'role': u.role,
+                'is_active': u.is_active,
+                'total_analyzed': stats['total'],
+                'recent_analyzed': recent_count,
+                'fake_count': stats['fake'],
+                'real_count': stats['real'],
+                'average_credibility': round(stats['avg_credibility'] or 0, 2),
+                'open_alerts': open_alerts,
+                'last_active': last.isoformat() if last else None,
+            })
+
+        return _success({
+            'organization': request.user.organization or '(personal)',
+            'members': members,
+        })
+
+
+class MyOrgView(APIView):
+    """Read-only organization overview for any member (e.g. journalists)."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        if not user.organization or not user.organization.strip():
+            return _success({'has_org': False})
+
+        org_users = User.objects.filter(organization__iexact=user.organization)
+        thirty_ago = timezone.now() - timedelta(days=30)
+
+        results = AnalysisResult.objects.filter(
+            article__user__in=org_users,
+            status=AnalysisResult.Status.COMPLETED,
+        )
+        stats = results.aggregate(
+            total=Count('id'),
+            fake=Count('id', filter=Q(classification='FAKE')),
+            avg_credibility=Avg('credibility_score'),
+        )
+        recent_total = results.filter(created_at__gte=thirty_ago).count()
+        open_alerts = Alert.objects.filter(
+            user__in=org_users, status__in=['open', 'escalated'],
+        ).count()
+
+        role_counts = {
+            r['role']: r['count']
+            for r in org_users.values('role').annotate(count=Count('id'))
+        }
+
+        # Top colleagues by volume (excluding the caller)
+        colleague_rows = AnalysisResult.objects.filter(
+            article__user__in=org_users.exclude(id=user.id),
+            status=AnalysisResult.Status.COMPLETED,
+        ).values(
+            'article__user', 'article__user__first_name',
+            'article__user__last_name', 'article__user__email',
+        ).annotate(
+            total=Count('id'),
+            avg_credibility=Avg('credibility_score'),
+        ).order_by('-total')[:5]
+
+        colleagues = [
+            {
+                'name': (f"{r['article__user__first_name']} {r['article__user__last_name']}".strip()
+                         or r['article__user__email']),
+                'total': r['total'],
+                'average_credibility': round(r['avg_credibility'] or 0, 2),
+            }
+            for r in colleague_rows
+        ]
+
+        return _success({
+            'has_org': True,
+            'organization': user.organization,
+            'member_count': org_users.count(),
+            'journalist_count': role_counts.get('journalist', 0),
+            'government_count': role_counts.get('government', 0),
+            'org_total_analyses': stats['total'],
+            'org_recent_analyses': recent_total,
+            'org_fake_count': stats['fake'],
+            'org_average_credibility': round(stats['avg_credibility'] or 0, 2),
+            'org_open_alerts': open_alerts,
+            'colleagues': colleagues,
+        })
+
+
 class OrgAlertActionView(APIView):
     """Resolve or escalate any alert in caller's organization."""
     required_permission = 'view_org_analyses'

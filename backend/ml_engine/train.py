@@ -26,6 +26,67 @@ MODELS_DIR = os.path.join(os.path.dirname(__file__), 'models_store')
 os.makedirs(MODELS_DIR, exist_ok=True)
 
 
+def _normalize_training_df(df):
+    """Normalize an arbitrary uploaded CSV into the (text, label) schema the
+    pipeline expects.
+
+    Accepts common column names:
+      - text:  'text', 'content', 'article', 'body'  (optionally prefixed with 'title')
+      - label: 'label', 'target', 'class', 'category', 'is_fake', 'fake'
+    Label values are mapped to 1 = fake, 0 = real for a range of conventions.
+    """
+    cols = {c.lower().strip(): c for c in df.columns}
+
+    text_col = next((cols[c] for c in ('text', 'content', 'article', 'body', 'news') if c in cols), None)
+    if text_col is None:
+        raise ValueError(
+            "Dataset must contain a text column (one of: text, content, article, body)."
+        )
+
+    label_col = next(
+        (cols[c] for c in ('label', 'target', 'class', 'category', 'is_fake', 'fake', 'y') if c in cols),
+        None,
+    )
+    if label_col is None:
+        raise ValueError(
+            "Dataset must contain a label column (one of: label, target, class, fake)."
+        )
+
+    out = pd.DataFrame()
+    title_col = next((cols[c] for c in ('title', 'headline') if c in cols), None)
+    if title_col is not None:
+        out['text'] = (df[title_col].fillna('').astype(str) + '. ' + df[text_col].fillna('').astype(str)).str.strip()
+    else:
+        out['text'] = df[text_col].fillna('').astype(str)
+
+    def to_binary(v):
+        s = str(v).strip().lower()
+        if s in ('1', 'fake', 'false', 'fake news', 'f', 'unreliable', 'yes', 'true_fake'):
+            return 1
+        if s in ('0', 'real', 'true', 'reliable', 'r', 'no', 'legit'):
+            return 0
+        # Numeric fallback
+        try:
+            return 1 if float(s) >= 0.5 else 0
+        except (TypeError, ValueError):
+            return None
+
+    out['label'] = df[label_col].map(to_binary)
+    out = out.dropna(subset=['label'])
+    out['label'] = out['label'].astype(int)
+    out = out[out['text'].str.len() > 10]
+
+    if len(out) < 20:
+        raise ValueError(
+            f"Dataset has too few usable rows after cleaning ({len(out)}). "
+            "Need at least 20 labeled articles with both classes."
+        )
+    if out['label'].nunique() < 2:
+        raise ValueError("Dataset must contain both fake (1) and real (0) examples.")
+
+    return out.reset_index(drop=True)
+
+
 def preprocess_dataframe(df):
     """Preprocess the entire dataset."""
     from .preprocessing import preprocess_text
@@ -402,13 +463,27 @@ def train_distilbert(X_train_text, X_test_text, y_train, y_test, epochs=2, max_l
 # MAIN TRAINING PIPELINE
 # ============================================================
 
-def train_all(dataset_path=None):
-    """Train all three models and save metrics."""
+def train_all(dataset_path=None, progress_cb=None):
+    """Train all three models and save metrics.
+
+    progress_cb(percent: int, stage: str, message: str) is an optional callback
+    used by the background training runner to surface live status.
+    """
     from .download_dataset import load_dataset
+
+    def report(percent, stage, message=''):
+        if progress_cb:
+            try:
+                progress_cb(percent, stage, message)
+            except Exception:
+                pass
+
+    report(3, 'Loading dataset', 'Reading training data')
 
     # Load dataset
     if dataset_path:
         df = pd.read_csv(dataset_path)
+        df = _normalize_training_df(df)
     else:
         df = load_dataset()
 
@@ -416,6 +491,7 @@ def train_all(dataset_path=None):
     print(f"Label distribution: {dict(df['label'].value_counts())}")
 
     # Preprocess
+    report(10, 'Preprocessing', f'Cleaning {len(df)} articles')
     df = preprocess_dataframe(df)
     print(f"After preprocessing: {len(df)} articles")
 
@@ -434,17 +510,21 @@ def train_all(dataset_path=None):
     all_metrics = {}
 
     # 1. Naive Bayes
+    report(20, 'Training Naive Bayes', 'Fitting TF-IDF + Naive Bayes')
     all_metrics['naive_bayes'] = train_naive_bayes(X_train, X_test, y_train, y_test)
 
     # 2. LSTM
+    report(45, 'Training LSTM', 'Training bidirectional LSTM')
     all_metrics['lstm'] = train_lstm(X_train, X_test, y_train, y_test)
 
     # 3. DistilBERT
+    report(70, 'Training DistilBERT', 'Fine-tuning DistilBERT transformer')
     all_metrics['distilbert'] = train_distilbert(
         X_train_raw, X_test_raw, y_train, y_test
     )
 
     # Save metrics
+    report(95, 'Saving', 'Persisting models and metrics')
     metrics_path = os.path.join(MODELS_DIR, 'model_metrics.json')
     with open(metrics_path, 'w') as f:
         json.dump(all_metrics, f, indent=2)
