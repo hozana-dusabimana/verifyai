@@ -177,10 +177,14 @@ def predict_ensemble(text, title=''):
     # Credibility score
     credibility_score = round((1 - ensemble_fake_prob) * 100, 2)
 
-    # Classification
-    if credibility_score <= 15:
+    # Classification — bands centred on the natural 50% decision boundary.
+    # The old FAKE cutoff (<=15) required the ensemble to be >=85% sure, which
+    # the de-biased models almost never reach, so blatant hoaxes only ever
+    # landed in UNCERTAIN. A cutoff at the decision boundary lets real fakes be
+    # called FAKE while a narrow 45-55 band still flags genuinely borderline text.
+    if credibility_score <= 45:
         classification = 'FAKE'
-    elif credibility_score <= 50:
+    elif credibility_score <= 55:
         classification = 'UNCERTAIN'
     else:
         classification = 'REAL'
