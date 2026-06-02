@@ -130,13 +130,6 @@ export const analyticsAPI = {
   getMyOrg: () => api.get('/analytics/my-org'),
 };
 
-// ─── Reports ──────────────────────────────────────────────────────────
-export const reportsAPI = {
-  generate: (data) => api.post('/reports/generate', data),
-  getReport: (id) => api.get(`/reports/${id}`),
-  list: () => api.get('/reports'),
-};
-
 // ─── Admin ────────────────────────────────────────────────────────────
 export const adminAPI = {
   getSystemHealth: () => api.get('/admin/system/health'),

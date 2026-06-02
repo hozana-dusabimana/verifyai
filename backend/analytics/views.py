@@ -15,8 +15,6 @@ from rest_framework.permissions import AllowAny
 from accounts.permissions import HasRolePermission
 from analysis.models import AnalysisResult
 from alerts.models import Alert
-from .models import Report
-from .serializers import ReportSerializer, ReportGenerateSerializer
 
 User = get_user_model()
 
@@ -195,53 +193,9 @@ class AnalyticsTopicsView(APIView):
         return _success(data)
 
 
-# ─── Reports ──────────────────────────────────────────────────────────
-
-class ReportGenerateView(APIView):
-    """Queue report generation job."""
-    required_permission = 'export_reports'
-    permission_classes = [IsAuthenticated, HasRolePermission]
-
-    def post(self, request):
-        serializer = ReportGenerateSerializer(data=request.data)
-        if not serializer.is_valid():
-            return _error(serializer.errors)
-
-        report = Report.objects.create(
-            user=request.user,
-            title=serializer.validated_data['title'],
-            report_format=serializer.validated_data['report_format'],
-            date_from=serializer.validated_data.get('date_from'),
-            date_to=serializer.validated_data.get('date_to'),
-        )
-
-        # In production, this would trigger a Celery task
-        # For now, mark as completed immediately
-        report.status = Report.Status.COMPLETED
-        report.save(update_fields=['status'])
-
-        return _success(ReportSerializer(report).data, status_code=status.HTTP_201_CREATED)
-
-
-class ReportDetailView(APIView):
-    required_permission = 'export_reports'
-    permission_classes = [IsAuthenticated, HasRolePermission]
-
-    def get(self, request, report_id):
-        try:
-            report = Report.objects.get(id=report_id, user=request.user)
-        except Report.DoesNotExist:
-            return _error('Report not found.', status.HTTP_404_NOT_FOUND)
-        return _success(ReportSerializer(report).data)
-
-
-class ReportListView(APIView):
-    required_permission = 'export_reports'
-    permission_classes = [IsAuthenticated, HasRolePermission]
-
-    def get(self, request):
-        reports = Report.objects.filter(user=request.user)
-        return _success(ReportSerializer(reports, many=True).data)
+# Note: report generation/list/detail endpoints were removed — the Analytics
+# page now produces CSV/PDF reports client-side. The Report model/table is
+# retained to avoid a destructive migration.
 
 
 class PlatformStatsView(APIView):
