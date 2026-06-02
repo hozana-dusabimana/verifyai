@@ -109,6 +109,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # DRF
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
+        # API-key auth runs first; it ignores non-`vai_` tokens so JWT still
+        # handles normal browser/session logins.
+        'accounts.authentication.APIKeyAuthentication',
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
