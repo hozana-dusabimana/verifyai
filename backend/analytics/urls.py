@@ -14,5 +14,7 @@ urlpatterns = [
     path('analytics/platform-stats', views.PlatformStatsView.as_view(), name='platform-stats'),
     path('analytics/org-summary', views.OrgSummaryView.as_view(), name='analytics-org-summary'),
     path('analytics/org-feed', views.OrgFeedView.as_view(), name='analytics-org-feed'),
+    path('analytics/org-members', views.OrgMembersPerformanceView.as_view(), name='analytics-org-members'),
+    path('analytics/my-org', views.MyOrgView.as_view(), name='analytics-my-org'),
     path('analytics/org-alert/<uuid:alert_id>', views.OrgAlertActionView.as_view(), name='analytics-org-alert-action'),
 ]

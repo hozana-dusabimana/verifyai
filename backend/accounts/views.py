@@ -511,7 +511,11 @@ class AdminUserDeactivateView(APIView):
 
 # ─── Organization Member Management (Government + Admin) ─────────────
 
+# Government can manage (list / deactivate) journalists and any legacy citizens
+# already attached to the org, but may only CREATE journalists — citizens are
+# not journalists and are not provisioned into organizations.
 ORG_MANAGEABLE_ROLES = (User.Role.CITIZEN, User.Role.JOURNALIST)
+ORG_CREATABLE_ROLES = (User.Role.JOURNALIST,)
 
 
 def _org_qs(user):
@@ -576,10 +580,10 @@ class OrgMemberCreateView(APIView):
             return _error({'missing_fields': missing})
 
         role = data['role']
-        if role not in ORG_MANAGEABLE_ROLES:
+        if role not in ORG_CREATABLE_ROLES:
             return _error({
-                'role': f'Government can only create Citizen or Journalist members. '
-                        f'Got "{role}".',
+                'role': 'Organizations are made up of journalists. '
+                        'Only Journalist members can be added.',
             })
 
         email = data['email'].strip().lower()

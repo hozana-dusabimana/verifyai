@@ -1,8 +1,31 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useLocation, Routes, Route } from 'react-router-dom';
-import { Activity, Users, Database, FileText, CheckCircle, Search, Upload, AlertTriangle, RefreshCw, Brain, Cpu, BarChart3, Zap, UserPlus } from 'lucide-react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
+import {
+  PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid,
+  Tooltip, ResponsiveContainer, Legend,
+} from 'recharts';
+import {
+  Activity, Users, Database, FileText, Search, Upload, AlertTriangle,
+  RefreshCw, Brain, Cpu, BarChart3, Zap, UserPlus, Building2, Trash2,
+  ChevronLeft, CheckCircle2, ShieldCheck, HardDrive, Server,
+} from 'lucide-react';
 import { adminAPI, usersAPI } from '../../services/api';
 import Modal from '../../components/Modal';
+
+const statusDot = (status) => {
+  const s = (status || '').toLowerCase();
+  if (['healthy', 'ready', 'ok'].includes(s)) return 'bg-emerald-500';
+  if (['unhealthy', 'unavailable', 'models missing'].includes(s)) return 'bg-red-500';
+  return 'bg-amber-500';
+};
+
+const SERVICE_ICON = {
+  database: Database,
+  redis: Server,
+  celery: Cpu,
+  ml_engine: Brain,
+  storage: HardDrive,
+};
 
 // ─── System Health ─────────────────────────────────────────────────
 function HealthPanel() {
@@ -25,39 +48,59 @@ function HealthPanel() {
   if (loading) return <div className="flex justify-center py-16"><div className="animate-spin rounded-full h-8 w-8 border-2 border-brand-500 border-t-transparent" /></div>;
 
   const services = health?.services || {};
+  const overall = health?.overall || 'unknown';
+
+  const metricCards = [
+    { label: 'Total Users', value: metrics?.total_users },
+    { label: 'Articles', value: metrics?.total_articles },
+    { label: 'Total Analyses', value: metrics?.total_analyses },
+    { label: 'Completed', value: metrics?.completed_analyses },
+    { label: 'Pending', value: metrics?.pending_analyses },
+    { label: 'Open Alerts', value: metrics?.open_alerts },
+    { label: 'Escalated', value: metrics?.escalated_alerts },
+  ];
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-extrabold text-slate-900">System Health</h2>
+        <div>
+          <h2 className="text-2xl font-extrabold text-slate-900">System Health</h2>
+          <p className="text-sm text-slate-500 mt-0.5">Live status of every platform service.</p>
+        </div>
         <button onClick={fetchHealth} className="flex items-center gap-2 px-4 py-2 bg-slate-100 rounded-xl text-sm font-bold hover:bg-slate-200">
           <RefreshCw className="w-4 h-4" /> Refresh
         </button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {Object.entries(services).map(([name, status]) => (
-          <div key={name} className="glass rounded-2xl p-5 flex items-center gap-4">
-            <div className={`w-3 h-3 rounded-full ${status === 'healthy' ? 'bg-emerald-500' : status === 'unhealthy' ? 'bg-red-500' : 'bg-amber-500'}`} />
-            <div>
-              <p className="text-sm font-bold text-slate-900 capitalize">{name}</p>
-              <p className="text-xs text-slate-500 capitalize">{status}</p>
+      <div className={`rounded-2xl p-4 border flex items-center gap-3 ${overall === 'healthy' ? 'bg-emerald-50 border-emerald-200' : 'bg-amber-50 border-amber-200'}`}>
+        <span className={`w-3 h-3 rounded-full ${statusDot(overall)}`} />
+        <p className={`text-sm font-bold capitalize ${overall === 'healthy' ? 'text-emerald-700' : 'text-amber-700'}`}>
+          Overall status: {overall}
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {Object.entries(services).map(([name, status]) => {
+          const Icon = SERVICE_ICON[name] || Activity;
+          return (
+            <div key={name} className="glass rounded-2xl p-5 flex items-center gap-4">
+              <div className="p-2 bg-slate-100 rounded-lg text-slate-600"><Icon className="w-5 h-5" /></div>
+              <div className="flex-1">
+                <p className="text-sm font-bold text-slate-900 capitalize">{name.replace('_', ' ')}</p>
+                <p className="text-xs text-slate-500 capitalize">{status}</p>
+              </div>
+              <div className={`w-3 h-3 rounded-full ${statusDot(status)}`} />
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {metrics && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          {[
-            { label: 'Total Users', value: metrics.total_users },
-            { label: 'Total Articles', value: metrics.total_articles },
-            { label: 'Completed Analyses', value: metrics.completed_analyses },
-            { label: 'Open Alerts', value: metrics.open_alerts },
-          ].map((m, i) => (
-            <div key={i} className="glass rounded-2xl p-5 text-center">
-              <p className="text-2xl font-bold text-slate-900">{m.value}</p>
-              <p className="text-xs text-slate-500 font-medium mt-1">{m.label}</p>
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
+          {metricCards.map((m, i) => (
+            <div key={i} className="glass rounded-2xl p-4 text-center">
+              <p className="text-2xl font-bold text-slate-900 tabular-nums">{m.value ?? '—'}</p>
+              <p className="text-[11px] text-slate-500 font-medium mt-1">{m.label}</p>
             </div>
           ))}
         </div>
@@ -181,6 +224,7 @@ function UsersPanel() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [showCreate, setShowCreate] = useState(false);
+  const [activity, setActivity] = useState(null);
 
   const fetchUsers = useCallback(async (term) => {
     setLoading(true);
@@ -230,7 +274,6 @@ function UsersPanel() {
         </button>
       </div>
 
-      {/* Role distribution chips */}
       {!loading && users.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {['admin', 'government', 'journalist', 'citizen'].map((r) => (
@@ -262,12 +305,6 @@ function UsersPanel() {
           <p className="text-xs text-slate-500 mt-1 mb-4">
             {search ? 'Try a different search term.' : 'Create the first user to get started.'}
           </p>
-          {!search && (
-            <button onClick={() => setShowCreate(true)}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-sm font-bold">
-              <UserPlus className="w-4 h-4" /> Create user
-            </button>
-          )}
         </div>
       ) : (
         <div className="glass rounded-2xl shadow-sm overflow-hidden">
@@ -317,7 +354,13 @@ function UsersPanel() {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-sm text-slate-500 tabular-nums">{new Date(u.created_at).toLocaleDateString()}</td>
-                    <td className="px-6 py-4 text-right">
+                    <td className="px-6 py-4 text-right whitespace-nowrap">
+                      <button
+                        onClick={() => setActivity(u.id)}
+                        className="text-xs font-bold text-brand-600 hover:text-brand-700 px-2 py-1 rounded hover:bg-brand-50"
+                      >
+                        View
+                      </button>
                       {u.is_active && (
                         <button
                           onClick={() => handleDeactivate(u.id)}
@@ -340,7 +383,96 @@ function UsersPanel() {
         onClose={() => setShowCreate(false)}
         onCreated={(newUser) => setUsers((prev) => [newUser, ...prev])}
       />
+      <UserActivityModal userId={activity} onClose={() => setActivity(null)} />
     </div>
+  );
+}
+
+// ─── User Activity (searches) modal ────────────────────────────────
+const CLS_BADGE = {
+  FAKE: 'bg-red-100 text-red-700',
+  REAL: 'bg-emerald-100 text-emerald-700',
+  UNCERTAIN: 'bg-amber-100 text-amber-700',
+};
+
+function UserActivityModal({ userId, onClose }) {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!userId) return;
+    let active = true;
+    (async () => {
+      setLoading(true);
+      setData(null);
+      try {
+        const res = await adminAPI.getUserActivity(userId);
+        if (active) setData(res.data.data);
+      } catch {
+        if (active) setData(null);
+      } finally {
+        if (active) setLoading(false);
+      }
+    })();
+    return () => { active = false; };
+  }, [userId]);
+
+  if (!userId) return null;
+  const u = data?.user;
+  const s = data?.stats;
+
+  return (
+    <Modal open={!!userId} onClose={onClose} icon={Users} title={u?.full_name || 'User activity'} subtitle={u?.email}>
+      <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+        {loading ? (
+          <div className="flex justify-center py-10"><div className="animate-spin rounded-full h-8 w-8 border-2 border-brand-500 border-t-transparent" /></div>
+        ) : !data ? (
+          <p className="text-sm text-slate-500 text-center py-8">Could not load activity.</p>
+        ) : (
+          <>
+            <div className="flex flex-wrap gap-2 text-xs">
+              <span className={`px-2 py-1 rounded-full font-bold border capitalize ${ROLE_BADGES[u.role] || ''}`}>{u.role}</span>
+              <span className="px-2 py-1 rounded-full font-bold border bg-slate-50 text-slate-700 border-slate-200">{u.organization}</span>
+              <span className={`px-2 py-1 rounded-full font-bold border ${u.is_active ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-red-50 text-red-700 border-red-200'}`}>{u.is_active ? 'Active' : 'Inactive'}</span>
+            </div>
+            <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+              {[
+                { label: 'Analyzed', value: s.total_analyzed },
+                { label: 'Fake', value: s.fake_count },
+                { label: 'Real', value: s.real_count },
+                { label: 'Avg cred.', value: `${Math.round(s.average_credibility)}%` },
+                { label: 'Open alerts', value: s.open_alerts },
+              ].map((m, i) => (
+                <div key={i} className="bg-slate-50 rounded-xl p-3 text-center">
+                  <p className="text-lg font-bold text-slate-900 tabular-nums">{m.value}</p>
+                  <p className="text-[10px] text-slate-500 font-medium">{m.label}</p>
+                </div>
+              ))}
+            </div>
+            <div>
+              <h4 className="text-sm font-bold text-slate-900 mb-2">Recent analyses (searches)</h4>
+              {data.recent_analyses.length === 0 ? (
+                <p className="text-xs text-slate-500 py-4 text-center">No analyses yet.</p>
+              ) : (
+                <div className="space-y-1.5">
+                  {data.recent_analyses.map((a) => (
+                    <div key={a.id} className="flex items-center justify-between gap-3 bg-white border border-slate-100 rounded-lg px-3 py-2">
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-slate-800 truncate">{a.title}</p>
+                        <p className="text-[11px] text-slate-500 truncate">{a.source_name} · {new Date(a.created_at).toLocaleDateString()}</p>
+                      </div>
+                      <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${CLS_BADGE[a.classification] || 'bg-slate-100 text-slate-600'}`}>
+                        {a.classification || a.status} {a.credibility_score != null && `· ${Math.round(a.credibility_score)}%`}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </>
+        )}
+      </div>
+    </Modal>
   );
 }
 
@@ -349,6 +481,7 @@ function DatasetsPanel() {
   const [datasets, setDatasets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     adminAPI.getDatasets().then(res => setDatasets(res.data.data || [])).catch(() => {}).finally(() => setLoading(false));
@@ -358,6 +491,7 @@ function DatasetsPanel() {
     const file = e.target.files[0];
     if (!file) return;
     setUploading(true);
+    setError('');
     try {
       const fd = new FormData();
       fd.append('name', file.name.replace(/\.[^.]+$/, ''));
@@ -365,32 +499,66 @@ function DatasetsPanel() {
       fd.append('file', file);
       const res = await adminAPI.uploadDataset(fd);
       setDatasets(prev => [res.data.data, ...prev]);
+    } catch (err) {
+      const data = err.response?.data?.error;
+      if (typeof data === 'object') {
+        setError(Object.entries(data).map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : v}`).join(' | '));
+      } else {
+        setError(data || 'Upload failed.');
+      }
+    } finally {
+      setUploading(false);
+      e.target.value = '';
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!confirm('Delete this dataset? The file will be removed.')) return;
+    try {
+      await adminAPI.deleteDataset(id);
+      setDatasets(prev => prev.filter(d => d.id !== id));
     } catch { /* ignore */ }
-    finally { setUploading(false); }
   };
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-extrabold text-slate-900">Dataset Manager</h2>
+        <div>
+          <h2 className="text-2xl font-extrabold text-slate-900">Dataset Manager</h2>
+          <p className="text-sm text-slate-500 mt-0.5">Labeled training data for model retraining.</p>
+        </div>
         <label className="flex items-center gap-2 px-4 py-2 bg-brand-600 text-white rounded-xl font-bold cursor-pointer hover:bg-brand-700 shadow-md">
-          <Upload className="w-4 h-4" /> {uploading ? 'Uploading...' : 'Upload Dataset'}
-          <input type="file" className="hidden" accept=".csv,.json,.txt" onChange={handleUpload} disabled={uploading} />
+          <Upload className="w-4 h-4" /> {uploading ? 'Uploading…' : 'Upload Dataset'}
+          <input type="file" className="hidden" accept=".csv,.json" onChange={handleUpload} disabled={uploading} />
         </label>
       </div>
+
+      <div className="rounded-xl bg-blue-50 border border-blue-200 px-4 py-3 text-xs text-blue-800">
+        <strong>Format:</strong> CSV or JSON with a text column (<code>text</code>, <code>content</code>, <code>article</code>, or <code>body</code>) and a label
+        column (<code>label</code>, <code>target</code>, <code>class</code>, or <code>fake</code>). Labels accept <code>fake</code>/<code>real</code> or <code>1</code>/<code>0</code>. Minimum 20 rows with both classes.
+      </div>
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm font-medium flex items-start gap-2">
+          <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" /> <span>{error}</span>
+        </div>
+      )}
 
       {loading ? (
         <div className="flex justify-center py-16"><div className="animate-spin rounded-full h-8 w-8 border-2 border-brand-500 border-t-transparent" /></div>
       ) : datasets.length > 0 ? (
         <div className="space-y-3">
           {datasets.map((ds) => (
-            <div key={ds.id} className="glass rounded-2xl p-5 flex items-center justify-between">
-              <div>
-                <p className="font-bold text-slate-900">{ds.name}</p>
-                <p className="text-xs text-slate-500 mt-0.5">{ds.description} | Uploaded by: {ds.uploaded_by_email || 'system'} | {new Date(ds.created_at).toLocaleDateString()}</p>
+            <div key={ds.id} className="glass rounded-2xl p-5 flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="font-bold text-slate-900 truncate">{ds.name}</p>
+                <p className="text-xs text-slate-500 mt-0.5 truncate">{ds.description} · {ds.uploaded_by_email || 'system'} · {new Date(ds.created_at).toLocaleDateString()}</p>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded-full font-bold">{ds.record_count} records</span>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <span className="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded-full font-bold tabular-nums">{ds.record_count} records</span>
+                <button onClick={() => handleDelete(ds.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg" title="Delete dataset">
+                  <Trash2 className="w-4 h-4" />
+                </button>
               </div>
             </div>
           ))}
@@ -457,14 +625,299 @@ function AuditPanel() {
   );
 }
 
+// ─── Statistics ────────────────────────────────────────────────────
+const ROLE_COLORS = { admin: '#a855f7', government: '#3b82f6', journalist: '#f59e0b', citizen: '#64748b' };
+const CLS_COLORS = { fake: '#ef4444', real: '#10b981', uncertain: '#f59e0b' };
+
+function StatCardSmall({ label, value, color }) {
+  return (
+    <div className="glass rounded-2xl p-5">
+      <p className="text-xs font-bold uppercase tracking-wider text-slate-500">{label}</p>
+      <p className={`text-3xl font-extrabold mt-1 tabular-nums ${color || 'text-slate-900'}`}>{value}</p>
+    </div>
+  );
+}
+
+function StatisticsPanel() {
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const fetchStats = async () => {
+    setLoading(true);
+    try {
+      const res = await adminAPI.getStatistics({ days: 30 });
+      setStats(res.data.data);
+    } catch { /* ignore */ }
+    finally { setLoading(false); }
+  };
+
+  useEffect(() => { fetchStats(); }, []);
+
+  if (loading) return <div className="flex justify-center py-16"><div className="animate-spin rounded-full h-8 w-8 border-2 border-brand-500 border-t-transparent" /></div>;
+  if (!stats) return <p className="text-sm text-slate-500">Could not load statistics.</p>;
+
+  const cls = stats.classification || {};
+  const pieData = [
+    { name: 'Real', key: 'real', value: cls.real || 0 },
+    { name: 'Fake', key: 'fake', value: cls.fake || 0 },
+    { name: 'Uncertain', key: 'uncertain', value: cls.uncertain || 0 },
+  ].filter(d => d.value > 0);
+
+  const roleData = Object.entries(stats.users_by_role || {}).map(([role, count]) => ({ role, count }));
+  const trend = (stats.trend || []).map(r => ({
+    name: new Date(r.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+    real: r.real_count, fake: r.fake_count,
+  }));
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-2xl font-extrabold text-slate-900">Platform Statistics</h2>
+          <p className="text-sm text-slate-500 mt-0.5">Last {stats.window_days} days · platform-wide.</p>
+        </div>
+        <button onClick={fetchStats} className="flex items-center gap-2 px-4 py-2 bg-slate-100 rounded-xl text-sm font-bold hover:bg-slate-200">
+          <RefreshCw className="w-4 h-4" /> Refresh
+        </button>
+      </div>
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCardSmall label="Total users" value={stats.total_users} />
+        <StatCardSmall label="Total analyses" value={cls.total} />
+        <StatCardSmall label="Avg credibility" value={`${Math.round(cls.average_credibility || 0)}%`} color="text-emerald-600" />
+        <StatCardSmall label={`New (${stats.window_days}d)`} value={stats.new_analyses_window} color="text-brand-600" />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="glass rounded-2xl p-6">
+          <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2"><PieChartIcon /> Classification mix</h3>
+          {pieData.length > 0 ? (
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90} innerRadius={50} paddingAngle={2}>
+                    {pieData.map((d) => <Cell key={d.key} fill={CLS_COLORS[d.key]} />)}
+                  </Pie>
+                  <Tooltip />
+                  <Legend iconType="circle" />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          ) : <p className="text-sm text-slate-500 py-10 text-center">No analyses yet.</p>}
+        </div>
+
+        <div className="glass rounded-2xl p-6">
+          <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2"><Users className="w-5 h-5 text-brand-600" /> Users by role</h3>
+          <div className="space-y-3 pt-2">
+            {roleData.map((r) => {
+              const max = Math.max(...roleData.map(x => x.count), 1);
+              return (
+                <div key={r.role} className="flex items-center gap-3">
+                  <span className="text-xs font-bold text-slate-700 w-24 capitalize">{r.role}</span>
+                  <div className="flex-1 h-3 bg-slate-100 rounded-full overflow-hidden">
+                    <div className="h-full rounded-full" style={{ width: `${(r.count / max) * 100}%`, background: ROLE_COLORS[r.role] || '#64748b' }} />
+                  </div>
+                  <span className="text-sm font-bold text-slate-700 w-8 text-right tabular-nums">{r.count}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      <div className="glass rounded-2xl p-6">
+        <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2"><BarChart3 className="w-5 h-5 text-brand-600" /> Real vs Fake — {stats.window_days} days</h3>
+        <div className="h-64">
+          {trend.length > 0 ? (
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={trend} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} allowDecimals={false} />
+                <Tooltip />
+                <Legend iconType="circle" />
+                <Line type="monotone" dataKey="real" name="Real" stroke="#10b981" strokeWidth={2.5} dot={false} />
+                <Line type="monotone" dataKey="fake" name="Fake" stroke="#ef4444" strokeWidth={2.5} dot={false} />
+              </LineChart>
+            </ResponsiveContainer>
+          ) : <p className="text-sm text-slate-500 py-10 text-center">No trend data yet.</p>}
+        </div>
+      </div>
+
+      <div className="glass rounded-2xl p-6">
+        <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2"><Building2 className="w-5 h-5 text-brand-600" /> Top organizations by activity</h3>
+        {(stats.top_organizations || []).length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="min-w-full">
+              <thead>
+                <tr className="border-b border-slate-200">
+                  <th className="px-3 py-2 text-left text-[11px] font-bold text-slate-500 uppercase">Organization</th>
+                  <th className="px-3 py-2 text-right text-[11px] font-bold text-slate-500 uppercase">Analyses</th>
+                  <th className="px-3 py-2 text-right text-[11px] font-bold text-slate-500 uppercase">Fake</th>
+                  <th className="px-3 py-2 text-right text-[11px] font-bold text-slate-500 uppercase">Avg cred.</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {stats.top_organizations.map((o, i) => (
+                  <tr key={i} className="hover:bg-slate-50/60">
+                    <td className="px-3 py-2.5 text-sm font-bold text-slate-800">{o.organization}</td>
+                    <td className="px-3 py-2.5 text-sm text-right tabular-nums">{o.total}</td>
+                    <td className="px-3 py-2.5 text-sm text-right text-red-600 font-bold tabular-nums">{o.fake}</td>
+                    <td className="px-3 py-2.5 text-sm text-right tabular-nums">{Math.round(o.average_credibility)}%</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : <p className="text-sm text-slate-500 py-6 text-center">No organization activity yet.</p>}
+      </div>
+    </div>
+  );
+}
+
+function PieChartIcon() {
+  return <BarChart3 className="w-5 h-5 text-brand-600" />;
+}
+
+// ─── Organizations (government oversight) ──────────────────────────
+function OrganizationsPanel() {
+  const [orgs, setOrgs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [detail, setDetail] = useState(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [activity, setActivity] = useState(null);
+
+  useEffect(() => {
+    adminAPI.getOrganizations().then(res => setOrgs(res.data.data || [])).catch(() => {}).finally(() => setLoading(false));
+  }, []);
+
+  const openOrg = async (name) => {
+    setDetailLoading(true);
+    setDetail({ organization: name, members: [] });
+    try {
+      const res = await adminAPI.getOrganizationDetail(name);
+      setDetail(res.data.data);
+    } catch { setDetail(null); }
+    finally { setDetailLoading(false); }
+  };
+
+  if (loading) return <div className="flex justify-center py-16"><div className="animate-spin rounded-full h-8 w-8 border-2 border-brand-500 border-t-transparent" /></div>;
+
+  if (detail) {
+    return (
+      <div className="space-y-6">
+        <button onClick={() => setDetail(null)} className="inline-flex items-center gap-1.5 text-sm font-bold text-brand-600 hover:text-brand-700">
+          <ChevronLeft className="w-4 h-4" /> All organizations
+        </button>
+        <div>
+          <h2 className="text-2xl font-extrabold text-slate-900 flex items-center gap-2"><Building2 className="w-6 h-6 text-brand-600" /> {detail.organization}</h2>
+          <p className="text-sm text-slate-500 mt-0.5">{detail.member_count} members · their users, details & searches.</p>
+        </div>
+
+        {detailLoading ? (
+          <div className="flex justify-center py-16"><div className="animate-spin rounded-full h-8 w-8 border-2 border-brand-500 border-t-transparent" /></div>
+        ) : (
+          <div className="glass rounded-2xl shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-slate-200">
+                <thead className="bg-slate-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-[11px] font-bold text-slate-500 uppercase">Member</th>
+                    <th className="px-6 py-3 text-left text-[11px] font-bold text-slate-500 uppercase">Role</th>
+                    <th className="px-6 py-3 text-right text-[11px] font-bold text-slate-500 uppercase">Analyses</th>
+                    <th className="px-6 py-3 text-right text-[11px] font-bold text-slate-500 uppercase">Fake</th>
+                    <th className="px-6 py-3 text-right text-[11px] font-bold text-slate-500 uppercase">Avg cred.</th>
+                    <th className="px-6 py-3 text-right text-[11px] font-bold text-slate-500 uppercase">Alerts</th>
+                    <th className="px-6 py-3 text-right text-[11px] font-bold text-slate-500 uppercase">Details</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 bg-white">
+                  {detail.members.map((m) => (
+                    <tr key={m.id} className="hover:bg-slate-50/60">
+                      <td className="px-6 py-4">
+                        <p className="text-sm font-bold text-slate-900 truncate">{m.full_name}</p>
+                        <p className="text-xs text-slate-500 truncate">{m.email}</p>
+                      </td>
+                      <td className="px-6 py-4"><span className={`inline-flex px-2 py-0.5 rounded text-xs font-bold border capitalize ${ROLE_BADGES[m.role] || ''}`}>{m.role}</span></td>
+                      <td className="px-6 py-4 text-sm text-right tabular-nums">{m.total_analyses}</td>
+                      <td className="px-6 py-4 text-sm text-right text-red-600 font-bold tabular-nums">{m.fake_count}</td>
+                      <td className="px-6 py-4 text-sm text-right tabular-nums">{Math.round(m.average_credibility)}%</td>
+                      <td className="px-6 py-4 text-sm text-right tabular-nums">{m.open_alerts}</td>
+                      <td className="px-6 py-4 text-right">
+                        <button onClick={() => setActivity(m.id)} className="text-xs font-bold text-brand-600 hover:text-brand-700 px-2 py-1 rounded hover:bg-brand-50">View</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+        <UserActivityModal userId={activity} onClose={() => setActivity(null)} />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-extrabold text-slate-900">Organizations</h2>
+        <p className="text-sm text-slate-500 mt-0.5">Government & newsroom organizations — drill in to see their users, details and searches.</p>
+      </div>
+
+      {orgs.length === 0 ? (
+        <div className="glass rounded-2xl p-12 text-center">
+          <Building2 className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+          <p className="text-slate-500">No organizations yet.</p>
+        </div>
+      ) : (
+        <div className="glass rounded-2xl shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-slate-200">
+              <thead className="bg-slate-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-[11px] font-bold text-slate-500 uppercase">Organization</th>
+                  <th className="px-6 py-3 text-right text-[11px] font-bold text-slate-500 uppercase">Members</th>
+                  <th className="px-6 py-3 text-right text-[11px] font-bold text-slate-500 uppercase">Gov / Journ.</th>
+                  <th className="px-6 py-3 text-right text-[11px] font-bold text-slate-500 uppercase">Analyses</th>
+                  <th className="px-6 py-3 text-right text-[11px] font-bold text-slate-500 uppercase">Avg cred.</th>
+                  <th className="px-6 py-3 text-right text-[11px] font-bold text-slate-500 uppercase">Alerts</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 bg-white">
+                {orgs.map((o, i) => (
+                  <tr key={i} onClick={() => openOrg(o.organization)} className="hover:bg-brand-50/40 cursor-pointer transition-colors">
+                    <td className="px-6 py-4 text-sm font-bold text-slate-900 flex items-center gap-2"><Building2 className="w-4 h-4 text-brand-500" /> {o.organization}</td>
+                    <td className="px-6 py-4 text-sm text-right tabular-nums">{o.member_count}</td>
+                    <td className="px-6 py-4 text-sm text-right tabular-nums">{o.government_count} / {o.journalist_count}</td>
+                    <td className="px-6 py-4 text-sm text-right tabular-nums">{o.total_analyses}</td>
+                    <td className="px-6 py-4 text-sm text-right tabular-nums">{Math.round(o.average_credibility)}%</td>
+                    <td className={`px-6 py-4 text-sm text-right font-bold tabular-nums ${o.open_alerts > 0 ? 'text-red-600' : 'text-slate-400'}`}>{o.open_alerts}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── ML Models Panel ──────────────────────────────────────────────
+const JOB_DONE = ['completed', 'failed'];
+
 function MLModelsPanel() {
   const [modelInfo, setModelInfo] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [retraining, setRetraining] = useState(false);
+  const [datasets, setDatasets] = useState([]);
+  const [selectedDataset, setSelectedDataset] = useState('');
+  const [job, setJob] = useState(null);
+  const [starting, setStarting] = useState(false);
   const [testText, setTestText] = useState('');
   const [testResult, setTestResult] = useState(null);
   const [testing, setTesting] = useState(false);
+  const pollRef = useRef(null);
 
   const fetchModels = async () => {
     setLoading(true);
@@ -475,16 +928,45 @@ function MLModelsPanel() {
     finally { setLoading(false); }
   };
 
-  useEffect(() => { fetchModels(); }, []);
+  useEffect(() => {
+    fetchModels();
+    adminAPI.getDatasets().then(res => setDatasets(res.data.data || [])).catch(() => {});
+    // Resume tracking the latest running job (e.g. after a refresh)
+    adminAPI.getTrainingJobs().then(res => {
+      const latest = (res.data.data || [])[0];
+      if (latest && !JOB_DONE.includes(latest.status)) startPolling(latest.id);
+      else if (latest) setJob(latest);
+    }).catch(() => {});
+    return () => clearInterval(pollRef.current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const startPolling = (jobId) => {
+    clearInterval(pollRef.current);
+    pollRef.current = setInterval(async () => {
+      try {
+        const res = await adminAPI.getTrainingJob(jobId);
+        const j = res.data.data;
+        setJob(j);
+        if (JOB_DONE.includes(j.status)) {
+          clearInterval(pollRef.current);
+          if (j.status === 'completed') fetchModels();
+        }
+      } catch { /* keep polling */ }
+    }, 3000);
+  };
 
   const handleRetrain = async () => {
-    if (!confirm('Start model retraining? This may take several minutes.')) return;
-    setRetraining(true);
+    if (!confirm('Start model retraining? This runs in the background and may take several minutes.')) return;
+    setStarting(true);
     try {
-      await adminAPI.retrainModels();
-      alert('Retraining started. Check back in a few minutes.');
-    } catch { alert('Failed to start retraining.'); }
-    finally { setRetraining(false); }
+      const res = await adminAPI.retrainModels(selectedDataset || undefined);
+      const jobId = res.data.data.job_id;
+      setJob({ id: jobId, status: 'running', progress: 1, stage: 'Starting' });
+      startPolling(jobId);
+    } catch (err) {
+      alert(err.response?.data?.error || 'Failed to start retraining.');
+    } finally { setStarting(false); }
   };
 
   const handleTest = async (e) => {
@@ -506,26 +988,60 @@ function MLModelsPanel() {
   const models = modelInfo?.models_available || {};
   const metrics = modelInfo?.metrics || {};
   const weights = modelInfo?.ensemble_weights || {};
+  const jobRunning = job && !JOB_DONE.includes(job.status);
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center flex-wrap gap-3">
         <h2 className="text-2xl font-extrabold text-slate-900 flex items-center gap-2"><Brain className="w-6 h-6 text-brand-600" /> ML Models</h2>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap items-center">
+          <select value={selectedDataset} onChange={(e) => setSelectedDataset(e.target.value)}
+            className="px-3 py-2 rounded-xl border border-slate-300 text-sm font-medium bg-white outline-none focus:ring-2 focus:ring-brand-500">
+            <option value="">Built-in dataset</option>
+            {datasets.map(d => <option key={d.id} value={d.id}>{d.name} ({d.record_count})</option>)}
+          </select>
           <button onClick={fetchModels} className="flex items-center gap-2 px-4 py-2 bg-slate-100 rounded-xl text-sm font-bold hover:bg-slate-200">
             <RefreshCw className="w-4 h-4" /> Refresh
           </button>
-          <button onClick={handleRetrain} disabled={retraining}
+          <button onClick={handleRetrain} disabled={starting || jobRunning}
             className="flex items-center gap-2 px-4 py-2 bg-brand-600 text-white rounded-xl text-sm font-bold hover:bg-brand-700 disabled:opacity-50 shadow-md">
-            <Zap className="w-4 h-4" /> {retraining ? 'Starting...' : 'Retrain Models'}
+            <Zap className="w-4 h-4" /> {jobRunning ? 'Training…' : starting ? 'Starting…' : 'Retrain Models'}
           </button>
         </div>
       </div>
 
+      {/* Training job progress */}
+      {job && (
+        <div className={`rounded-2xl p-4 border ${
+          job.status === 'completed' ? 'bg-emerald-50 border-emerald-200' :
+          job.status === 'failed' ? 'bg-red-50 border-red-200' :
+          'bg-blue-50 border-blue-200'
+        }`}>
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-sm font-bold flex items-center gap-2">
+              {job.status === 'completed' ? <CheckCircle2 className="w-4 h-4 text-emerald-600" /> :
+               job.status === 'failed' ? <AlertTriangle className="w-4 h-4 text-red-600" /> :
+               <RefreshCw className="w-4 h-4 text-blue-600 animate-spin" />}
+              <span className="capitalize">{job.status}</span>
+              {job.stage && <span className="text-slate-500 font-medium">· {job.stage}</span>}
+            </p>
+            <span className="text-sm font-bold tabular-nums">{job.progress || 0}%</span>
+          </div>
+          {jobRunning && (
+            <div className="h-2 bg-white/70 rounded-full overflow-hidden">
+              <div className="h-full bg-blue-500 rounded-full transition-all duration-500" style={{ width: `${job.progress || 0}%` }} />
+            </div>
+          )}
+          {job.message && <p className="text-xs text-slate-600 mt-2">{job.message}</p>}
+          {job.error && <p className="text-xs text-red-700 mt-1 font-mono">{job.error}</p>}
+        </div>
+      )}
+
       {/* Model Status */}
       <div className={`rounded-2xl p-4 border ${modelInfo?.all_ready ? 'bg-emerald-50 border-emerald-200' : 'bg-amber-50 border-amber-200'}`}>
-        <p className={`text-sm font-bold ${modelInfo?.all_ready ? 'text-emerald-700' : 'text-amber-700'}`}>
-          {modelInfo?.all_ready ? 'All models are trained and ready for inference.' : 'Some models are missing. Please train models before running analyses.'}
+        <p className={`text-sm font-bold flex items-center gap-2 ${modelInfo?.all_ready ? 'text-emerald-700' : 'text-amber-700'}`}>
+          <ShieldCheck className="w-4 h-4" />
+          {modelInfo?.all_ready ? 'All models are trained and ready for inference.' : 'Some models are missing. Retrain before running analyses.'}
         </p>
       </div>
 
@@ -629,7 +1145,9 @@ const AdminDashboard = () => {
       </div>
 
       {currentPath === 'health' && <HealthPanel />}
+      {currentPath === 'statistics' && <StatisticsPanel />}
       {currentPath === 'users' && <UsersPanel />}
+      {currentPath === 'organizations' && <OrganizationsPanel />}
       {currentPath === 'datasets' && <DatasetsPanel />}
       {currentPath === 'audit' && <AuditPanel />}
       {currentPath === 'models' && <MLModelsPanel />}

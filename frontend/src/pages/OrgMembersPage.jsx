@@ -11,15 +11,10 @@ const ROLE_BADGES = {
   admin:      'bg-purple-100 text-purple-800 border-purple-200',
 };
 
-const ROLE_ICON = {
-  citizen: Users,
-  journalist: Newspaper,
-};
-
 function CreateMemberModal({ open, orgName, onClose, onCreated }) {
   const [form, setForm] = useState({
     first_name: '', last_name: '', email: '',
-    role: 'journalist', password: '',
+    role: 'journalist', password: '',  // organizations are made up of journalists
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -87,27 +82,11 @@ function CreateMemberModal({ open, orgName, onClose, onCreated }) {
 
         <div>
           <label className="text-xs font-bold text-slate-600 mb-1 block">Role</label>
-          <div className="grid grid-cols-2 gap-2">
-            {['journalist', 'citizen'].map((r) => {
-              const Icon = ROLE_ICON[r];
-              const selected = form.role === r;
-              return (
-                <button
-                  key={r}
-                  type="button"
-                  onClick={() => setForm((p) => ({ ...p, role: r }))}
-                  className={`flex items-center gap-2 px-3 py-2.5 rounded-lg border-2 text-sm font-bold capitalize transition-all ${
-                    selected ? 'border-brand-500 bg-brand-50 text-brand-700' : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
-                  }`}
-                >
-                  <Icon className="w-4 h-4" />
-                  {r}
-                </button>
-              );
-            })}
+          <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg border-2 border-brand-500 bg-brand-50 text-brand-700 text-sm font-bold">
+            <Newspaper className="w-4 h-4" /> Journalist
           </div>
           <p className="text-[11px] text-slate-500 mt-1.5">
-            Government and Admin roles are provisioned by a platform administrator.
+            Organizations are made up of journalists. Citizens are independent accounts; Government and Admin roles are provisioned by a platform administrator.
           </p>
         </div>
 
@@ -207,7 +186,7 @@ const OrgMembersPage = () => {
             <Building2 className="w-3.5 h-3.5" /> {orgName}
           </p>
           <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Member management</h1>
-          <p className="text-slate-500 font-medium mt-1">Add and manage citizens and journalists across your organization.</p>
+          <p className="text-slate-500 font-medium mt-1">Add and manage the journalists in your organization.</p>
         </div>
         <button onClick={() => setShowCreate(true)}
           className="inline-flex items-center gap-2 px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl font-bold shadow-md hover:shadow-lg transition-all w-fit">
@@ -238,8 +217,8 @@ const OrgMembersPage = () => {
             <p className="text-2xl font-extrabold text-slate-900 mt-1 tabular-nums">{counts.journalist || 0}</p>
           </div>
           <div className="glass rounded-xl p-4">
-            <p className="text-xs font-bold uppercase tracking-wider text-slate-600">Citizens</p>
-            <p className="text-2xl font-extrabold text-slate-900 mt-1 tabular-nums">{counts.citizen || 0}</p>
+            <p className="text-xs font-bold uppercase tracking-wider text-blue-700">Managers</p>
+            <p className="text-2xl font-extrabold text-slate-900 mt-1 tabular-nums">{counts.government || 0}</p>
           </div>
         </div>
       )}
@@ -303,20 +282,20 @@ const OrgMembersPage = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        {isManageable && !isSelf ? (
-                          <select
-                            className={`rounded-lg border py-1 px-2 text-xs font-bold capitalize ${ROLE_BADGES[m.role]}`}
-                            value={m.role}
-                            onChange={(e) => handleRoleChange(m.id, e.target.value)}
-                          >
-                            <option value="citizen">Citizen</option>
-                            <option value="journalist">Journalist</option>
-                          </select>
-                        ) : (
+                        <div className="flex items-center gap-2">
                           <span className={`inline-flex px-2 py-0.5 rounded text-xs font-bold border capitalize ${ROLE_BADGES[m.role] || 'border-slate-300'}`}>
                             {m.role}
                           </span>
-                        )}
+                          {/* Legacy citizens can be converted to journalists to align the org */}
+                          {m.role === 'citizen' && !isSelf && (
+                            <button
+                              onClick={() => handleRoleChange(m.id, 'journalist')}
+                              className="text-[11px] font-bold text-brand-600 hover:text-brand-700 px-1.5 py-0.5 rounded hover:bg-brand-50"
+                            >
+                              Make journalist
+                            </button>
+                          )}
+                        </div>
                       </td>
                       <td className="px-6 py-4">
                         <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-bold border ${m.is_active ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-red-50 text-red-700 border-red-200'}`}>

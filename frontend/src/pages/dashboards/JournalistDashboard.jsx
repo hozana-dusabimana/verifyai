@@ -4,6 +4,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import {
   FileText, Activity, Bell, TrendingUp,
   ShieldAlert, Megaphone, Search, Newspaper,
+  Building2, Users, Award,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { analyticsAPI, analysisAPI } from '../../services/api';
@@ -25,19 +26,22 @@ const JournalistDashboard = () => {
   const [sources, setSources] = useState([]);
   const [keywords, setKeywords] = useState([]);
   const [sourcesFlagged, setSourcesFlagged] = useState(0);
+  const [org, setOrg] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     (async () => {
-      const [s, h, t, src, kw] = await Promise.allSettled([
+      const [s, h, t, src, kw, o] = await Promise.allSettled([
         analyticsAPI.getSummary(),
         analysisAPI.getHistory({ page_size: 6 }),
         analyticsAPI.getTrends({ days: 30 }),
         analyticsAPI.getSources(),
         analyticsAPI.getKeywords(),
+        analyticsAPI.getMyOrg(),
       ]);
 
       if (s.status === 'fulfilled') setStats(s.value.data.data);
+      if (o.status === 'fulfilled') setOrg(o.value.data.data);
       if (h.status === 'fulfilled') setRecent(h.value.data.data || []);
       if (t.status === 'fulfilled') {
         const rows = t.value.data.data || [];
@@ -112,6 +116,59 @@ const JournalistDashboard = () => {
             color="bg-amber-50 text-amber-600"
             alert={stats.active_alerts > 0}
           />
+        </div>
+      )}
+
+      {/* ── Your organization ────────────────────────────────────── */}
+      {org?.has_org && (
+        <div className="glass rounded-2xl p-6 shadow-sm">
+          <div className="flex justify-between items-start mb-4">
+            <div>
+              <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                <Building2 className="w-5 h-5 text-brand-600" /> Your organization — {org.organization}
+              </h2>
+              <p className="text-xs text-slate-500 mt-0.5">How your newsroom is performing across all its members.</p>
+            </div>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-brand-50 text-brand-700 border border-brand-100">
+              <Users className="w-3.5 h-3.5" /> {org.journalist_count} journalists
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+            {[
+              { label: 'Members', value: org.member_count, icon: <Users className="w-4 h-4" />, color: 'text-slate-900' },
+              { label: 'Org analyses', value: org.org_total_analyses, icon: <Activity className="w-4 h-4" />, color: 'text-blue-600' },
+              { label: 'Avg credibility', value: `${Math.round(org.org_average_credibility || 0)}%`, icon: <Award className="w-4 h-4" />, color: 'text-emerald-600' },
+              { label: 'Open alerts', value: org.org_open_alerts, icon: <Bell className="w-4 h-4" />, color: org.org_open_alerts > 0 ? 'text-red-600' : 'text-slate-900' },
+            ].map((m, i) => (
+              <div key={i} className="bg-slate-50/70 rounded-xl p-4">
+                <div className="flex items-center gap-1.5 text-slate-400 mb-1">{m.icon}<span className="text-[11px] font-bold uppercase tracking-wider">{m.label}</span></div>
+                <p className={`text-2xl font-extrabold tabular-nums ${m.color}`}>{m.value}</p>
+              </div>
+            ))}
+          </div>
+
+          {org.colleagues?.length > 0 && (
+            <div>
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Most active colleagues</h3>
+              <ul className="divide-y divide-slate-100">
+                {org.colleagues.map((c, idx) => (
+                  <li key={idx} className="flex items-center justify-between py-2">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-7 h-7 rounded-full bg-brand-100 flex items-center justify-center text-brand-700 font-bold text-xs flex-shrink-0">
+                        {(c.name?.[0] || '?').toUpperCase()}
+                      </div>
+                      <span className="text-sm font-semibold text-slate-800 truncate">{c.name}</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-xs flex-shrink-0">
+                      <span className="text-slate-500 tabular-nums">{c.total} vetted</span>
+                      <span className="font-bold text-emerald-600 tabular-nums">{Math.round(c.average_credibility)}%</span>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       )}
 

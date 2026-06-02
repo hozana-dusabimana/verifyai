@@ -124,7 +124,10 @@ export const analyticsAPI = {
   // Org-scoped (Government / Admin)
   getOrgSummary: () => api.get('/analytics/org-summary'),
   getOrgFeed: () => api.get('/analytics/org-feed'),
+  getOrgMembersPerformance: () => api.get('/analytics/org-members'),
   orgAlertAction: (alertId, action) => api.put(`/analytics/org-alert/${alertId}`, { action }),
+  // Member-facing org overview (e.g. journalists)
+  getMyOrg: () => api.get('/analytics/my-org'),
 };
 
 // ─── Reports ──────────────────────────────────────────────────────────
@@ -143,13 +146,21 @@ export const adminAPI = {
       headers: { 'Content-Type': 'multipart/form-data' },
     }),
   getDatasets: () => api.get('/admin/datasets'),
+  deleteDataset: (id) => api.delete(`/admin/datasets/${id}`),
   getAlertRules: () => api.get('/admin/alerts/rules'),
   updateAlertRules: (data) => api.put('/admin/alerts/rules', data),
   getMetrics: () => api.get('/admin/metrics'),
+  // Statistics & organization oversight
+  getStatistics: (params) => api.get('/admin/statistics', { params }),
+  getOrganizations: () => api.get('/admin/organizations'),
+  getOrganizationDetail: (name) => api.get('/admin/organizations/detail', { params: { name } }),
+  getUserActivity: (userId) => api.get(`/admin/users/${userId}/activity`),
   // ML Engine
   getMLModels: () => api.get('/ml/models'),
   getMLHealth: () => api.get('/ml/health'),
   retrainModels: (datasetId) => api.post('/ml/retrain', { dataset_id: datasetId }),
+  getTrainingJobs: () => api.get('/ml/training-jobs'),
+  getTrainingJob: (jobId) => api.get(`/ml/training-jobs/${jobId}`),
   mlPredict: (text, title) => api.post('/ml/predict', { text, title }),
 };
 
