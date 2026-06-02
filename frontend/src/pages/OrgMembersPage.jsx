@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Building2, Users, UserPlus, Search, Newspaper, AlertCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { orgAPI } from '../services/api';
+import { roleLabel } from '../utils/roles';
 import Modal from '../components/Modal';
 
 const ROLE_BADGES = {
@@ -86,7 +87,7 @@ function CreateMemberModal({ open, orgName, onClose, onCreated }) {
             <Newspaper className="w-4 h-4" /> Journalist
           </div>
           <p className="text-[11px] text-slate-500 mt-1.5">
-            Organizations are made up of journalists. Citizens are independent accounts; Government and Admin roles are provisioned by a platform administrator.
+            Organizations are made up of journalists. Citizens are independent accounts; Media House and Admin roles are provisioned by a platform administrator.
           </p>
         </div>
 
@@ -284,7 +285,7 @@ const OrgMembersPage = () => {
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
                           <span className={`inline-flex px-2 py-0.5 rounded text-xs font-bold border capitalize ${ROLE_BADGES[m.role] || 'border-slate-300'}`}>
-                            {m.role}
+                            {roleLabel(m.role)}
                           </span>
                           {/* Legacy citizens can be converted to journalists to align the org */}
                           {m.role === 'citizen' && !isSelf && (

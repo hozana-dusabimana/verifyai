@@ -11,6 +11,7 @@ import {
   Download, SlidersHorizontal, Plus, Save,
 } from 'lucide-react';
 import { adminAPI, usersAPI } from '../../services/api';
+import { roleLabel } from '../../utils/roles';
 import Modal from '../../components/Modal';
 
 // Build a CSV string from an array of objects (or array of arrays) and trigger a download.
@@ -181,7 +182,7 @@ function CreateUserModal({ open, onClose, onCreated }) {
       onClose={onClose}
       icon={UserPlus}
       title="Create user"
-      subtitle="Provision an account with any role, including Government and Admin."
+      subtitle="Provision an account with any role, including Media House and Admin."
     >
       <form onSubmit={submit} className="p-6 space-y-4">
           {error && (
@@ -211,7 +212,7 @@ function CreateUserModal({ open, onClose, onCreated }) {
                 className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm font-medium capitalize focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none bg-white">
                 <option value="citizen">Citizen</option>
                 <option value="journalist">Journalist</option>
-                <option value="government">Government</option>
+                <option value="government">Media House</option>
                 <option value="admin">Admin</option>
               </select>
             </div>
@@ -302,7 +303,7 @@ function UsersPanel() {
         <div className="flex flex-wrap gap-2">
           {['admin', 'government', 'journalist', 'citizen'].map((r) => (
             <span key={r} className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border capitalize ${ROLE_BADGES[r]}`}>
-              {r} <span className="ml-1.5 px-1.5 rounded bg-white/60 tabular-nums">{counts[r] || 0}</span>
+              {roleLabel(r)} <span className="ml-1.5 px-1.5 rounded bg-white/60 tabular-nums">{counts[r] || 0}</span>
             </span>
           ))}
           <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border bg-white text-slate-700 border-slate-200">
@@ -367,7 +368,7 @@ function UsersPanel() {
                       >
                         <option value="citizen">Citizen</option>
                         <option value="journalist">Journalist</option>
-                        <option value="government">Government</option>
+                        <option value="government">Media House</option>
                         <option value="admin">Admin</option>
                       </select>
                     </td>
@@ -455,7 +456,7 @@ function UserActivityModal({ userId, onClose }) {
         ) : (
           <>
             <div className="flex flex-wrap gap-2 text-xs">
-              <span className={`px-2 py-1 rounded-full font-bold border capitalize ${ROLE_BADGES[u.role] || ''}`}>{u.role}</span>
+              <span className={`px-2 py-1 rounded-full font-bold border capitalize ${ROLE_BADGES[u.role] || ''}`}>{roleLabel(u.role)}</span>
               <span className="px-2 py-1 rounded-full font-bold border bg-slate-50 text-slate-700 border-slate-200">{u.organization}</span>
               <span className={`px-2 py-1 rounded-full font-bold border ${u.is_active ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-red-50 text-red-700 border-red-200'}`}>{u.is_active ? 'Active' : 'Inactive'}</span>
             </div>
@@ -767,7 +768,7 @@ function StatisticsPanel() {
               const max = Math.max(...roleData.map(x => x.count), 1);
               return (
                 <div key={r.role} className="flex items-center gap-3">
-                  <span className="text-xs font-bold text-slate-700 w-24 capitalize">{r.role}</span>
+                  <span className="text-xs font-bold text-slate-700 w-24 capitalize">{roleLabel(r.role)}</span>
                   <div className="flex-1 h-3 bg-slate-100 rounded-full overflow-hidden">
                     <div className="h-full rounded-full" style={{ width: `${(r.count / max) * 100}%`, background: ROLE_COLORS[r.role] || '#64748b' }} />
                   </div>
@@ -906,7 +907,7 @@ function OrganizationsPanel() {
                         <p className="text-sm font-bold text-slate-900 truncate">{m.full_name}</p>
                         <p className="text-xs text-slate-500 truncate">{m.email}</p>
                       </td>
-                      <td className="px-6 py-4"><span className={`inline-flex px-2 py-0.5 rounded text-xs font-bold border capitalize ${ROLE_BADGES[m.role] || ''}`}>{m.role}</span></td>
+                      <td className="px-6 py-4"><span className={`inline-flex px-2 py-0.5 rounded text-xs font-bold border capitalize ${ROLE_BADGES[m.role] || ''}`}>{roleLabel(m.role)}</span></td>
                       <td className="px-6 py-4 text-sm text-right tabular-nums">{m.total_analyses}</td>
                       <td className="px-6 py-4 text-sm text-right text-red-600 font-bold tabular-nums">{m.fake_count}</td>
                       <td className="px-6 py-4 text-sm text-right tabular-nums">{Math.round(m.average_credibility)}%</td>
@@ -931,7 +932,7 @@ function OrganizationsPanel() {
       <div className="flex items-start justify-between gap-3">
         <div>
           <h2 className="text-2xl font-extrabold text-slate-900">Organizations</h2>
-          <p className="text-sm text-slate-500 mt-0.5">Government & newsroom organizations — drill in to see their users, details and searches.</p>
+          <p className="text-sm text-slate-500 mt-0.5">Media houses & newsroom organizations — drill in to see their users, details and searches.</p>
         </div>
         {orgs.length > 0 && (
           <button
@@ -961,7 +962,7 @@ function OrganizationsPanel() {
                 <tr>
                   <th className="px-6 py-3 text-left text-[11px] font-bold text-slate-500 uppercase">Organization</th>
                   <th className="px-6 py-3 text-right text-[11px] font-bold text-slate-500 uppercase">Members</th>
-                  <th className="px-6 py-3 text-right text-[11px] font-bold text-slate-500 uppercase">Gov / Journ.</th>
+                  <th className="px-6 py-3 text-right text-[11px] font-bold text-slate-500 uppercase">Mgrs / Journ.</th>
                   <th className="px-6 py-3 text-right text-[11px] font-bold text-slate-500 uppercase">Analyses</th>
                   <th className="px-6 py-3 text-right text-[11px] font-bold text-slate-500 uppercase">Avg cred.</th>
                   <th className="px-6 py-3 text-right text-[11px] font-bold text-slate-500 uppercase">Alerts</th>

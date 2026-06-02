@@ -307,7 +307,7 @@ const RegisterPage = () => {
                 <div className="flex items-start gap-2 p-3 bg-slate-50 border border-slate-200 rounded-xl">
                   <Info className="w-4 h-4 text-slate-500 flex-shrink-0 mt-0.5" />
                   <p className="text-xs text-slate-600 leading-relaxed">
-                    <span className="font-bold text-slate-700">Government and Admin accounts</span> are provisioned by a platform administrator.
+                    <span className="font-bold text-slate-700">Media House and Admin accounts</span> are provisioned by a platform administrator.
                     If your organization needs one, please contact your admin after creating a Citizen account.
                   </p>
                 </div>

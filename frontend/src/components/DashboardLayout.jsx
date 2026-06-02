@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ShieldCheck, LayoutDashboard, Search, History, BarChart2, Bell, Settings, User, LogOut, Menu, X, Shield, Activity, Users, Database, FileText, Brain, Building2, PieChart, SlidersHorizontal } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { roleLabel } from '../utils/roles';
 
 const DashboardLayout = ({ children }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -160,7 +161,7 @@ const DashboardLayout = ({ children }) => {
                 <div className="py-2">
                   <div className="px-4 py-2 border-b border-slate-100 mb-1">
                     <p className="text-sm font-bold text-slate-900 truncate">{displayName}</p>
-                    <p className="text-xs font-medium text-slate-500 truncate capitalize">{user?.role || 'User'}</p>
+                    <p className="text-xs font-medium text-slate-500 truncate capitalize">{roleLabel(user?.role) || 'User'}</p>
                   </div>
                   <Link to="/settings" className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2 font-medium">
                     <User className="w-4 h-4" /> Profile Details

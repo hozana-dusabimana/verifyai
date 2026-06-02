@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Search, Filter, Download, CheckCircle, ShieldAlert, HelpCircle, ChevronLeft, ChevronRight, Users, Building2 } from 'lucide-react';
 import { analysisAPI, orgAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
+import { roleLabel } from '../utils/roles';
 
 const HistoryPage = () => {
   const { user } = useAuth();
@@ -130,7 +131,7 @@ const HistoryPage = () => {
               value={member} onChange={(e) => { setMember(e.target.value); setPage(1); }}>
               <option value="">All journalists</option>
               {members.map((m) => (
-                <option key={m.id} value={m.id}>{(m.full_name?.trim() || m.email)}{m.role !== 'journalist' ? ` (${m.role})` : ''}</option>
+                <option key={m.id} value={m.id}>{(m.full_name?.trim() || m.email)}{m.role !== 'journalist' ? ` (${roleLabel(m.role)})` : ''}</option>
               ))}
             </select>
           </div>

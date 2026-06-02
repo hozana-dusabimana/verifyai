@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { User, Lock, Bell, Key, Save, Plus, Trash2, CheckCircle, Copy, Terminal, Check } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { usersAPI, alertsAPI } from '../services/api';
+import { roleLabel } from '../utils/roles';
 
 // ─── API example builder ──────────────────────────────────────────────
 const buildExamples = (baseUrl) => [
@@ -450,7 +451,7 @@ const SettingsPage = () => {
             </div>
             <div>
               <label className="block text-sm font-bold text-slate-700 mb-1">Role</label>
-              <input type="text" disabled className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm bg-slate-50 text-slate-500 capitalize" value={user?.role || ''} />
+              <input type="text" disabled className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm bg-slate-50 text-slate-500 capitalize" value={roleLabel(user?.role)} />
             </div>
             <button onClick={handleProfileSave} className="flex items-center gap-2 px-6 py-2.5 bg-brand-600 text-white rounded-xl font-bold hover:bg-brand-700 shadow-md">
               <Save className="w-4 h-4" /> Save Changes

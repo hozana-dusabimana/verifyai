@@ -15,7 +15,7 @@ const FEATURES = [
 
 const DEMO_ACCOUNTS = [
   { role: 'Admin',      email: 'admin@verifyai.demo',      password: 'AdminDemo!2026',  icon: ShieldCheck, accent: 'bg-purple-100 text-purple-700' },
-  { role: 'Government', email: 'gov@verifyai.demo',         password: 'GovDemo!2026',     icon: Building2,   accent: 'bg-blue-100 text-blue-700' },
+  { role: 'Media House', email: 'gov@verifyai.demo',        password: 'GovDemo!2026',     icon: Building2,   accent: 'bg-blue-100 text-blue-700' },
   { role: 'Journalist', email: 'journalist@verifyai.demo',  password: 'JournoDemo!2026',  icon: Newspaper,   accent: 'bg-amber-100 text-amber-700' },
   { role: 'Citizen',    email: 'citizen@verifyai.demo',     password: 'CitizenDemo!2026', icon: Users,       accent: 'bg-slate-100 text-slate-700' },
 ];

@@ -10,6 +10,7 @@ import { analyticsAPI } from '../../services/api';
 import StatCard from '../../components/dashboard/StatCard';
 import StatusBadge from '../../components/dashboard/StatusBadge';
 import { StatRowSkeleton } from '../../components/dashboard/Skeleton';
+import { roleLabel } from '../../utils/roles';
 
 const SEVERITY = {
   high:   { dot: 'bg-red-500',    cls: 'bg-red-50 text-red-800 border-red-200' },
@@ -232,7 +233,7 @@ const GovernmentDashboard = () => {
                         <p className="text-xs text-slate-500 truncate max-w-[180px]">{m.email}</p>
                       </td>
                       <td className="px-2 py-3">
-                        <span className={`inline-flex px-2 py-0.5 rounded text-[11px] font-bold border capitalize ${ROLE_BADGE[m.role] || 'border-slate-200'}`}>{m.role}</span>
+                        <span className={`inline-flex px-2 py-0.5 rounded text-[11px] font-bold border capitalize ${ROLE_BADGE[m.role] || 'border-slate-200'}`}>{roleLabel(m.role)}</span>
                       </td>
                       <td className="px-2 py-3 text-sm text-right font-bold text-slate-800 tabular-nums">{m.total_analyzed}</td>
                       <td className="px-2 py-3 text-sm text-right text-slate-500 tabular-nums hidden sm:table-cell">{m.recent_analyzed}</td>
