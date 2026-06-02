@@ -14,10 +14,10 @@
     "training_time": 1985.6
   },
   "distilbert": {
-    "accuracy": 0.9995,
-    "precision": 0.999,
-    "recall": 1.0,
-    "f1_score": 0.9995,
-    "training_time": 6915.9
+    "accuracy": 0.99,
+    "precision": 0.9904,
+    "recall": 0.9904,
+    "f1_score": 0.9904,
+    "training_time": 7483.2
   }
 }
