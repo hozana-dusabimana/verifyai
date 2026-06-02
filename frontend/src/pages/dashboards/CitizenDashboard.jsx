@@ -90,14 +90,9 @@ const CitizenDashboard = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 glass rounded-2xl p-6 shadow-sm">
-          <div className="flex justify-between items-center mb-5">
-            <div>
-              <h2 className="text-lg font-bold text-slate-900">Your recent checks</h2>
-              <p className="text-xs text-slate-500 mt-0.5">The reasoning shown is the model's top flag for each item.</p>
-            </div>
-            <Link to="/history" className="text-sm font-semibold text-brand-600 hover:text-brand-700 inline-flex items-center gap-1">
-              View all <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
+          <div className="mb-5">
+            <h2 className="text-lg font-bold text-slate-900">Your recent checks</h2>
+            <p className="text-xs text-slate-500 mt-0.5">The reasoning shown is the model's top flag for each item.</p>
           </div>
           {loading ? (
             <div className="space-y-3">

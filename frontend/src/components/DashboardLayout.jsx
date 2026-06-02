@@ -25,13 +25,17 @@ const DashboardLayout = ({ children }) => {
   const displayName = user ? (user.full_name || user.first_name || user.email) : 'User';
   const isAdmin = user?.role === 'admin' || user?.is_superuser;
   const isGovernment = user?.role === 'government';
+  const isCitizen = user?.role === 'citizen';
 
+  // Citizens get a simplified workspace — no History/Analytics/Alerts.
   const baseLinks = [
     { name: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard className="w-5 h-5 flex-shrink-0" /> },
     { name: 'Analyze Content', path: '/analyze', icon: <Search className="w-5 h-5 flex-shrink-0" /> },
-    { name: 'History', path: '/history', icon: <History className="w-5 h-5 flex-shrink-0" /> },
-    { name: 'Analytics', path: '/analytics', icon: <BarChart2 className="w-5 h-5 flex-shrink-0" /> },
-    { name: 'Alerts', path: '/alerts', icon: <Bell className="w-5 h-5 flex-shrink-0" /> },
+    ...(!isCitizen ? [
+      { name: 'History', path: '/history', icon: <History className="w-5 h-5 flex-shrink-0" /> },
+      { name: 'Analytics', path: '/analytics', icon: <BarChart2 className="w-5 h-5 flex-shrink-0" /> },
+      { name: 'Alerts', path: '/alerts', icon: <Bell className="w-5 h-5 flex-shrink-0" /> },
+    ] : []),
     { name: 'Settings', path: '/settings', icon: <Settings className="w-5 h-5 flex-shrink-0" /> },
   ];
 
@@ -139,10 +143,12 @@ const DashboardLayout = ({ children }) => {
           </div>
 
           <div className="flex items-center gap-4">
-            <Link to="/alerts" className="relative p-2 text-slate-400 hover:text-slate-500 transition-colors">
-              <span className="absolute top-1 right-1 block w-2 h-2 rounded-full bg-red-500 ring-2 ring-white" />
-              <Bell className="w-6 h-6" />
-            </Link>
+            {!isCitizen && (
+              <Link to="/alerts" className="relative p-2 text-slate-400 hover:text-slate-500 transition-colors">
+                <span className="absolute top-1 right-1 block w-2 h-2 rounded-full bg-red-500 ring-2 ring-white" />
+                <Bell className="w-6 h-6" />
+              </Link>
+            )}
             <div className="relative group">
               <button className="flex items-center gap-2 rounded-full bg-slate-100 p-1 pr-3 hover:bg-slate-200 transition-colors focus:outline-none">
                 <div className="w-8 h-8 rounded-full bg-brand-100 flex items-center justify-center text-brand-700 font-bold border border-brand-200">
