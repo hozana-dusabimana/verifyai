@@ -4,6 +4,8 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.http import JsonResponse
 
+from newsfeed.views import portal_page
+
 
 def health(_request):
     """Public, unauthenticated liveness probe (no DB hit). Used by deploy
@@ -13,12 +15,14 @@ def health(_request):
 
 urlpatterns = [
     path('health', health, name='health'),
+    path('portal', portal_page, name='newsfeed-portal'),
     path('admin/', admin.site.urls),
     path('api/v1/', include('accounts.urls')),
     path('api/v1/', include('analysis.urls')),
     path('api/v1/', include('alerts.urls')),
     path('api/v1/', include('analytics.urls')),
     path('api/v1/', include('administration.urls')),
+    path('api/v1/', include('newsfeed.urls')),
 ]
 
 if settings.DEBUG:

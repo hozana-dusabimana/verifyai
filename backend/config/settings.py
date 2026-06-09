@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'alerts',
     'analytics',
     'administration',
+    'newsfeed',
 ]
 
 MIDDLEWARE = [

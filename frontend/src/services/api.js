@@ -94,6 +94,15 @@ export const analysisAPI = {
   exportCSV: (id) => api.get(`/analysis/${id}/export/csv`, { responseType: 'blob' }),
 };
 
+// ─── News Feed ────────────────────────────────────────────────────────
+export const newsfeedAPI = {
+  submit: (data) => api.post('/newsfeed/posts', data),
+  getFeed: (params) => api.get('/newsfeed/feed', { params }),
+  getMyPosts: (params) => api.get('/newsfeed/posts/mine', { params }),
+  getPost: (id) => api.get(`/newsfeed/posts/${id}`),
+  delete: (id) => api.delete(`/newsfeed/posts/${id}`),
+};
+
 // ─── Alerts ───────────────────────────────────────────────────────────
 export const alertsAPI = {
   list: (params) => api.get('/alerts', { params }),

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { ShieldCheck, LayoutDashboard, Search, History, BarChart2, Bell, Settings, User, LogOut, Menu, X, Shield, Activity, Users, Database, FileText, Brain, Building2, PieChart, SlidersHorizontal } from 'lucide-react';
+import { ShieldCheck, LayoutDashboard, Search, History, BarChart2, Bell, Settings, User, LogOut, Menu, X, Shield, Activity, Users, Database, FileText, Brain, Building2, PieChart, SlidersHorizontal, Newspaper } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { roleLabel } from '../utils/roles';
 
@@ -32,6 +32,7 @@ const DashboardLayout = ({ children }) => {
   const baseLinks = [
     { name: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard className="w-5 h-5 flex-shrink-0" /> },
     { name: 'Analyze Content', path: '/analyze', icon: <Search className="w-5 h-5 flex-shrink-0" /> },
+    { name: 'Community News', path: '/news', icon: <Newspaper className="w-5 h-5 flex-shrink-0" /> },
     ...(!isCitizen ? [
       { name: 'History', path: '/history', icon: <History className="w-5 h-5 flex-shrink-0" /> },
       { name: 'Analytics', path: '/analytics', icon: <BarChart2 className="w-5 h-5 flex-shrink-0" /> },

@@ -19,9 +19,11 @@ const Navbar = () => {
   const navLinks = user ? [
     { name: 'Dashboard', path: '/dashboard' },
     { name: 'Analyze', path: '/analyze' },
+    { name: 'News', path: '/news' },
     { name: 'History', path: '/history' },
     { name: 'Analytics', path: '/analytics' },
   ] : [
+    { name: 'News', path: '/news' },
     { name: 'How It Works', path: '/#how-it-works' },
     { name: 'Pricing', path: '/#pricing' },
     { name: 'About Us', path: '/#about' },

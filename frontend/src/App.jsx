@@ -13,6 +13,7 @@ import HistoryPage from './pages/HistoryPage';
 import AnalyticsPage from './pages/AnalyticsPage';
 import AlertsPage from './pages/AlertsPage';
 import SettingsPage from './pages/SettingsPage';
+import NewsFeedPage from './pages/NewsFeedPage';
 import OrgMembersPage from './pages/OrgMembersPage';
 import AdminDashboard from './pages/admin/AdminDashboard';
 
@@ -75,6 +76,7 @@ function App() {
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+            <Route path="/news" element={<NewsFeedPage />} />
           </Route>
 
           {/* Authenticated Routes */}

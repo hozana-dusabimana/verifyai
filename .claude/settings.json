@@ -2,7 +2,11 @@
   "permissions": {
     "allow": [
       "Bash(PYTHONIOENCODING=utf-8 PYTHONUTF8=1 ./venv/Scripts/python.exe -m ml_engine.train)",
-      "WebSearch"
+      "WebSearch",
+      "PowerShell(gh run list --branch main --limit 3)",
+      "Bash(dot -V)",
+      "Bash(python -c \"import graphviz; print\\('graphviz-py ok'\\)\")",
+      "Bash(pip install *)"
     ]
   }
 }
