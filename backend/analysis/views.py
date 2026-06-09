@@ -52,11 +52,17 @@ class AnalysisSubmitView(APIView):
             status=AnalysisResult.Status.PENDING,
         )
 
-        # Trigger async ML pipeline
+        # Trigger ML pipeline. With CELERY_TASK_ALWAYS_EAGER the task runs
+        # synchronously here, so by the time .delay() returns the result row is
+        # already populated; with a real worker it stays PENDING for polling.
         from .tasks import run_analysis_pipeline
         task = run_analysis_pipeline.delay(str(result.id))
         result.celery_task_id = task.id
         result.save(update_fields=['celery_task_id'])
+
+        # Re-load so the response reflects any work completed synchronously
+        # (eager mode) instead of the stale PENDING snapshot.
+        result = AnalysisResult.objects.select_related('article').get(id=result.id)
 
         return _success(
             AnalysisResultSerializer(result).data,
