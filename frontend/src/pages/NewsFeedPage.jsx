@@ -43,6 +43,7 @@ const NewsFeedPage = () => {
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const [sourceUrl, setSourceUrl] = useState('');
   const [sourceName, setSourceName] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState('');
@@ -83,12 +84,17 @@ const NewsFeedPage = () => {
       setFormError('Content must be at least 50 characters for the AI to verify it.');
       return;
     }
+    if (!sourceUrl.trim()) {
+      setFormError('A source link is required so the story can be verified.');
+      return;
+    }
 
     setSubmitting(true);
     try {
       const res = await newsfeedAPI.submit({
         title: title.trim(),
         content: content.trim(),
+        source_url: sourceUrl.trim(),
         source_name: sourceName.trim(),
       });
       const post = res.data.data;
@@ -97,6 +103,7 @@ const NewsFeedPage = () => {
         // Reset the composer and surface it in the public feed.
         setTitle('');
         setContent('');
+        setSourceUrl('');
         setSourceName('');
         loadFeed();
       }
@@ -162,10 +169,18 @@ const NewsFeedPage = () => {
               onChange={(e) => setContent(e.target.value)}
               className="w-full h-40 border border-slate-300 rounded-xl p-4 text-slate-900 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 resize-none shadow-sm"
             />
+            <input
+              type="url"
+              required
+              placeholder="Source link (https://…) — the story is checked against this page"
+              value={sourceUrl}
+              onChange={(e) => setSourceUrl(e.target.value)}
+              className="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-brand-500 focus:border-brand-500"
+            />
             <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
               <input
                 type="text"
-                placeholder="Source (optional)"
+                placeholder="Source name (optional)"
                 value={sourceName}
                 onChange={(e) => setSourceName(e.target.value)}
                 className="flex-1 border border-slate-300 rounded-xl p-3 text-sm focus:ring-brand-500 focus:border-brand-500"
@@ -265,7 +280,13 @@ const NewsFeedPage = () => {
                 <h3 className="font-bold text-lg text-slate-900 leading-snug">{post.title}</h3>
                 <p className="text-slate-600 text-sm leading-relaxed flex-1">{post.excerpt}</p>
                 <div className="flex items-center justify-between text-xs text-slate-400 font-medium pt-2 border-t border-slate-100">
-                  <span>{post.source_name || post.submitted_by || 'Community'}</span>
+                  {post.source_url ? (
+                    <a href={post.source_url} target="_blank" rel="noopener noreferrer" className="underline hover:text-slate-600">
+                      {post.source_name || (() => { try { return new URL(post.source_url).hostname.replace(/^www\./, ''); } catch { return 'Source'; } })()}
+                    </a>
+                  ) : (
+                    <span>{post.source_name || post.submitted_by || 'Community'}</span>
+                  )}
                   <span>{formatDate(post.published_at)}</span>
                 </div>
               </article>

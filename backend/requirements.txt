@@ -43,3 +43,6 @@ transformers==4.46.3
 newspaper3k==0.2.8
 lxml_html_clean==0.4.1
 kagglehub==0.3.12
+spacy==3.8.7
+# spaCy NER model used by the newsfeed specificity gate.
+en_core_web_sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl

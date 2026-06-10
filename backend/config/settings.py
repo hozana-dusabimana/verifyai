@@ -200,6 +200,12 @@ DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'noreply@verifyai.com')
 # Alert threshold
 ALERT_CREDIBILITY_THRESHOLD = int(os.getenv('ALERT_CREDIBILITY_THRESHOLD', '30'))
 
+# Newsfeed publication gates (a REAL verdict alone is not enough to publish).
+# Title vs body TF-IDF similarity: unrelated titles score 0.0, legit ones >= ~0.09.
+NEWSFEED_MIN_TITLE_CONSISTENCY = float(os.getenv('NEWSFEED_MIN_TITLE_CONSISTENCY', '0.05'))
+# Story vs cited-source-page similarity: paraphrased-from-source ~0.13+, unrelated ~0.03.
+NEWSFEED_MIN_SOURCE_MATCH = float(os.getenv('NEWSFEED_MIN_SOURCE_MATCH', '0.08'))
+
 # ML Engine
 ML_MODELS_DIR = BASE_DIR / 'ml_engine' / 'models_store'
 

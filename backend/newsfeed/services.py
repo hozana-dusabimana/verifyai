@@ -2,9 +2,10 @@ from analysis.models import Article, AnalysisResult
 from analysis.tasks import run_analysis_pipeline
 
 from .models import NewsPost
+from .verification import compute_source_match, count_named_entities
 
 
-def create_and_verify_post(user, title, content, source_name='', author=''):
+def create_and_verify_post(user, title, content, source_name='', author='', source_url=''):
     """Create a news post, run it through the ML analysis pipeline, and set its
     approval status from the verdict.
 
@@ -38,6 +39,9 @@ def create_and_verify_post(user, title, content, source_name='', author=''):
         content=content,
         source_name=source_name,
         author=author,
+        source_url=source_url,
+        source_match_score=compute_source_match(content, source_url),
+        named_entity_count=count_named_entities(f'{title}. {content}'),
         analysis_result=result,
     )
 

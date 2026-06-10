@@ -55,7 +55,8 @@
         <form id="submitForm" class="space-y-3">
           <input id="title" type="text" maxlength="500" placeholder="Headline" required class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm font-semibold" />
           <textarea id="content" rows="6" placeholder="Full story text (min 50 characters)…" required class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm resize-none"></textarea>
-          <input id="source" type="text" placeholder="Source (optional)" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm" />
+          <input id="sourceUrl" type="url" required placeholder="Source link (https://…)" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm" />
+          <input id="source" type="text" placeholder="Source name (optional)" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm" />
           <button id="submitBtn" type="submit" disabled class="w-full bg-emerald-600 text-white rounded-lg py-2.5 text-sm font-bold hover:bg-emerald-700 transition-colors disabled:bg-stone-300 disabled:cursor-not-allowed">Verify &amp; Publish</button>
         </form>
 
@@ -262,15 +263,17 @@
       verdict.classList.add('hidden');
       const title = $('title').value.trim();
       const content = $('content').value.trim();
+      const source_url = $('sourceUrl').value.trim();
       const source_name = $('source').value.trim();
       if (content.length < 50) { showVerdict('error', 'Story must be at least 50 characters for the AI to verify it.'); return; }
+      if (!source_url) { showVerdict('error', 'A source link is required so the story can be verified.'); return; }
 
       $('submitBtn').disabled = true;
       $('submitBtn').textContent = 'Verifying…';
       try {
         const { ok, body } = await apiFetch('/newsfeed/posts', {
           method: 'POST',
-          body: JSON.stringify({ title, content, source_name }),
+          body: JSON.stringify({ title, content, source_url, source_name }),
         });
         if (!ok) {
           const err = body.error;
@@ -280,7 +283,7 @@
         const post = body.data;
         renderVerdict(post);
         if (post.status === 'approved') {
-          $('title').value = ''; $('content').value = ''; $('source').value = '';
+          $('title').value = ''; $('content').value = ''; $('source').value = ''; $('sourceUrl').value = '';
           loadFeed();
         }
       } catch (e) {
@@ -321,6 +324,9 @@
     function esc(s) {
       return (s || '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
     }
+    function hostOf(u) {
+      try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return ''; }
+    }
     function fmtDate(d) {
       if (!d) return '';
       try { return new Date(d).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }); } catch { return ''; }
@@ -341,7 +347,9 @@
             <h3 class="font-bold text-lg leading-snug">${esc(p.title)}</h3>
             <p class="text-sm text-stone-600 leading-relaxed flex-1">${esc(p.excerpt)}</p>
             <div class="ui flex items-center justify-between text-[11px] text-stone-400 pt-2 border-t border-stone-100">
-              <span>${esc(p.source_name || p.submitted_by || 'Community')}</span>
+              <span>${p.source_url
+                ? `<a href="${esc(p.source_url)}" target="_blank" rel="noopener" class="underline hover:text-stone-700">${esc(p.source_name || hostOf(p.source_url) || 'Source')}</a>`
+                : esc(p.source_name || p.submitted_by || 'Community')}</span>
               <span>${fmtDate(p.published_at)}</span>
             </div>
           </article>`).join('');

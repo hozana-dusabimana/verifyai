@@ -7,6 +7,14 @@ class NewsPostSubmitSerializer(serializers.Serializer):
     """Validates a new community news submission."""
     title = serializers.CharField(max_length=500)
     content = serializers.CharField()
+    source_url = serializers.URLField(
+        max_length=500,
+        error_messages={
+            'required': 'A source link is required so the story can be verified.',
+            'blank': 'A source link is required so the story can be verified.',
+            'invalid': 'Enter a valid source URL (starting with http:// or https://).',
+        },
+    )
     source_name = serializers.CharField(required=False, allow_blank=True, max_length=255)
     author = serializers.CharField(required=False, allow_blank=True, max_length=255)
 
@@ -43,8 +51,9 @@ class NewsPostSerializer(serializers.ModelSerializer):
     class Meta:
         model = NewsPost
         fields = [
-            'id', 'title', 'content', 'source_name', 'author',
+            'id', 'title', 'content', 'source_name', 'source_url', 'author',
             'status', 'classification', 'credibility_score', 'confidence',
+            'source_match_score', 'named_entity_count',
             'error_message', 'submitted_by', 'created_at', 'published_at',
         ]
 
@@ -63,7 +72,7 @@ class NewsFeedSerializer(serializers.ModelSerializer):
     class Meta:
         model = NewsPost
         fields = [
-            'id', 'title', 'excerpt', 'content', 'source_name', 'author',
+            'id', 'title', 'excerpt', 'content', 'source_name', 'source_url', 'author',
             'classification', 'credibility_score', 'submitted_by', 'published_at',
         ]
 

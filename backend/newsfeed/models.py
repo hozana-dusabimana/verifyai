@@ -28,6 +28,13 @@ class NewsPost(models.Model):
     source_name = models.CharField(max_length=255, blank=True)
     author = models.CharField(max_length=255, blank=True)
 
+    # Source corroboration: the cited link, how well its page text matches the
+    # story (TF-IDF cosine; None = page unreachable), and how many specific
+    # named entities (org/place/person) the story contains.
+    source_url = models.URLField(max_length=500, blank=True)
+    source_match_score = models.FloatField(null=True, blank=True)
+    named_entity_count = models.IntegerField(null=True, blank=True)
+
     # Link to the underlying ML analysis that gated approval.
     analysis_result = models.OneToOneField(
         AnalysisResult, on_delete=models.SET_NULL,
@@ -53,9 +60,11 @@ class NewsPost(models.Model):
     def sync_from_result(self, save=True):
         """Derive the post's status from its analysis result. REAL → approved
         (published to the feed); FAKE/UNCERTAIN → rejected; failed analysis →
-        failed. A REAL verdict is additionally gated on headline-body
-        consistency so a credible body cannot be published under an unrelated
-        or nonsense headline (the verdict only scores the body)."""
+        failed. A REAL verdict is additionally gated on (1) headline-body
+        consistency, since the verdict only scores the body; (2) specificity —
+        a story naming no organization, place, or person is unverifiable; and
+        (3) source corroboration — the cited link must resolve and its page
+        must overlap the story."""
         result = self.analysis_result
         if result is None or result.status == AnalysisResult.Status.FAILED:
             self.status = self.Status.FAILED
@@ -66,25 +75,59 @@ class NewsPost(models.Model):
             self.classification = result.classification
             self.credibility_score = result.credibility_score
             self.error_message = ''
-            min_consistency = getattr(settings, 'NEWSFEED_MIN_TITLE_CONSISTENCY', 0.05)
-            consistency = result.headline_body_consistency
             if result.classification != AnalysisResult.Classification.REAL:
                 self.status = self.Status.REJECTED
-                self.published_at = None
-            elif consistency is not None and consistency < min_consistency:
-                self.status = self.Status.REJECTED
-                self.published_at = None
-                self.error_message = (
-                    'Headline does not match the story content. The AI verified the '
-                    'story body, but the headline appears unrelated to it.'
-                )
             else:
-                self.status = self.Status.APPROVED
+                self.error_message = self._publication_block_reason(result)
+                self.status = self.Status.REJECTED if self.error_message else self.Status.APPROVED
+
+            if self.status == self.Status.APPROVED:
                 if not self.published_at:
                     self.published_at = timezone.now()
+            else:
+                self.published_at = None
         if save:
             self.save(update_fields=[
                 'status', 'classification', 'credibility_score',
-                'error_message', 'published_at',
+                'error_message', 'published_at', 'named_entity_count',
             ])
         return self
+
+    def _publication_block_reason(self, result):
+        """Apply the publication gates to a REAL-classified post. Returns a
+        human-readable reason when the post must not publish, else ''."""
+        min_consistency = getattr(settings, 'NEWSFEED_MIN_TITLE_CONSISTENCY', 0.05)
+        consistency = result.headline_body_consistency
+        if consistency is not None and consistency < min_consistency:
+            return (
+                'Headline does not match the story content. The AI verified the '
+                'story body, but the headline appears unrelated to it.'
+            )
+
+        # Lazily backfill the entity count for posts created before this gate
+        # existed (resync recomputes from stored content; no network needed).
+        if self.named_entity_count is None:
+            from .verification import count_named_entities
+            self.named_entity_count = count_named_entities(f'{self.title}. {self.content}')
+        # None here means the NER model is unavailable — fail open rather than
+        # block the whole wire on an infrastructure problem.
+        if self.named_entity_count == 0:
+            return (
+                'Story lacks verifiable specifics: it names no organization, '
+                'place, or person that could be checked.'
+            )
+
+        if not self.source_url:
+            return 'No source link provided. Stories must cite a source URL.'
+        if self.source_match_score is None:
+            return (
+                'The cited source could not be retrieved for verification. '
+                'Check the link and resubmit.'
+            )
+        min_match = getattr(settings, 'NEWSFEED_MIN_SOURCE_MATCH', 0.08)
+        if self.source_match_score < min_match:
+            return (
+                'The story does not match the content of the cited source. '
+                'Cite the article the story is actually based on.'
+            )
+        return ''
