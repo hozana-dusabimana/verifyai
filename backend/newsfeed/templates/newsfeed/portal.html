@@ -275,7 +275,10 @@
       if (post.status === 'approved') {
         showVerdict('ok', `<b>Approved — published to the wire.</b><br>AI verdict: REAL · credibility ${score}.`);
       } else if (post.status === 'rejected') {
-        showVerdict('warn', `<b>Not approved.</b><br>AI verdict: ${post.classification || 'not credible'} · credibility ${score}. Only REAL stories are published.`);
+        const reason = post.error_message
+          ? esc(post.error_message)
+          : `AI verdict: ${post.classification || 'not credible'} · credibility ${score}. Only REAL stories are published.`;
+        showVerdict('warn', `<b>Not approved.</b><br>${reason}`);
       } else {
         showVerdict('error', '<b>Verification failed.</b> ' + (post.error_message || ''));
       }

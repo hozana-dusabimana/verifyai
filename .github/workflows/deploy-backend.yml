@@ -44,3 +44,7 @@ jobs:
             code=$(curl -s -o /dev/null -w '%{http_code}' https://api-verifyai.isiri.rw/health)
             echo "public /health -> $code"
             test "$code" = "200"
+            # Re-apply the current approval policy to existing news posts
+            # (idempotent; unpublishes posts that fail newly added gates).
+            docker compose -f docker-compose.prod.yml --env-file .env.prod exec -T backend \
+              python manage.py resync_newsposts

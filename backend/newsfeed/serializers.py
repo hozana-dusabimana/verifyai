@@ -10,6 +10,19 @@ class NewsPostSubmitSerializer(serializers.Serializer):
     source_name = serializers.CharField(required=False, allow_blank=True, max_length=255)
     author = serializers.CharField(required=False, allow_blank=True, max_length=255)
 
+    def validate_title(self, value):
+        value = value.strip()
+        if len(value) < 10:
+            raise serializers.ValidationError(
+                'Headline too short. Use a descriptive headline of at least 10 characters.'
+            )
+        if len(value) > 200:
+            raise serializers.ValidationError(
+                'Headline too long. Use a concise headline of at most 200 characters '
+                '— details belong in the story content.'
+            )
+        return value
+
     def validate_content(self, value):
         if len(value.strip()) < 50:
             raise serializers.ValidationError(

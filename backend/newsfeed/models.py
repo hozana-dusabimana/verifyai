@@ -53,7 +53,9 @@ class NewsPost(models.Model):
     def sync_from_result(self, save=True):
         """Derive the post's status from its analysis result. REAL → approved
         (published to the feed); FAKE/UNCERTAIN → rejected; failed analysis →
-        failed."""
+        failed. A REAL verdict is additionally gated on headline-body
+        consistency so a credible body cannot be published under an unrelated
+        or nonsense headline (the verdict only scores the body)."""
         result = self.analysis_result
         if result is None or result.status == AnalysisResult.Status.FAILED:
             self.status = self.Status.FAILED
@@ -64,13 +66,22 @@ class NewsPost(models.Model):
             self.classification = result.classification
             self.credibility_score = result.credibility_score
             self.error_message = ''
-            if result.classification == AnalysisResult.Classification.REAL:
+            min_consistency = getattr(settings, 'NEWSFEED_MIN_TITLE_CONSISTENCY', 0.05)
+            consistency = result.headline_body_consistency
+            if result.classification != AnalysisResult.Classification.REAL:
+                self.status = self.Status.REJECTED
+                self.published_at = None
+            elif consistency is not None and consistency < min_consistency:
+                self.status = self.Status.REJECTED
+                self.published_at = None
+                self.error_message = (
+                    'Headline does not match the story content. The AI verified the '
+                    'story body, but the headline appears unrelated to it.'
+                )
+            else:
                 self.status = self.Status.APPROVED
                 if not self.published_at:
                     self.published_at = timezone.now()
-            else:
-                self.status = self.Status.REJECTED
-                self.published_at = None
         if save:
             self.save(update_fields=[
                 'status', 'classification', 'credibility_score',
