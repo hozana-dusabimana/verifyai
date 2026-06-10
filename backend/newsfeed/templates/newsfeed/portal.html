@@ -153,10 +153,19 @@
       }
     }
 
-    async function apiFetch(path, opts = {}) {
+    async function apiFetch(path, opts = {}, retried = false) {
       const headers = Object.assign({ 'Content-Type': 'application/json' }, opts.headers || {});
       if (access) headers['Authorization'] = 'Bearer ' + access;
       const res = await fetch(apiBase + path, Object.assign({}, opts, { headers }));
+      if (res.status === 401 && !retried) {
+        // Access tokens expire after 15 min but stay cached in localStorage.
+        // Drop the stale token, silently reconnect, and retry once.
+        access = '';
+        localStorage.removeItem(LS.access);
+        await autoConnect();
+        if (access) return apiFetch(path, opts, true);
+        setConnected(false);
+      }
       const body = await res.json().catch(() => ({}));
       return { ok: res.ok, status: res.status, body };
     }
@@ -201,10 +210,22 @@
       el.classList.remove('hidden');
     }
 
+    // True when a stored JWT is missing, malformed, or within 30s of expiry.
+    function tokenExpired(t) {
+      try { return JSON.parse(atob(t.split('.')[1])).exp * 1000 < Date.now() + 30000; }
+      catch { return true; }
+    }
+
     // Auto-connect: silently log in as the public portal account on load so the
     // external app is ready to post without a manual sign-in step.
     async function autoConnect() {
-      if (access) return;
+      if (access && !tokenExpired(access)) return;
+      // Never silently switch identity: if a non-portal account's session
+      // expired, surface "Not connected" and let them reconnect via Settings.
+      if (user && user.email && user.email !== PORTAL_CREDS.email) {
+        disconnect();
+        return;
+      }
       $('connStatus').textContent = 'Connecting…';
       try {
         const res = await fetch(apiBase + '/auth/login', {
