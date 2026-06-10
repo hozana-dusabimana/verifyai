@@ -267,7 +267,10 @@ def _generate_flagging_reasons(ensemble_prob, nb_score, lstm_score, bert_score,
             f'High sensationalism detected ({sensationalism:.0%}) — excessive use of emotional or clickbait language.'
         )
 
-    if consistency < 0.3:
+    # Matches the newsfeed publication gate (NEWSFEED_MIN_TITLE_CONSISTENCY).
+    # TF-IDF cosine similarity runs low for short headlines: legitimate ones
+    # score ~0.1-0.3, so flagging below 0.3 mislabeled real posts.
+    if consistency < 0.05:
         reasons.append(
             'Headline does not match the body content, a common tactic in misleading articles.'
         )
