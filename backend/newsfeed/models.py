@@ -17,6 +17,9 @@ class NewsPost(models.Model):
         PENDING = 'pending', 'Pending'
         APPROVED = 'approved', 'Approved'
         REJECTED = 'rejected', 'Rejected'
+        # Sourceless eyewitness reports that pass every automated check still
+        # cannot be machine-verified; a moderator decides.
+        REVIEW = 'review', 'Pending Review'
         FAILED = 'failed', 'Failed'
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -47,6 +50,14 @@ class NewsPost(models.Model):
     credibility_score = models.FloatField(null=True, blank=True)
     error_message = models.TextField(blank=True)
 
+    # Editorial decision on a REVIEW post. Once set, the human verdict is
+    # final: resync never re-derives the status of a reviewed post.
+    reviewed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='reviewed_news_posts',
+    )
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
     published_at = models.DateTimeField(null=True, blank=True)
 
@@ -64,7 +75,11 @@ class NewsPost(models.Model):
         consistency, since the verdict only scores the body; (2) specificity —
         a story naming no organization, place, or person is unverifiable; and
         (3) source corroboration — the cited link must resolve and its page
-        must overlap the story."""
+        must overlap the story. A sourceless story that passes everything else
+        (an eyewitness report) goes to editorial REVIEW instead of rejection.
+        A post a moderator has already decided on is never re-derived."""
+        if self.reviewed_by_id is not None:
+            return self
         result = self.analysis_result
         if result is None or result.status == AnalysisResult.Status.FAILED:
             self.status = self.Status.FAILED
@@ -78,8 +93,7 @@ class NewsPost(models.Model):
             if result.classification != AnalysisResult.Classification.REAL:
                 self.status = self.Status.REJECTED
             else:
-                self.error_message = self._publication_block_reason(result)
-                self.status = self.Status.REJECTED if self.error_message else self.Status.APPROVED
+                self.status, self.error_message = self._publication_verdict(result)
 
             if self.status == self.Status.APPROVED:
                 if not self.published_at:
@@ -93,13 +107,15 @@ class NewsPost(models.Model):
             ])
         return self
 
-    def _publication_block_reason(self, result):
-        """Apply the publication gates to a REAL-classified post. Returns a
-        human-readable reason when the post must not publish, else ''."""
+    def _publication_verdict(self, result):
+        """Apply the publication gates to a REAL-classified post. Returns
+        (status, reason): APPROVED with '' when every gate passes, REVIEW for
+        sourceless eyewitness reports that pass everything else, REJECTED with
+        the failed gate's reason otherwise."""
         min_consistency = getattr(settings, 'NEWSFEED_MIN_TITLE_CONSISTENCY', 0.05)
         consistency = result.headline_body_consistency
         if consistency is not None and consistency < min_consistency:
-            return (
+            return self.Status.REJECTED, (
                 'Headline does not match the story content. The AI verified the '
                 'story body, but the headline appears unrelated to it.'
             )
@@ -112,22 +128,43 @@ class NewsPost(models.Model):
         # None here means the NER model is unavailable — fail open rather than
         # block the whole wire on an infrastructure problem.
         if self.named_entity_count == 0:
-            return (
+            return self.Status.REJECTED, (
                 'Story lacks verifiable specifics: it names no organization, '
                 'place, or person that could be checked.'
             )
 
         if not self.source_url:
-            return 'No source link provided. Stories must cite a source URL.'
+            return self.Status.REVIEW, (
+                'No source link — held for editorial review. Eyewitness reports '
+                'are checked by a moderator before publishing.'
+            )
         if self.source_match_score is None:
-            return (
+            return self.Status.REJECTED, (
                 'The cited source could not be retrieved for verification. '
                 'Check the link and resubmit.'
             )
         min_match = getattr(settings, 'NEWSFEED_MIN_SOURCE_MATCH', 0.08)
         if self.source_match_score < min_match:
-            return (
+            return self.Status.REJECTED, (
                 'The story does not match the content of the cited source. '
                 'Cite the article the story is actually based on.'
             )
-        return ''
+        return self.Status.APPROVED, ''
+
+    def review(self, moderator, approve):
+        """Record a moderator's decision on a post held for review."""
+        self.reviewed_by = moderator
+        self.reviewed_at = timezone.now()
+        if approve:
+            self.status = self.Status.APPROVED
+            self.error_message = ''
+            if not self.published_at:
+                self.published_at = timezone.now()
+        else:
+            self.status = self.Status.REJECTED
+            self.published_at = None
+            self.error_message = 'Rejected by editorial review.'
+        self.save(update_fields=[
+            'status', 'error_message', 'published_at', 'reviewed_by', 'reviewed_at',
+        ])
+        return self

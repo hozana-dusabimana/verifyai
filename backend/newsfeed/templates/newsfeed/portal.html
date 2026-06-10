@@ -55,7 +55,7 @@
         <form id="submitForm" class="space-y-3">
           <input id="title" type="text" maxlength="500" placeholder="Headline" required class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm font-semibold" />
           <textarea id="content" rows="6" placeholder="Full story text (min 50 characters)…" required class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm resize-none"></textarea>
-          <input id="sourceUrl" type="url" required placeholder="Source link (https://…)" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm" />
+          <input id="sourceUrl" type="url" placeholder="Source link (https://…) — without one, a moderator reviews first" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm" />
           <input id="source" type="text" placeholder="Source name (optional)" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm" />
           <button id="submitBtn" type="submit" disabled class="w-full bg-emerald-600 text-white rounded-lg py-2.5 text-sm font-bold hover:bg-emerald-700 transition-colors disabled:bg-stone-300 disabled:cursor-not-allowed">Verify &amp; Publish</button>
         </form>
@@ -266,7 +266,6 @@
       const source_url = $('sourceUrl').value.trim();
       const source_name = $('source').value.trim();
       if (content.length < 50) { showVerdict('error', 'Story must be at least 50 characters for the AI to verify it.'); return; }
-      if (!source_url) { showVerdict('error', 'A source link is required so the story can be verified.'); return; }
 
       $('submitBtn').disabled = true;
       $('submitBtn').textContent = 'Verifying…';
@@ -298,6 +297,8 @@
       const score = post.credibility_score != null ? Math.round(post.credibility_score) + '%' : '—';
       if (post.status === 'approved') {
         showVerdict('ok', `<b>Approved — published to the wire.</b><br>AI verdict: REAL · credibility ${score}.`);
+      } else if (post.status === 'review') {
+        showVerdict('warn', `<b>Held for editorial review.</b><br>${esc(post.error_message || 'A moderator will review this eyewitness report before it publishes.')}`);
       } else if (post.status === 'rejected') {
         const reason = post.error_message
           ? esc(post.error_message)

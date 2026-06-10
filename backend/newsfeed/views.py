@@ -51,7 +51,7 @@ class NewsPostSubmitView(APIView):
             content=data['content'],
             source_name=data.get('source_name', ''),
             author=data.get('author', ''),
-            source_url=data['source_url'],
+            source_url=data.get('source_url', ''),
         )
         return _success(NewsPostSerializer(post).data, status_code=status.HTTP_201_CREATED)
 

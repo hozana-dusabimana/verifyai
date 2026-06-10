@@ -76,11 +76,31 @@ class SyncFromResultTests(TestCase):
         post.sync_from_result()
         self.assertEqual(post.status, NewsPost.Status.APPROVED)
 
-    def test_missing_source_url_is_rejected(self):
+    def test_missing_source_url_goes_to_editorial_review(self):
         post = make_post(self.user, 'REAL', consistency=0.3, source_url='', source_match=None)
         post.sync_from_result()
+        self.assertEqual(post.status, NewsPost.Status.REVIEW)
+        self.assertIsNone(post.published_at)
+        self.assertIn('editorial review', post.error_message)
+
+    def test_review_approve_publishes_and_is_final(self):
+        post = make_post(self.user, 'REAL', consistency=0.3, source_url='', source_match=None)
+        post.sync_from_result()
+        post.review(self.user, approve=True)
+        self.assertEqual(post.status, NewsPost.Status.APPROVED)
+        self.assertIsNotNone(post.published_at)
+        # A resync must not overturn the moderator's decision.
+        post.sync_from_result()
+        self.assertEqual(post.status, NewsPost.Status.APPROVED)
+
+    def test_review_reject_is_final(self):
+        post = make_post(self.user, 'REAL', consistency=0.3, source_url='', source_match=None)
+        post.sync_from_result()
+        post.review(self.user, approve=False)
         self.assertEqual(post.status, NewsPost.Status.REJECTED)
-        self.assertIn('source link', post.error_message.lower())
+        self.assertIn('editorial review', post.error_message.lower())
+        post.sync_from_result()
+        self.assertEqual(post.status, NewsPost.Status.REJECTED)
 
     def test_unreachable_source_is_rejected(self):
         post = make_post(self.user, 'REAL', consistency=0.3, source_match=None)
@@ -94,9 +114,10 @@ class SyncFromResultTests(TestCase):
         self.assertEqual(post.status, NewsPost.Status.REJECTED)
         self.assertIn('does not match the content of the cited source', post.error_message)
 
-    def test_resync_unpublishes_legacy_post_without_source(self):
+    def test_resync_demotes_legacy_post_without_source(self):
         # Simulates a post approved before the corroboration gates existed:
-        # generic content, no source, no stored entity count.
+        # generic content, no source, no stored entity count. The generic
+        # content fails the specificity gate, so it rejects outright.
         post = make_post(
             self.user, 'REAL', consistency=0.3,
             source_url='', source_match=None, entities=None,
@@ -137,9 +158,9 @@ class SubmitSerializerTests(TestCase):
         errs = self._errors(title='News')
         self.assertTrue(any('too short' in str(e) for e in errs.get('title', [])))
 
-    def test_missing_source_url_is_rejected(self):
-        errs = self._errors(source_url=None)
-        self.assertTrue(any('source link is required' in str(e) for e in errs.get('source_url', [])))
+    def test_missing_source_url_is_allowed(self):
+        # Sourceless submissions are valid — they route to editorial review.
+        self.assertEqual(self._errors(source_url=None), {})
 
     def test_invalid_source_url_is_rejected(self):
         errs = self._errors(source_url='not-a-url')

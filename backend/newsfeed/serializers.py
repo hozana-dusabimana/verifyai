@@ -7,11 +7,11 @@ class NewsPostSubmitSerializer(serializers.Serializer):
     """Validates a new community news submission."""
     title = serializers.CharField(max_length=500)
     content = serializers.CharField()
+    # Optional: a sourced story can publish automatically; a sourceless one is
+    # held for editorial review instead.
     source_url = serializers.URLField(
-        max_length=500,
+        required=False, allow_blank=True, max_length=500,
         error_messages={
-            'required': 'A source link is required so the story can be verified.',
-            'blank': 'A source link is required so the story can be verified.',
             'invalid': 'Enter a valid source URL (starting with http:// or https://).',
         },
     )

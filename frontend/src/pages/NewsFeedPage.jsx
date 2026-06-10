@@ -10,6 +10,7 @@ import { useAuth } from '../contexts/AuthContext';
 const STATUS_META = {
   approved: { label: 'Approved', cls: 'bg-emerald-100 text-emerald-800 border-emerald-200', icon: <CheckCircle className="w-3.5 h-3.5 mr-1" /> },
   rejected: { label: 'Not approved', cls: 'bg-red-100 text-red-800 border-red-200', icon: <ShieldAlert className="w-3.5 h-3.5 mr-1" /> },
+  review: { label: 'In editorial review', cls: 'bg-amber-100 text-amber-800 border-amber-200', icon: <AlertTriangle className="w-3.5 h-3.5 mr-1" /> },
   pending: { label: 'Verifying…', cls: 'bg-blue-100 text-blue-800 border-blue-200', icon: <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> },
   failed: { label: 'Failed', cls: 'bg-slate-100 text-slate-700 border-slate-200', icon: <AlertTriangle className="w-3.5 h-3.5 mr-1" /> },
 };
@@ -84,11 +85,6 @@ const NewsFeedPage = () => {
       setFormError('Content must be at least 50 characters for the AI to verify it.');
       return;
     }
-    if (!sourceUrl.trim()) {
-      setFormError('A source link is required so the story can be verified.');
-      return;
-    }
-
     setSubmitting(true);
     try {
       const res = await newsfeedAPI.submit({
@@ -171,8 +167,7 @@ const NewsFeedPage = () => {
             />
             <input
               type="url"
-              required
-              placeholder="Source link (https://…) — the story is checked against this page"
+              placeholder="Source link (https://…) — sourced stories publish instantly; without one, a moderator reviews first"
               value={sourceUrl}
               onChange={(e) => setSourceUrl(e.target.value)}
               className="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-brand-500 focus:border-brand-500"
@@ -201,7 +196,8 @@ const NewsFeedPage = () => {
           {lastResult && (
             <div className={`mt-5 rounded-2xl border p-4 flex items-start gap-3 ${
               lastResult.status === 'approved' ? 'bg-emerald-50 border-emerald-200' :
-              lastResult.status === 'rejected' ? 'bg-red-50 border-red-200' : 'bg-slate-50 border-slate-200'
+              lastResult.status === 'rejected' ? 'bg-red-50 border-red-200' :
+              lastResult.status === 'review' ? 'bg-amber-50 border-amber-200' : 'bg-slate-50 border-slate-200'
             }`}>
               <div className="mt-0.5">
                 {lastResult.status === 'approved' ? <CheckCircle className="w-6 h-6 text-emerald-600" /> :
@@ -211,6 +207,7 @@ const NewsFeedPage = () => {
               <div className="text-sm">
                 <p className="font-bold text-slate-900">
                   {lastResult.status === 'approved' && 'Approved — published to the newsletter.'}
+                  {lastResult.status === 'review' && 'Held for editorial review — a moderator will check this report before it publishes.'}
                   {lastResult.status === 'rejected' && `Not approved — AI verdict: ${lastResult.classification || 'not credible'}.`}
                   {lastResult.status === 'failed' && 'Verification failed.'}
                 </p>
