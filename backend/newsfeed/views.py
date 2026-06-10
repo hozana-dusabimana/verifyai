@@ -127,3 +127,32 @@ class NewsPostDetailView(APIView):
             return _error('Post not found.', status.HTTP_404_NOT_FOUND)
         post.delete()
         return _success({'detail': 'Post deleted.'})
+
+
+class NewsPostUnpublishView(APIView):
+    """Moderator takedown: removes a published post from the wire (final —
+    resync never republishes a reviewed post) and resolves the eyewitness
+    alerts that pointed at it, for every admin."""
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, post_id):
+        if not request.user.is_admin():
+            return _error('Admin permission required.', status.HTTP_403_FORBIDDEN)
+        try:
+            post = NewsPost.objects.get(id=post_id)
+        except NewsPost.DoesNotExist:
+            return _error('Post not found.', status.HTTP_404_NOT_FOUND)
+
+        post.review(request.user, approve=False)
+
+        if post.analysis_result_id:
+            from django.utils import timezone
+
+            from alerts.models import Alert
+
+            Alert.objects.filter(
+                analysis_result_id=post.analysis_result_id,
+                status__in=[Alert.Status.OPEN, Alert.Status.ESCALATED],
+            ).update(status=Alert.Status.RESOLVED, resolved_at=timezone.now())
+
+        return _success(NewsPostSerializer(post).data)

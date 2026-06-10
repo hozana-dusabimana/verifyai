@@ -6,15 +6,34 @@ from .models import Alert, NotificationPreference
 class AlertSerializer(serializers.ModelSerializer):
     article_title = serializers.CharField(source='analysis_result.article.title', read_only=True)
     credibility_score = serializers.FloatField(source='analysis_result.credibility_score', read_only=True)
+    # Linked community news post, when the alert is about one (lets the UI
+    # offer a direct "unpublish story" action).
+    news_post_id = serializers.SerializerMethodField()
+    news_post_status = serializers.SerializerMethodField()
 
     class Meta:
         model = Alert
         fields = [
             'id', 'analysis_result_id', 'article_title', 'credibility_score',
+            'news_post_id', 'news_post_status',
             'severity', 'status', 'message', 'assigned_to',
             'created_at', 'updated_at', 'resolved_at',
         ]
         read_only_fields = ['id', 'analysis_result_id', 'created_at', 'updated_at']
+
+    def _news_post(self, obj):
+        try:
+            return obj.analysis_result.news_post
+        except Exception:
+            return None
+
+    def get_news_post_id(self, obj):
+        post = self._news_post(obj)
+        return str(post.id) if post else None
+
+    def get_news_post_status(self, obj):
+        post = self._news_post(obj)
+        return post.status if post else None
 
 
 class AlertDetailSerializer(serializers.ModelSerializer):

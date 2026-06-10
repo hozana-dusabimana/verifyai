@@ -26,7 +26,7 @@ class AlertListView(APIView):
         from rest_framework.pagination import PageNumberPagination
 
         alerts = Alert.objects.select_related(
-            'analysis_result', 'analysis_result__article',
+            'analysis_result', 'analysis_result__article', 'analysis_result__news_post',
         ).filter(user=request.user)
 
         # Filters

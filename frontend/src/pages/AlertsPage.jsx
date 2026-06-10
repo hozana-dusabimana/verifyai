@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Bell, ShieldAlert, CheckCircle, Mail, ArrowRight, Sliders } from 'lucide-react';
-import { alertsAPI } from '../services/api';
+import { Bell, ShieldAlert, CheckCircle, Mail, ArrowRight, Sliders, EyeOff } from 'lucide-react';
+import { alertsAPI, newsfeedAPI } from '../services/api';
 
 const AlertsPage = () => {
   const [alerts, setAlerts] = useState([]);
@@ -54,6 +54,17 @@ const AlertsPage = () => {
     try {
       await alertsAPI.dismiss(id);
       setAlerts(prev => prev.filter(a => a.id !== id));
+    } catch { /* ignore */ }
+  };
+
+  const handleUnpublish = async (alertItem) => {
+    if (!window.confirm('Remove this story from the public wire? This is final.')) return;
+    try {
+      await newsfeedAPI.unpublish(alertItem.news_post_id);
+      // Backend also resolves the related alerts; mirror that locally.
+      setAlerts(prev => prev.map(a => a.news_post_id === alertItem.news_post_id
+        ? { ...a, news_post_status: 'rejected', status: a.status === 'open' || a.status === 'escalated' ? 'resolved' : a.status }
+        : a));
     } catch { /* ignore */ }
   };
 
@@ -165,6 +176,17 @@ const AlertsPage = () => {
                   </div>
                 </div>
                 <div className="flex gap-2 flex-shrink-0">
+                  {alert.news_post_id && alert.news_post_status === 'approved' && (
+                    <button onClick={() => handleUnpublish(alert)}
+                      className="px-3 py-1.5 bg-red-100 text-red-700 rounded-lg text-xs font-bold hover:bg-red-200 flex items-center gap-1">
+                      <EyeOff className="w-3.5 h-3.5" /> Unpublish story
+                    </button>
+                  )}
+                  {alert.news_post_id && alert.news_post_status === 'rejected' && (
+                    <span className="px-3 py-1.5 bg-slate-100 text-slate-500 rounded-lg text-xs font-bold flex items-center gap-1">
+                      <EyeOff className="w-3.5 h-3.5" /> Story unpublished
+                    </span>
+                  )}
                   {alert.status === 'open' && (
                     <>
                       <button onClick={() => handleResolve(alert.id)}

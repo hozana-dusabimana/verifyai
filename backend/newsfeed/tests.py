@@ -178,6 +178,56 @@ class SubmitSerializerTests(TestCase):
         self.assertTrue(any('valid source URL' in str(e) for e in errs.get('source_url', [])))
 
 
+class UnpublishEndpointTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.author = get_user_model().objects.create_user(
+            username='author', email='author@example.com', password='x',
+        )
+        cls.admin = get_user_model().objects.create_user(
+            username='mod', email='mod@example.com', password='x', role='admin',
+        )
+
+    def _make_published_post(self):
+        post = make_post(self.author, 'REAL', consistency=0.3, source_url='', source_match=None)
+        post.sync_from_result()
+        self.assertEqual(post.status, NewsPost.Status.APPROVED)
+        return post
+
+    def test_admin_unpublish_removes_post_and_resolves_alerts(self):
+        from alerts.models import Alert
+
+        post = self._make_published_post()
+        alert = Alert.objects.create(
+            analysis_result=post.analysis_result, user=self.admin,
+            severity='medium', message='check it',
+        )
+        from rest_framework.test import APIClient
+        client = APIClient()
+        client.force_authenticate(self.admin)
+        resp = client.post(f'/api/v1/newsfeed/posts/{post.id}/unpublish')
+        self.assertEqual(resp.status_code, 200)
+
+        post.refresh_from_db()
+        self.assertEqual(post.status, NewsPost.Status.REJECTED)
+        self.assertEqual(post.reviewed_by, self.admin)
+        alert.refresh_from_db()
+        self.assertEqual(alert.status, Alert.Status.RESOLVED)
+        # Final: resync must not republish.
+        post.sync_from_result()
+        self.assertEqual(post.status, NewsPost.Status.REJECTED)
+
+    def test_non_admin_cannot_unpublish(self):
+        post = self._make_published_post()
+        from rest_framework.test import APIClient
+        client = APIClient()
+        client.force_authenticate(self.author)
+        resp = client.post(f'/api/v1/newsfeed/posts/{post.id}/unpublish')
+        self.assertEqual(resp.status_code, 403)
+        post.refresh_from_db()
+        self.assertEqual(post.status, NewsPost.Status.APPROVED)
+
+
 class VerificationHelperTests(TestCase):
     def test_specific_text_has_entities(self):
         from .verification import count_named_entities

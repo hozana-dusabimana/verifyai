@@ -101,6 +101,7 @@ export const newsfeedAPI = {
   getMyPosts: (params) => api.get('/newsfeed/posts/mine', { params }),
   getPost: (id) => api.get(`/newsfeed/posts/${id}`),
   delete: (id) => api.delete(`/newsfeed/posts/${id}`),
+  unpublish: (id) => api.post(`/newsfeed/posts/${id}/unpublish`),
 };
 
 // ─── Alerts ───────────────────────────────────────────────────────────
