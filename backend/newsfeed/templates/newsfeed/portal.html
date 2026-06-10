@@ -55,7 +55,7 @@
         <form id="submitForm" class="space-y-3">
           <input id="title" type="text" maxlength="500" placeholder="Headline" required class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm font-semibold" />
           <textarea id="content" rows="6" placeholder="Full story text (min 50 characters)…" required class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm resize-none"></textarea>
-          <input id="sourceUrl" type="url" placeholder="Source link (https://…) — without one, a moderator reviews first" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm" />
+          <input id="sourceUrl" type="url" placeholder="Source link (https://…) — optional; unsourced stories are flagged for moderators" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm" />
           <input id="source" type="text" placeholder="Source name (optional)" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm" />
           <button id="submitBtn" type="submit" disabled class="w-full bg-emerald-600 text-white rounded-lg py-2.5 text-sm font-bold hover:bg-emerald-700 transition-colors disabled:bg-stone-300 disabled:cursor-not-allowed">Verify &amp; Publish</button>
         </form>
@@ -296,7 +296,8 @@
     function renderVerdict(post) {
       const score = post.credibility_score != null ? Math.round(post.credibility_score) + '%' : '—';
       if (post.status === 'approved') {
-        showVerdict('ok', `<b>Approved — published to the wire.</b><br>AI verdict: REAL · credibility ${score}.`);
+        const note = post.source_url ? '' : '<br>Published as an unsourced eyewitness report — moderators have been notified to verify it.';
+        showVerdict('ok', `<b>Approved — published to the wire.</b><br>AI verdict: REAL · credibility ${score}.${note}`);
       } else if (post.status === 'review') {
         showVerdict('warn', `<b>Held for editorial review.</b><br>${esc(post.error_message || 'A moderator will review this eyewitness report before it publishes.')}`);
       } else if (post.status === 'rejected') {

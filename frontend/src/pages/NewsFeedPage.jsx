@@ -167,7 +167,7 @@ const NewsFeedPage = () => {
             />
             <input
               type="url"
-              placeholder="Source link (https://…) — sourced stories publish instantly; without one, a moderator reviews first"
+              placeholder="Source link (https://…) — optional; unsourced stories are flagged for moderator verification"
               value={sourceUrl}
               onChange={(e) => setSourceUrl(e.target.value)}
               className="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-brand-500 focus:border-brand-500"
@@ -213,6 +213,9 @@ const NewsFeedPage = () => {
                 </p>
                 {lastResult.credibility_score != null && (
                   <p className="text-slate-600 mt-0.5 font-medium">Credibility score: {Math.round(lastResult.credibility_score)}%</p>
+                )}
+                {lastResult.status === 'approved' && !lastResult.source_url && (
+                  <p className="text-slate-500 mt-1">Published as an unsourced eyewitness report — moderators have been notified to verify it.</p>
                 )}
                 {lastResult.status === 'rejected' && (
                   <p className="text-slate-500 mt-1">Only news classified as REAL is published. You can still see this under “My submissions” below.</p>

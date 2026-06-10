@@ -76,8 +76,9 @@ class NewsPost(models.Model):
         a story naming no organization, place, or person is unverifiable; and
         (3) source corroboration — the cited link must resolve and its page
         must overlap the story. A sourceless story that passes everything else
-        (an eyewitness report) goes to editorial REVIEW instead of rejection.
-        A post a moderator has already decided on is never re-derived."""
+        (an eyewitness report) publishes immediately with an admin alert for
+        after-the-fact moderation. A post a moderator has already decided on
+        is never re-derived."""
         if self.reviewed_by_id is not None:
             return self
         result = self.analysis_result
@@ -133,11 +134,11 @@ class NewsPost(models.Model):
                 'place, or person that could be checked.'
             )
 
+        # Sourceless eyewitness report: every automated check passed, so it
+        # publishes immediately — but admins are alerted (see services) and can
+        # unpublish it via the review actions, whose decision is final.
         if not self.source_url:
-            return self.Status.REVIEW, (
-                'No source link — held for editorial review. Eyewitness reports '
-                'are checked by a moderator before publishing.'
-            )
+            return self.Status.APPROVED, ''
         if self.source_match_score is None:
             return self.Status.REJECTED, (
                 'The cited source could not be retrieved for verification. '

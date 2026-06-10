@@ -47,4 +47,32 @@ def create_and_verify_post(user, title, content, source_name='', author='', sour
 
     if result.status in (AnalysisResult.Status.COMPLETED, AnalysisResult.Status.FAILED):
         post.sync_from_result()
+        if post.status == NewsPost.Status.APPROVED and not post.source_url:
+            notify_admins_of_eyewitness_post(post)
     return post
+
+
+def notify_admins_of_eyewitness_post(post):
+    """A sourceless eyewitness story was auto-published; alert every admin so
+    a human can double-check it on the wire (and unpublish via the review
+    actions if it doesn't hold up)."""
+    from django.contrib.auth import get_user_model
+    from django.db.models import Q
+
+    from alerts.models import Alert
+
+    admins = get_user_model().objects.filter(
+        Q(role='admin') | Q(is_superuser=True), is_active=True,
+    ).distinct()
+    for admin_user in admins:
+        Alert.objects.create(
+            analysis_result=post.analysis_result,
+            user=admin_user,
+            severity=Alert.Severity.MEDIUM,
+            message=(
+                f'Local eyewitness story published without a source: "{post.title}" '
+                f'(by {post.user.email}, credibility {post.credibility_score}%). '
+                'Please verify it; you can unpublish it from the admin console '
+                '(News posts -> Reject selected posts).'
+            ),
+        )
