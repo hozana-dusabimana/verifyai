@@ -181,17 +181,24 @@ def predict_ensemble(text, title=''):
     # The old FAKE cutoff (<=15) required the ensemble to be >=85% sure, which
     # the de-biased models almost never reach, so blatant hoaxes only ever
     # landed in UNCERTAIN. A cutoff at the decision boundary lets real fakes be
-    # called FAKE while a narrow 45-55 band still flags genuinely borderline text.
-    if credibility_score <= 45:
+    # called FAKE. The band is widened to 40-60 (from 45-55) so that genuinely
+    # true but unsourced/encyclopedic text — which the ISOT-trained models tend
+    # to score in the 30s because it lacks wire-service style — lands in
+    # UNCERTAIN rather than getting a hard FAKE verdict.
+    if credibility_score <= 40:
         classification = 'FAKE'
-    elif credibility_score <= 55:
+    elif credibility_score <= 60:
         classification = 'UNCERTAIN'
     else:
         classification = 'REAL'
 
-    # Confidence
-    confidence = round(abs(credibility_score - 50) * 2, 2)
-    confidence = min(confidence, 100.0)
+    # Confidence = the model's probability in the class it actually predicted,
+    # i.e. how sure it is of its leaning. For a 2-class problem this is the
+    # dominant-class probability and ranges 50-100. The old metric (distance
+    # from the 50 midpoint, x2) was unintuitive: a FAKE verdict could display a
+    # low number like 32%, which read as "barely fake" when the model was in
+    # fact ~66% sure it was fake.
+    confidence = round(max(credibility_score, 100 - credibility_score), 2)
 
     # NLP features
     sentiment = compute_sentiment(text)

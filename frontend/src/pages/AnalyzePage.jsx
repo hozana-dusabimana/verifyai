@@ -122,16 +122,26 @@ const AnalyzePage = () => {
     } catch { /* ignore */ }
   };
 
+  // Bands match the backend classification thresholds (FAKE <=40, UNCERTAIN
+  // 40-60, REAL >60) so the gauge color never disagrees with the verdict.
   const getGaugeColor = (score) => {
-    if (score <= 30) return '#ef4444';
+    if (score <= 40) return '#ef4444';
     if (score <= 60) return '#f59e0b';
     return '#10b981';
   };
 
   const getRiskBand = (score) => {
-    if (score <= 30) return { label: 'HIGH RISK', color: 'text-red-600' };
+    if (score <= 40) return { label: 'HIGH RISK', color: 'text-red-600' };
     if (score <= 60) return { label: 'UNCERTAIN', color: 'text-amber-600' };
     return { label: 'CREDIBLE', color: 'text-emerald-600' };
+  };
+
+  // Confidence now reflects the model's certainty in its predicted class, so
+  // word it relative to the verdict instead of a bare percentage.
+  const confidenceLabel = (cls) => {
+    if (cls === 'FAKE') return 'likely fake';
+    if (cls === 'REAL') return 'likely credible';
+    return 'leaning either way';
   };
 
   return (
@@ -256,7 +266,7 @@ const AnalyzePage = () => {
                <AlertTriangle className="w-8 h-8 text-amber-600" />}
               <div>
                 <h2 className="text-xl font-extrabold tracking-tight">Classification: {result.classification}</h2>
-                <p className="text-sm font-medium opacity-80 mt-0.5">Confidence Level: {result.confidence ? Math.round(result.confidence) : 0}%</p>
+                <p className="text-sm font-medium opacity-80 mt-0.5">{result.confidence ? Math.round(result.confidence) : 0}% {confidenceLabel(result.classification)} <span className="opacity-60">(model certainty)</span></p>
               </div>
             </div>
             <div className="flex gap-2">
