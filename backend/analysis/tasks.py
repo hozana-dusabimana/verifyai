@@ -63,6 +63,17 @@ def run_analysis_pipeline(self, result_id):
         if not content or len(content.strip()) < 20:
             raise ValueError('Insufficient content for analysis.')
 
+        # Language guardrail: the ensemble is English-only, so a verdict on
+        # non-English text (e.g. Kinyarwanda) would be meaningless. This also
+        # covers URL/file submissions, whose content is only available here
+        # after fetching/extraction (the submit view can't check them upfront).
+        from ml_engine.language import looks_english
+        if not looks_english(content):
+            raise ValueError(
+                'Analysis currently supports English content only. '
+                'Kinyarwanda support is coming soon.'
+            )
+
         # Stage 3–6: ML Inference via the ML engine
         _update_stage(result, 3, 'Preprocessing')
 
