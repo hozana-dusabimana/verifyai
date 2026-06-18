@@ -240,6 +240,94 @@ def predict_ensemble(text, title=''):
     }
 
 
+def _load_kinyarwanda():
+    """Load the Kinyarwanda TF-IDF + classifier pipeline (single joblib)."""
+    if 'kinyarwanda' not in _models:
+        _models['kinyarwanda'] = joblib.load(
+            os.path.join(MODELS_DIR, 'kinyarwanda_model.joblib')
+        )
+    return _models['kinyarwanda']
+
+
+def kinyarwanda_available():
+    """True when the Kinyarwanda model artifact is present."""
+    return os.path.exists(os.path.join(MODELS_DIR, 'kinyarwanda_model.joblib'))
+
+
+def predict_kinyarwanda(text, title=''):
+    """Run the Kinyarwanda model and return the same dict shape as
+    ``predict_ensemble`` so the pipeline/serializers consume it identically.
+
+    It's a single classifier (not a 3-model ensemble), so the per-model score
+    fields all carry its probability — the UI then shows one consistent number.
+    """
+    from .language import clean_for_rw
+
+    pipe = _load_kinyarwanda()
+    combined = f'{title}. {text}' if title else text
+    fake_prob = float(pipe.predict_proba([clean_for_rw(combined)])[0][1])
+
+    credibility_score = round((1 - fake_prob) * 100, 2)
+    if credibility_score <= 40:
+        classification = 'FAKE'
+    elif credibility_score <= 60:
+        classification = 'UNCERTAIN'
+    else:
+        classification = 'REAL'
+    confidence = round(max(credibility_score, 100 - credibility_score), 2)
+
+    # Best-effort, language-agnostic explainability features (do not drive the
+    # verdict, which comes from the Kinyarwanda classifier above).
+    sentiment = compute_sentiment(text)
+    sensationalism = compute_sensationalism_score(text)
+    consistency = compute_headline_body_consistency(title, text)
+    compound = sentiment['compound']
+    if compound > 0.3:
+        emotional_tone = 'Positive'
+    elif compound < -0.3:
+        emotional_tone = 'Negative'
+    else:
+        emotional_tone = 'Neutral'
+    top_keywords = extract_top_keywords(text, n=10)
+
+    reasons = _generate_kinyarwanda_reasons(fake_prob, sensationalism, consistency)
+
+    return {
+        'naive_bayes_score': round(fake_prob, 4),
+        'lstm_score': round(fake_prob, 4),
+        'distilbert_score': round(fake_prob, 4),
+        'ensemble_score': round(fake_prob, 4),
+        'credibility_score': credibility_score,
+        'classification': classification,
+        'confidence': confidence,
+        'sentiment_score': round(compound, 4),
+        'emotional_tone': emotional_tone,
+        'sensationalism_score': round(sensationalism, 4),
+        'headline_body_consistency': round(consistency, 4),
+        'top_keywords': top_keywords,
+        'flagging_reasons': reasons,
+        'model_used': 'kinyarwanda',
+    }
+
+
+def _generate_kinyarwanda_reasons(fake_prob, sensationalism, consistency):
+    """Plain-language explainability for the Kinyarwanda single-model verdict."""
+    reasons = ['Analyzed by the Kinyarwanda language model (trained on a translated news corpus).']
+    if fake_prob > 0.7:
+        reasons.append('The Kinyarwanda model strongly indicates this content is likely fabricated or misleading.')
+    elif fake_prob > 0.5:
+        reasons.append('The Kinyarwanda model found characteristics commonly associated with misinformation.')
+    elif fake_prob < 0.3:
+        reasons.append('The Kinyarwanda model found language patterns consistent with credible reporting.')
+    if sensationalism > 0.6:
+        reasons.append(
+            f'High sensationalism detected ({sensationalism:.0%}) — excessive emotional or clickbait language.'
+        )
+    if consistency is not None and consistency < 0.05:
+        reasons.append('Headline does not appear to match the body content.')
+    return reasons
+
+
 def _generate_flagging_reasons(ensemble_prob, nb_score, lstm_score, bert_score,
                                 sensationalism, consistency, sentiment):
     """Generate plain-language explainability reasons."""
@@ -315,6 +403,7 @@ def get_model_info():
     return {
         'models_available': models_available,
         'all_ready': all(models_available.values()),
+        'kinyarwanda_ready': os.path.exists(os.path.join(MODELS_DIR, 'kinyarwanda_model.joblib')),
         'metrics': metrics,
         'ensemble_weights': {
             'naive_bayes': 0.50,

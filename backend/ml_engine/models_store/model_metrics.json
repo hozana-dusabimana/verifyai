@@ -19,5 +19,16 @@
     "recall": 0.9904,
     "f1_score": 0.9904,
     "training_time": 7483.2
+  },
+  "kinyarwanda": {
+    "accuracy": 0.9471,
+    "precision": 0.9681,
+    "recall": 0.9239,
+    "f1_score": 0.9455,
+    "training_time": 1.7,
+    "train_samples": 1584,
+    "test_samples": 397,
+    "language": "rw",
+    "model_type": "tfidf+logreg (translated ISOT)"
   }
 }

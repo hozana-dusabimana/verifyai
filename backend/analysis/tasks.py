@@ -63,37 +63,47 @@ def run_analysis_pipeline(self, result_id):
         if not content or len(content.strip()) < 20:
             raise ValueError('Insufficient content for analysis.')
 
-        # Language guardrail: the ensemble is English-only, so a verdict on
-        # non-English text (e.g. Kinyarwanda) would be meaningless. This also
-        # covers URL/file submissions, whose content is only available here
-        # after fetching/extraction (the submit view can't check them upfront).
-        from ml_engine.language import looks_english
-        if not looks_english(content):
-            raise ValueError(
-                'Analysis currently supports English content only. '
-                'Kinyarwanda support is coming soon.'
-            )
-
         # Stage 3–6: ML Inference via the ML engine
         _update_stage(result, 3, 'Preprocessing')
 
-        from ml_engine.inference import predict_ensemble, get_model_info
+        from ml_engine.inference import (
+            predict_ensemble, predict_kinyarwanda, get_model_info, kinyarwanda_available,
+        )
+        from ml_engine.language import detect_language
 
-        # Check models are available
+        # Route by detected language: Kinyarwanda → the dedicated model, English
+        # → the existing 3-model ensemble. Other languages are unsupported (the
+        # models would produce a meaningless verdict), so we fail clearly. This
+        # check sits here, not in the submit view, because URL/file content is
+        # only available after fetching/extraction above.
+        lang = detect_language(content)
         model_info = get_model_info()
-        if not model_info['all_ready']:
-            raise RuntimeError(
-                'ML models not trained yet. An admin must train models before analysis can run. '
-                'Missing: ' + ', '.join(
-                    k for k, v in model_info['models_available'].items() if not v
+
+        if lang == 'rw':
+            if not kinyarwanda_available():
+                raise RuntimeError(
+                    'Kinyarwanda model not trained yet. An admin must train it before '
+                    'Kinyarwanda content can be analyzed.'
                 )
+            _update_stage(result, 4, 'Feature Extraction')
+            _update_stage(result, 5, 'Model Inference')
+            prediction = predict_kinyarwanda(content, title)
+        elif lang == 'en':
+            if not model_info['all_ready']:
+                raise RuntimeError(
+                    'ML models not trained yet. An admin must train models before analysis can run. '
+                    'Missing: ' + ', '.join(
+                        k for k, v in model_info['models_available'].items() if not v
+                    )
+                )
+            _update_stage(result, 4, 'Feature Extraction')
+            _update_stage(result, 5, 'Model Inference')
+            # Run ensemble prediction (preprocessing, features, and all 3 models)
+            prediction = predict_ensemble(content, title)
+        else:
+            raise ValueError(
+                'Analysis currently supports English and Kinyarwanda content only.'
             )
-
-        _update_stage(result, 4, 'Feature Extraction')
-        _update_stage(result, 5, 'Model Inference')
-
-        # Run ensemble prediction (includes preprocessing, features, and all 3 models)
-        prediction = predict_ensemble(content, title)
 
         _update_stage(result, 6, 'Score Generation')
 

@@ -32,27 +32,58 @@ _RW_MARKERS = {
 
 _WORD_RE = re.compile(r"[A-Za-zÀ-ɏ']+")
 
+# Keep only Latin letters + apostrophes (meaningful in Kinyarwanda: n', y', …).
+_RW_CLEAN_RE = re.compile(r"[^a-zà-ÿ'\s]")
 
-def looks_english(text, min_words=5):
-    """Return True if ``text`` appears to be English (or is too short to judge).
 
-    Returns False only when there's clear evidence the text is NOT English, so
-    users aren't silently handed a meaningless verdict from English-only models.
+def detect_language(text, min_words=5):
+    """Classify ``text`` as 'en', 'rw' (Kinyarwanda), or 'other'.
+
+    Heuristic stopword-ratio detector — no external dependency. Designed to route
+    analysis: 'rw' uses the Kinyarwanda model, 'en' the English ensemble, 'other'
+    is rejected (unsupported). Fails toward 'en' when there's too little signal,
+    so short legitimate English is never misrouted.
     """
     words = [w.lower() for w in _WORD_RE.findall(text or '')]
     total = len(words)
     if total < min_words:
-        return True  # too little signal — fail open
+        return 'en'  # too little signal — fail open to the default models
 
     en_hits = sum(1 for w in words if w in _EN_STOPWORDS)
     rw_hits = sum(1 for w in words if w in _RW_MARKERS)
     en_ratio = en_hits / total
+    rw_ratio = rw_hits / total
 
+    # Strong Kinyarwanda signal that outweighs any English function words.
+    if rw_hits >= 2 and rw_ratio >= en_ratio:
+        return 'rw'
     # Normal English prose carries a high share of function words.
     if en_ratio >= 0.08:
-        return True
-    # Clear non-English: Kinyarwanda markers present, or essentially no English
-    # function words across a sizable block of text.
-    if rw_hits >= 2 or (en_ratio < 0.02 and total >= 12):
-        return False
-    return True  # ambiguous → fail open
+        return 'en'
+    # Some Kinyarwanda markers present and little English → Kinyarwanda.
+    if rw_hits >= 2:
+        return 'rw'
+    # Sizable text with almost no English function words and no rw markers →
+    # some other language we don't support (e.g. French).
+    if en_ratio < 0.02 and total >= 12:
+        return 'other'
+    return 'en'  # ambiguous → fail open
+
+
+def looks_english(text, min_words=5):
+    """Back-compat helper: True unless the text is clearly non-English."""
+    return detect_language(text, min_words=min_words) == 'en'
+
+
+def is_kinyarwanda(text, min_words=5):
+    """True when the text is detected as Kinyarwanda."""
+    return detect_language(text, min_words=min_words) == 'rw'
+
+
+def clean_for_rw(text):
+    """Light normalization for Kinyarwanda TF-IDF (lowercase, strip punctuation
+    and digits, keep apostrophes, collapse whitespace). Shared by training and
+    inference so features line up."""
+    t = (text or '').lower()
+    t = _RW_CLEAN_RE.sub(' ', t)
+    return ' '.join(t.split())

@@ -37,15 +37,15 @@ class AnalysisSubmitView(APIView):
 
         data = serializer.validated_data
 
-        # Language guardrail: the ML ensemble is English-only, so a verdict on
-        # non-English text would be meaningless. Block direct text submissions
-        # that aren't English (URL/file content is fetched later, in the task).
+        # Language guardrail: English routes to the ensemble and Kinyarwanda to
+        # its dedicated model (handled in the task). Other languages would yield
+        # a meaningless verdict, so reject them upfront for direct text input.
+        # (URL/file content is only known later, so the task re-checks there.)
         if data['input_type'] == 'text':
-            from ml_engine.language import looks_english
-            if not looks_english(data.get('content', '')):
+            from ml_engine.language import detect_language
+            if detect_language(data.get('content', '')) == 'other':
                 return _error(
-                    'Analysis currently supports English content only. '
-                    'Kinyarwanda support is coming soon.'
+                    'Analysis currently supports English and Kinyarwanda content only.'
                 )
 
         article = Article.objects.create(

@@ -50,6 +50,12 @@ MESSAGES = {
     'Analysis currently supports English content only. Kinyarwanda support is coming soon.':
         'Isesengura kuri ubu rikora ku nyandiko z\'Icyongereza gusa. '
         'Gufasha Ikinyarwanda biraza vuba.',
+    'Analysis currently supports English and Kinyarwanda content only.':
+        'Isesengura kuri ubu rikora ku nyandiko z\'Icyongereza n\'Ikinyarwanda gusa.',
+    'Kinyarwanda model not trained yet. An admin must train it before '
+    'Kinyarwanda content can be analyzed.':
+        'Icyitegererezo cy\'Ikinyarwanda ntikiratozwa. Umuyobozi agomba '
+        'kugitoza mbere yuko inyandiko z\'Ikinyarwanda zisesengurwa.',
     # ── ML / admin ─────────────────────────────────────────────────────
     'ML models not trained yet. Please train models first.':
         'Ibyitegererezo bya ML ntibirimo gutozwa. Banza utoze ibyitegererezo.',
