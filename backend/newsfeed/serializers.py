@@ -40,6 +40,14 @@ class NewsPostSubmitSerializer(serializers.Serializer):
             raise serializers.ValidationError(
                 'Content too long. Maximum 50,000 characters allowed.'
             )
+        # The verification ensemble is English-only; reject non-English stories
+        # so they aren't published on a meaningless verdict.
+        from ml_engine.language import looks_english
+        if not looks_english(value):
+            raise serializers.ValidationError(
+                'Analysis currently supports English content only. '
+                'Kinyarwanda support is coming soon.'
+            )
         return value
 
 

@@ -47,6 +47,9 @@ MESSAGES = {
     'Text must be at least 20 characters.': 'Inyandiko igomba kuba nibura inyuguti 20.',
     'Maximum 50 articles per bulk submission.': 'Ntarengwa ni inkuru 50 kuri buri kohereza rimwe.',
     'Analysis failed.': 'Isesengura ryanze.',
+    'Analysis currently supports English content only. Kinyarwanda support is coming soon.':
+        'Isesengura kuri ubu rikora ku nyandiko z\'Icyongereza gusa. '
+        'Gufasha Ikinyarwanda biraza vuba.',
     # ── ML / admin ─────────────────────────────────────────────────────
     'ML models not trained yet. Please train models first.':
         'Ibyitegererezo bya ML ntibirimo gutozwa. Banza utoze ibyitegererezo.',
