@@ -1,0 +1,31 @@
+{
+  "history": {
+    "title": "Amateka y'Isesengura",
+    "subtitle": "Reba kandi unyungure ibisubizo by'isesengura ryawe rishize.",
+    "subtitleOrg": "Reba kandi unyungure isesengura ryose ry'ikigo cyawe.",
+    "scope": {
+      "own": "Isesengura ryanjye",
+      "org": "Ikigo"
+    },
+    "searchPlaceholder": "Shakisha ukurikije umutwe…",
+    "allJournalists": "Abanyamakuru bose",
+    "allResults": "Ibisubizo byose",
+    "col": {
+      "article": "Inkuru",
+      "submittedBy": "Yatanzwe na",
+      "source": "Inkomoko",
+      "result": "Igisubizo",
+      "date": "Itariki",
+      "actions": "Ibikorwa"
+    },
+    "untitled": "Nta mutwe",
+    "inputType": "Injiza ya {{type}}",
+    "exportCsv": "Kuramo CSV",
+    "totalResults_one": "Igisubizo {{count}} cyose hamwe",
+    "totalResults_other": "Ibisubizo {{count}} byose hamwe",
+    "pageOf": "Urupapuro {{page}} kuri {{total}}",
+    "prevPage": "Urupapuro rwabanje",
+    "nextPage": "Urupapuro rukurikira",
+    "empty": "Nta sesengura ryabonetse. Tangira usesengura ibintu bimwe na bimwe."
+  }
+}

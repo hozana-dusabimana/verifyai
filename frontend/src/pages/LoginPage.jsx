@@ -5,22 +5,24 @@ import {
   CheckCircle2, KeyRound, Sparkles, Building2, Newspaper, Users,
   ChevronDown, Award,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 
 const FEATURES = [
-  { icon: Sparkles, title: 'Three-model ensemble', body: 'Naive Bayes, LSTM and DistilBERT scored together for robust verdicts.' },
-  { icon: ShieldCheck, title: 'Explainable results', body: 'Every classification ships with the keywords, signals, and reasons behind it.' },
-  { icon: Award, title: 'Standards-aligned', body: 'Designed against IFCN, C2PA, JTI and DSA reference frameworks.' },
+  { icon: Sparkles, key: 'ensemble' },
+  { icon: ShieldCheck, key: 'explainable' },
+  { icon: Award, key: 'standards' },
 ];
 
 const DEMO_ACCOUNTS = [
-  { role: 'Admin',      email: 'admin@verifyai.demo',      password: 'AdminDemo!2026',  icon: ShieldCheck, accent: 'bg-purple-100 text-purple-700' },
-  { role: 'Media House', email: 'gov@verifyai.demo',        password: 'GovDemo!2026',     icon: Building2,   accent: 'bg-blue-100 text-blue-700' },
-  { role: 'Journalist', email: 'journalist@verifyai.demo',  password: 'JournoDemo!2026',  icon: Newspaper,   accent: 'bg-amber-100 text-amber-700' },
-  { role: 'Citizen',    email: 'citizen@verifyai.demo',     password: 'CitizenDemo!2026', icon: Users,       accent: 'bg-slate-100 text-slate-700' },
+  { roleKey: 'admin',      email: 'admin@verifyai.demo',      password: 'AdminDemo!2026',  icon: ShieldCheck, accent: 'bg-purple-100 text-purple-700' },
+  { roleKey: 'government', email: 'gov@verifyai.demo',        password: 'GovDemo!2026',     icon: Building2,   accent: 'bg-blue-100 text-blue-700' },
+  { roleKey: 'journalist', email: 'journalist@verifyai.demo',  password: 'JournoDemo!2026',  icon: Newspaper,   accent: 'bg-amber-100 text-amber-700' },
+  { roleKey: 'citizen',    email: 'citizen@verifyai.demo',     password: 'CitizenDemo!2026', icon: Users,       accent: 'bg-slate-100 text-slate-700' },
 ];
 
 const LoginPage = () => {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -58,13 +60,13 @@ const LoginPage = () => {
       const status = err.response?.status;
       const msg = err.response?.data?.error;
       if (!err.response) {
-        setError('Cannot reach the server. Check your connection and try again.');
+        setError(t('login.errors.network'));
         setErrorKind('network');
       } else if (status === 403 && typeof msg === 'string' && msg.toLowerCase().includes('locked')) {
-        setError('Account temporarily locked after multiple failed attempts. Try again in 30 minutes or reset your password.');
+        setError(t('login.errors.lockout'));
         setErrorKind('lockout');
       } else {
-        setError(typeof msg === 'string' ? msg : 'Invalid email or password.');
+        setError(typeof msg === 'string' ? msg : t('login.errors.invalid'));
         setErrorKind('error');
       }
     } finally {
@@ -88,10 +90,10 @@ const LoginPage = () => {
       <div className="flex-1 flex items-center justify-center px-4 sm:px-8 lg:px-16 py-12 bg-slate-50/40">
         <div className="w-full max-w-md">
           <div className="mb-8">
-            <p className="text-xs font-bold uppercase tracking-widest text-brand-600 mb-2">Sign in</p>
-            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Welcome back</h1>
+            <p className="text-xs font-bold uppercase tracking-widest text-brand-600 mb-2">{t('login.eyebrow')}</p>
+            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">{t('login.welcomeBack')}</h1>
             <p className="text-sm text-slate-500 mt-1.5 font-medium">
-              Sign in to continue verifying content with VerifyAI.
+              {t('login.subtitle')}
             </p>
           </div>
 
@@ -123,7 +125,7 @@ const LoginPage = () => {
 
             <div>
               <label htmlFor="email" className="block text-xs font-bold text-slate-700 mb-1.5">
-                Email
+                {t('login.emailLabel')}
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -135,7 +137,7 @@ const LoginPage = () => {
                   autoComplete="email"
                   required
                   className={inputCls}
-                  placeholder="you@organization.com"
+                  placeholder={t('login.emailPlaceholder')}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />
@@ -145,10 +147,10 @@ const LoginPage = () => {
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label htmlFor="password" className="block text-xs font-bold text-slate-700">
-                  Password
+                  {t('login.passwordLabel')}
                 </label>
                 <Link to="/forgot-password" className="text-xs font-semibold text-brand-600 hover:text-brand-700">
-                  Forgot password?
+                  {t('login.forgotPassword')}
                 </Link>
               </div>
               <div className="relative">
@@ -161,7 +163,7 @@ const LoginPage = () => {
                   autoComplete="current-password"
                   required
                   className={`${inputCls} pr-10`}
-                  placeholder="Enter your password"
+                  placeholder={t('login.passwordPlaceholder')}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
@@ -170,7 +172,7 @@ const LoginPage = () => {
                   className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600"
                   onClick={() => setShowPassword((s) => !s)}
                   tabIndex={-1}
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  aria-label={showPassword ? t('login.hidePassword') : t('login.showPassword')}
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
@@ -184,7 +186,7 @@ const LoginPage = () => {
                 className="h-4 w-4 text-brand-600 focus:ring-brand-500 border-slate-300 rounded cursor-pointer"
               />
               <label htmlFor="remember-me" className="ml-2 block text-sm text-slate-600 font-medium cursor-pointer">
-                Keep me signed in
+                {t('login.keepSignedIn')}
               </label>
             </div>
 
@@ -196,11 +198,11 @@ const LoginPage = () => {
               {loading ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/30 border-t-white" />
-                  Signing in…
+                  {t('login.signingIn')}
                 </>
               ) : (
                 <>
-                  Sign in <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
+                  {t('login.signIn')} <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
                 </>
               )}
             </button>
@@ -214,7 +216,7 @@ const LoginPage = () => {
               className="w-full flex items-center justify-between px-4 py-2.5 rounded-xl border border-dashed border-slate-300 text-xs font-bold text-slate-600 hover:bg-slate-50 hover:border-slate-400 transition-colors"
             >
               <span className="inline-flex items-center gap-2">
-                <KeyRound className="w-3.5 h-3.5" /> Demo accounts for evaluation
+                <KeyRound className="w-3.5 h-3.5" /> {t('login.demo.toggle')}
               </span>
               <ChevronDown className={`w-4 h-4 transition-transform ${showDemo ? 'rotate-180' : ''}`} />
             </button>
@@ -222,7 +224,7 @@ const LoginPage = () => {
             {showDemo && (
               <div className="mt-3 p-4 bg-slate-50/80 border border-slate-200 rounded-xl space-y-2">
                 <p className="text-[11px] text-slate-500 font-medium mb-2">
-                  Click any account to fill the form. Created automatically by the seed command.
+                  {t('login.demo.hint')}
                 </p>
                 {DEMO_ACCOUNTS.map((a) => {
                   const Icon = a.icon;
@@ -237,7 +239,7 @@ const LoginPage = () => {
                         <Icon className="w-4 h-4" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs font-bold text-slate-800">{a.role}</p>
+                        <p className="text-xs font-bold text-slate-800">{t(`common.roles.${a.roleKey}`)}</p>
                         <p className="text-[11px] text-slate-500 truncate font-mono">{a.email}</p>
                       </div>
                       <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-brand-600 group-hover:translate-x-0.5 transition-all" />
@@ -249,9 +251,9 @@ const LoginPage = () => {
           </div>
 
           <p className="mt-8 text-center text-sm text-slate-500 font-medium">
-            New to VerifyAI?{' '}
+            {t('login.noAccount')}{' '}
             <Link to="/register" className="font-bold text-brand-600 hover:text-brand-700 transition-colors">
-              Create an account
+              {t('login.createAccount')}
             </Link>
           </p>
         </div>
@@ -279,24 +281,24 @@ const LoginPage = () => {
           </div>
 
           <h2 className="text-3xl xl:text-4xl font-extrabold leading-tight tracking-tight">
-            Verify what you read.<br />
-            <span className="text-brand-100">Trust what you share.</span>
+            {t('login.brand.headlineLine1')}<br />
+            <span className="text-brand-100">{t('login.brand.headlineLine2')}</span>
           </h2>
           <p className="text-brand-50/85 text-base mt-4 leading-relaxed max-w-md">
-            AI-powered fact verification built for citizens, newsrooms, and governments.
+            {t('login.brand.subtext')}
           </p>
 
           <ul className="mt-12 space-y-5 max-w-md">
             {FEATURES.map((f) => {
               const Icon = f.icon;
               return (
-                <li key={f.title} className="flex items-start gap-3.5">
+                <li key={f.key} className="flex items-start gap-3.5">
                   <div className="w-9 h-9 rounded-xl bg-white/15 border border-white/25 flex items-center justify-center flex-shrink-0 backdrop-blur-sm">
                     <Icon className="w-4 h-4 text-white" />
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-white">{f.title}</p>
-                    <p className="text-xs text-brand-50/80 mt-0.5 leading-relaxed">{f.body}</p>
+                    <p className="text-sm font-bold text-white">{t(`login.features.${f.key}.title`)}</p>
+                    <p className="text-xs text-brand-50/80 mt-0.5 leading-relaxed">{t(`login.features.${f.key}.body`)}</p>
                   </div>
                 </li>
               );
@@ -305,7 +307,7 @@ const LoginPage = () => {
         </div>
 
         <div className="relative z-10 pt-8 border-t border-white/15">
-          <p className="text-[11px] uppercase tracking-widest text-brand-100/80 font-bold mb-2">Aligned with</p>
+          <p className="text-[11px] uppercase tracking-widest text-brand-100/80 font-bold mb-2">{t('login.alignedWith')}</p>
           <div className="flex flex-wrap gap-2">
             {['IFCN', 'C2PA', 'JTI', 'DSA'].map((s) => (
               <span key={s} className="text-[11px] font-bold text-white bg-white/10 border border-white/20 px-2.5 py-1 rounded-md backdrop-blur-sm">

@@ -1,0 +1,23 @@
+{
+  "widgets": {
+    "quickAnalyze": {
+      "title": "Sesengura vuba",
+      "subtitle": "Andika cyangwa shyiramo URL kugira ngo ugenzure ako kanya.",
+      "placeholder": "Andika cyangwa shyiramo URL hano…",
+      "submit": "Sesengura inkuru"
+    },
+    "recentTable": {
+      "title": "Isesengura riheruka",
+      "colArticle": "Inkuru",
+      "colSource": "Inkomoko",
+      "colResult": "Igisubizo",
+      "colCite": "Kuvuga",
+      "untitled": "Nta mutwe",
+      "exportPdf": "Sohora icyemezo cya PDF",
+      "empty": "Nta sesengura rirakorwa. Tanga inkuru yawe ya mbere kugira ngo utangire."
+    },
+    "trustGauge": {
+      "label": "Ikizere"
+    }
+  }
+}

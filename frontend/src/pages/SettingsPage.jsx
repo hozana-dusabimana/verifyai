@@ -1,17 +1,18 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { User, Lock, Bell, Key, Save, Plus, Trash2, CheckCircle, Copy, Terminal, Check } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { usersAPI, alertsAPI } from '../services/api';
-import { roleLabel } from '../utils/roles';
+import { roleLabelKey, roleLabel } from '../utils/roles';
 
 // ─── API example builder ──────────────────────────────────────────────
 const buildExamples = (baseUrl) => [
   {
     id: 'submit-text',
-    title: 'Submit text for analysis',
+    titleKey: 'settings.apiKeys.examples.submitText.title',
+    descriptionKey: 'settings.apiKeys.examples.submitText.description',
     method: 'POST',
     path: '/analysis/submit',
-    description: 'Send article text and receive an analysis ID. The pipeline runs asynchronously — poll the status endpoint until completed.',
     snippets: {
       curl: `curl -X POST ${baseUrl}/analysis/submit \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
@@ -54,10 +55,10 @@ print(res.json()["data"]["id"])  # analysis id to poll`,
   },
   {
     id: 'submit-url',
-    title: 'Submit a URL',
+    titleKey: 'settings.apiKeys.examples.submitUrl.title',
+    descriptionKey: 'settings.apiKeys.examples.submitUrl.description',
     method: 'POST',
     path: '/analysis/submit',
-    description: 'Pass a URL and the backend will fetch and parse the article content automatically.',
     snippets: {
       curl: `curl -X POST ${baseUrl}/analysis/submit \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
@@ -93,10 +94,10 @@ print(res.json()["data"])`,
   },
   {
     id: 'get-result',
-    title: 'Get analysis result',
+    titleKey: 'settings.apiKeys.examples.getResult.title',
+    descriptionKey: 'settings.apiKeys.examples.getResult.description',
     method: 'GET',
     path: '/analysis/{id}',
-    description: 'Fetch the full result once status is "completed". Returns credibility score, classification (REAL / FAKE / UNCERTAIN), top keywords, and flagging reasons.',
     snippets: {
       curl: `curl ${baseUrl}/analysis/8f3e1c0a-1234-4abc-9def-0123456789ab \\
   -H "Authorization: Bearer YOUR_API_KEY"`,
@@ -118,10 +119,10 @@ print(result["classification"], result["credibility_score"])`,
   },
   {
     id: 'history',
-    title: 'List your analysis history',
+    titleKey: 'settings.apiKeys.examples.history.title',
+    descriptionKey: 'settings.apiKeys.examples.history.description',
     method: 'GET',
     path: '/analysis/history',
-    description: 'Paginated list of your recent analyses. Supports ?page=N&page_size=N.',
     snippets: {
       curl: `curl "${baseUrl}/analysis/history?page=1&page_size=20" \\
   -H "Authorization: Bearer YOUR_API_KEY"`,
@@ -152,6 +153,7 @@ const METHOD_COLORS = {
 };
 
 function ApiExampleCard({ example, currentKey }) {
+  const { t } = useTranslation();
   const [lang, setLang] = useState('curl');
   const [copied, setCopied] = useState(false);
 
@@ -177,8 +179,8 @@ function ApiExampleCard({ example, currentKey }) {
           </span>
           <code className="text-xs font-mono text-slate-700 font-semibold">{example.path}</code>
         </div>
-        <p className="text-sm font-bold text-slate-900">{example.title}</p>
-        <p className="text-xs text-slate-500 mt-1 leading-relaxed">{example.description}</p>
+        <p className="text-sm font-bold text-slate-900">{t(example.titleKey)}</p>
+        <p className="text-xs text-slate-500 mt-1 leading-relaxed">{t(example.descriptionKey)}</p>
       </div>
 
       <div className="flex items-center justify-between px-3 py-2 bg-slate-50 border-b border-slate-100">
@@ -201,7 +203,7 @@ function ApiExampleCard({ example, currentKey }) {
           onClick={copy}
           className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold text-slate-600 hover:bg-white hover:text-slate-900 transition-colors"
         >
-          {copied ? <><Check className="w-3 h-3 text-emerald-600" /> Copied</> : <><Copy className="w-3 h-3" /> Copy</>}
+          {copied ? <><Check className="w-3 h-3 text-emerald-600" /> {t('settings.apiKeys.copied')}</> : <><Copy className="w-3 h-3" /> {t('settings.apiKeys.copy')}</>}
         </button>
       </div>
 
@@ -213,6 +215,7 @@ function ApiExampleCard({ example, currentKey }) {
 }
 
 function ApiKeysTab({ apiKeys, newKeyName, setNewKeyName, newKeyValue, handleCreateKey, handleDeleteKey }) {
+  const { t } = useTranslation();
   const baseUrl = useMemo(() => {
     const env = import.meta.env.VITE_API_URL;
     if (env && /^https?:/.test(env)) return env;
@@ -230,27 +233,27 @@ function ApiKeysTab({ apiKeys, newKeyName, setNewKeyName, newKeyValue, handleCre
       <section className="space-y-4">
         <div>
           <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-            <Key className="w-5 h-5 text-brand-600" /> Your API keys
+            <Key className="w-5 h-5 text-brand-600" /> {t('settings.apiKeys.yourKeys')}
           </h3>
           <p className="text-xs text-slate-500 mt-0.5">
-            Use keys to authenticate programmatic requests. Treat them like passwords — never commit them to source control.
+            {t('settings.apiKeys.yourKeysDesc')}
           </p>
         </div>
 
         <div className="flex gap-3 max-w-lg">
-          <input type="text" placeholder="Key name (e.g. 'Production')"
+          <input type="text" placeholder={t('settings.apiKeys.keyNamePlaceholder')}
             className="flex-1 rounded-xl border border-slate-300 px-4 py-3 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
             value={newKeyName} onChange={(e) => setNewKeyName(e.target.value)} />
           <button onClick={handleCreateKey}
             className="flex items-center gap-2 px-5 py-2.5 bg-brand-600 text-white rounded-xl font-bold hover:bg-brand-700 shadow-md">
-            <Plus className="w-4 h-4" /> Generate
+            <Plus className="w-4 h-4" /> {t('settings.apiKeys.generate')}
           </button>
         </div>
 
         {newKeyValue && (
           <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
             <p className="text-sm font-bold text-emerald-800 mb-2 flex items-center gap-2">
-              <CheckCircle className="w-4 h-4" /> New API key — copy it now, it won't be shown again:
+              <CheckCircle className="w-4 h-4" /> {t('settings.apiKeys.newKeyNotice')}
             </p>
             <code className="text-sm bg-white px-3 py-2 rounded-lg border border-emerald-200 block break-all select-all font-mono">{newKeyValue}</code>
           </div>
@@ -263,11 +266,11 @@ function ApiKeysTab({ apiKeys, newKeyName, setNewKeyName, newKeyValue, handleCre
                 <div className="min-w-0">
                   <p className="font-bold text-slate-900 text-sm truncate">{key.name}</p>
                   <p className="text-xs text-slate-500 mt-0.5 font-mono">
-                    {key.prefix}…  ·  Created {new Date(key.created_at).toLocaleDateString()}
-                    {key.last_used_at && `  ·  Last used ${new Date(key.last_used_at).toLocaleDateString()}`}
+                    {key.prefix}…  ·  {t('settings.apiKeys.createdOn', { date: new Date(key.created_at).toLocaleDateString() })}
+                    {key.last_used_at && `  ·  ${t('settings.apiKeys.lastUsed', { date: new Date(key.last_used_at).toLocaleDateString() })}`}
                   </p>
                 </div>
-                <button onClick={() => handleDeleteKey(key.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg" title="Revoke">
+                <button onClick={() => handleDeleteKey(key.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg" title={t('settings.apiKeys.revoke')}>
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>
@@ -276,8 +279,8 @@ function ApiKeysTab({ apiKeys, newKeyName, setNewKeyName, newKeyValue, handleCre
         ) : (
           <div className="text-center py-8 px-6 border-2 border-dashed border-slate-200 rounded-xl">
             <Key className="w-7 h-7 text-slate-300 mx-auto mb-2" />
-            <p className="text-sm font-bold text-slate-700">No API keys yet</p>
-            <p className="text-xs text-slate-500 mt-1">Generate one above to enable programmatic access.</p>
+            <p className="text-sm font-bold text-slate-700">{t('settings.apiKeys.emptyTitle')}</p>
+            <p className="text-xs text-slate-500 mt-1">{t('settings.apiKeys.emptyDesc')}</p>
           </div>
         )}
       </section>
@@ -286,12 +289,12 @@ function ApiKeysTab({ apiKeys, newKeyName, setNewKeyName, newKeyValue, handleCre
       <section className="space-y-4 pt-2 border-t border-slate-200">
         <div>
           <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-            <Terminal className="w-5 h-5 text-brand-600" /> Example requests
+            <Terminal className="w-5 h-5 text-brand-600" /> {t('settings.apiKeys.exampleRequests')}
           </h3>
           <p className="text-xs text-slate-500 mt-0.5">
-            Authenticate with <code className="px-1.5 py-0.5 rounded bg-slate-100 font-mono text-[11px]">Authorization: Bearer YOUR_API_KEY</code>.
-            Base URL: <code className="px-1.5 py-0.5 rounded bg-slate-100 font-mono text-[11px]">{baseUrl}</code>
-            {newKeyValue && <> · <span className="font-bold text-emerald-700">Snippets below are pre-filled with the key you just generated.</span></>}
+            {t('settings.apiKeys.exampleAuthPrefix')} <code className="px-1.5 py-0.5 rounded bg-slate-100 font-mono text-[11px]">Authorization: Bearer YOUR_API_KEY</code>.
+            {' '}{t('settings.apiKeys.exampleBaseUrl')} <code className="px-1.5 py-0.5 rounded bg-slate-100 font-mono text-[11px]">{baseUrl}</code>
+            {newKeyValue && <> · <span className="font-bold text-emerald-700">{t('settings.apiKeys.examplePrefilled')}</span></>}
           </p>
         </div>
 
@@ -302,7 +305,7 @@ function ApiKeysTab({ apiKeys, newKeyName, setNewKeyName, newKeyValue, handleCre
         </div>
 
         <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-4 text-xs text-slate-600 leading-relaxed">
-          <p className="font-bold text-slate-700 mb-1">Response envelope</p>
+          <p className="font-bold text-slate-700 mb-1">{t('settings.apiKeys.responseEnvelope')}</p>
           All endpoints return <code className="px-1 rounded bg-white border border-slate-200 font-mono">{`{ success, data, error, meta? }`}</code>.
           On success, <code className="font-mono">data</code> contains the result; on error, <code className="font-mono">error</code> is a string or
           field-level object. List endpoints include <code className="font-mono">meta.count</code>, <code className="font-mono">meta.next</code>,
@@ -314,6 +317,7 @@ function ApiKeysTab({ apiKeys, newKeyName, setNewKeyName, newKeyValue, handleCre
 }
 
 const SettingsPage = () => {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('profile');
   const { user, refreshProfile } = useAuth();
   const [profileForm, setProfileForm] = useState({ first_name: '', last_name: '', organization: '' });
@@ -352,29 +356,29 @@ const SettingsPage = () => {
     try {
       await usersAPI.updateProfile(profileForm);
       await refreshProfile();
-      showMsg('Profile updated.');
+      showMsg(t('settings.profile.updated'));
     } catch (err) {
-      showErr(err.response?.data?.error || 'Update failed.');
+      showErr(err.response?.data?.error || t('settings.profile.updateFailed'));
     }
   };
 
   const handlePasswordChange = async () => {
-    if (passwordForm.new_password !== passwordForm.confirm) { showErr('Passwords do not match.'); return; }
+    if (passwordForm.new_password !== passwordForm.confirm) { showErr(t('settings.security.passwordsDoNotMatch')); return; }
     try {
       await usersAPI.changePassword({ old_password: passwordForm.old_password, new_password: passwordForm.new_password });
       setPasswordForm({ old_password: '', new_password: '', confirm: '' });
-      showMsg('Password changed.');
+      showMsg(t('settings.security.passwordChanged'));
     } catch (err) {
       const msg = err.response?.data?.error;
-      showErr(typeof msg === 'object' ? JSON.stringify(msg) : msg || 'Password change failed.');
+      showErr(typeof msg === 'object' ? JSON.stringify(msg) : msg || t('settings.security.passwordChangeFailed'));
     }
   };
 
   const handleNotifSave = async () => {
     try {
       await alertsAPI.updateSettings(notifPrefs);
-      showMsg('Notification preferences saved.');
-    } catch { showErr('Failed to save preferences.'); }
+      showMsg(t('settings.notifications.preferencesSaved'));
+    } catch { showErr(t('settings.notifications.preferencesFailed')); }
   };
 
   const handleCreateKey = async () => {
@@ -384,9 +388,9 @@ const SettingsPage = () => {
       setNewKeyValue(res.data.data.key);
       setNewKeyName('');
       usersAPI.getAPIKeys().then(r => setApiKeys(r.data.data || []));
-      showMsg('API key created. Copy it now — it won\'t be shown again.');
+      showMsg(t('settings.apiKeys.created'));
     } catch (err) {
-      showErr(err.response?.data?.error || 'Failed to create key.');
+      showErr(err.response?.data?.error || t('settings.apiKeys.createFailed'));
     }
   };
 
@@ -394,22 +398,22 @@ const SettingsPage = () => {
     try {
       await usersAPI.deleteAPIKey(id);
       setApiKeys(prev => prev.filter(k => k.id !== id));
-      showMsg('API key revoked.');
-    } catch { showErr('Failed to revoke key.'); }
+      showMsg(t('settings.apiKeys.revoked'));
+    } catch { showErr(t('settings.apiKeys.revokeFailed')); }
   };
 
   // Citizens are casual users — no programmatic API access.
   const isCitizen = user?.role === 'citizen';
   const tabs = [
-    { id: 'profile', label: 'Profile', icon: <User className="w-4 h-4" /> },
-    { id: 'security', label: 'Security', icon: <Lock className="w-4 h-4" /> },
-    { id: 'notifications', label: 'Notifications', icon: <Bell className="w-4 h-4" /> },
-    ...(!isCitizen ? [{ id: 'apikeys', label: 'API Keys', icon: <Key className="w-4 h-4" /> }] : []),
+    { id: 'profile', label: t('settings.tabs.profile'), icon: <User className="w-4 h-4" /> },
+    { id: 'security', label: t('settings.tabs.security'), icon: <Lock className="w-4 h-4" /> },
+    { id: 'notifications', label: t('settings.tabs.notifications'), icon: <Bell className="w-4 h-4" /> },
+    ...(!isCitizen ? [{ id: 'apikeys', label: t('settings.tabs.apiKeys'), icon: <Key className="w-4 h-4" /> }] : []),
   ];
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Settings</h1>
+      <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">{t('settings.title')}</h1>
 
       {(message || error) && (
         <div className={`px-4 py-3 rounded-xl text-sm font-medium ${message ? 'bg-emerald-50 border border-emerald-200 text-emerald-700' : 'bg-red-50 border border-red-200 text-red-700'}`}>
@@ -433,30 +437,30 @@ const SettingsPage = () => {
         {activeTab === 'profile' && (
           <div className="space-y-5 max-w-lg">
             <div>
-              <label className="block text-sm font-bold text-slate-700 mb-1">First Name</label>
+              <label className="block text-sm font-bold text-slate-700 mb-1">{t('settings.profile.firstName')}</label>
               <input type="text" className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm focus:ring-brand-500 focus:border-brand-500"
                 value={profileForm.first_name} onChange={(e) => setProfileForm({ ...profileForm, first_name: e.target.value })} />
             </div>
             <div>
-              <label className="block text-sm font-bold text-slate-700 mb-1">Last Name</label>
+              <label className="block text-sm font-bold text-slate-700 mb-1">{t('settings.profile.lastName')}</label>
               <input type="text" className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm focus:ring-brand-500 focus:border-brand-500"
                 value={profileForm.last_name} onChange={(e) => setProfileForm({ ...profileForm, last_name: e.target.value })} />
             </div>
             <div>
-              <label className="block text-sm font-bold text-slate-700 mb-1">Organization</label>
+              <label className="block text-sm font-bold text-slate-700 mb-1">{t('settings.profile.organization')}</label>
               <input type="text" className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm focus:ring-brand-500 focus:border-brand-500"
                 value={profileForm.organization} onChange={(e) => setProfileForm({ ...profileForm, organization: e.target.value })} />
             </div>
             <div>
-              <label className="block text-sm font-bold text-slate-700 mb-1">Email</label>
+              <label className="block text-sm font-bold text-slate-700 mb-1">{t('settings.profile.email')}</label>
               <input type="email" disabled className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm bg-slate-50 text-slate-500" value={user?.email || ''} />
             </div>
             <div>
-              <label className="block text-sm font-bold text-slate-700 mb-1">Role</label>
-              <input type="text" disabled className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm bg-slate-50 text-slate-500 capitalize" value={roleLabel(user?.role)} />
+              <label className="block text-sm font-bold text-slate-700 mb-1">{t('settings.profile.role')}</label>
+              <input type="text" disabled className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm bg-slate-50 text-slate-500 capitalize" value={t(roleLabelKey(user?.role), { defaultValue: roleLabel(user?.role) })} />
             </div>
             <button onClick={handleProfileSave} className="flex items-center gap-2 px-6 py-2.5 bg-brand-600 text-white rounded-xl font-bold hover:bg-brand-700 shadow-md">
-              <Save className="w-4 h-4" /> Save Changes
+              <Save className="w-4 h-4" /> {t('settings.profile.saveChanges')}
             </button>
           </div>
         )}
@@ -464,18 +468,18 @@ const SettingsPage = () => {
         {/* Security Tab */}
         {activeTab === 'security' && (
           <div className="space-y-5 max-w-lg">
-            <h3 className="text-lg font-bold text-slate-900">Change Password</h3>
-            <input type="password" placeholder="Current Password"
+            <h3 className="text-lg font-bold text-slate-900">{t('settings.security.changePassword')}</h3>
+            <input type="password" placeholder={t('settings.security.currentPassword')}
               className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm focus:ring-brand-500 focus:border-brand-500"
               value={passwordForm.old_password} onChange={(e) => setPasswordForm({ ...passwordForm, old_password: e.target.value })} />
-            <input type="password" placeholder="New Password"
+            <input type="password" placeholder={t('settings.security.newPassword')}
               className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm focus:ring-brand-500 focus:border-brand-500"
               value={passwordForm.new_password} onChange={(e) => setPasswordForm({ ...passwordForm, new_password: e.target.value })} />
-            <input type="password" placeholder="Confirm New Password"
+            <input type="password" placeholder={t('settings.security.confirmNewPassword')}
               className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm focus:ring-brand-500 focus:border-brand-500"
               value={passwordForm.confirm} onChange={(e) => setPasswordForm({ ...passwordForm, confirm: e.target.value })} />
             <button onClick={handlePasswordChange} className="flex items-center gap-2 px-6 py-2.5 bg-brand-600 text-white rounded-xl font-bold hover:bg-brand-700 shadow-md">
-              <Lock className="w-4 h-4" /> Update Password
+              <Lock className="w-4 h-4" /> {t('settings.security.updatePassword')}
             </button>
           </div>
         )}
@@ -487,34 +491,34 @@ const SettingsPage = () => {
               <input type="checkbox" className="rounded text-brand-600" checked={notifPrefs.email_on_high_risk}
                 onChange={(e) => setNotifPrefs({ ...notifPrefs, email_on_high_risk: e.target.checked })} />
               <div>
-                <p className="text-sm font-bold text-slate-700">Email on high-risk detection</p>
-                <p className="text-xs text-slate-500">Get notified when content is flagged as high risk</p>
+                <p className="text-sm font-bold text-slate-700">{t('settings.notifications.emailOnHighRisk')}</p>
+                <p className="text-xs text-slate-500">{t('settings.notifications.emailOnHighRiskDesc')}</p>
               </div>
             </label>
             <label className="flex items-center gap-3 p-4 rounded-xl border border-slate-200 cursor-pointer hover:bg-slate-50">
               <input type="checkbox" className="rounded text-brand-600" checked={notifPrefs.email_on_analysis_complete}
                 onChange={(e) => setNotifPrefs({ ...notifPrefs, email_on_analysis_complete: e.target.checked })} />
               <div>
-                <p className="text-sm font-bold text-slate-700">Email on analysis complete</p>
-                <p className="text-xs text-slate-500">Get notified when an analysis finishes</p>
+                <p className="text-sm font-bold text-slate-700">{t('settings.notifications.emailOnAnalysisComplete')}</p>
+                <p className="text-xs text-slate-500">{t('settings.notifications.emailOnAnalysisCompleteDesc')}</p>
               </div>
             </label>
             <div>
-              <label className="block text-sm font-bold text-slate-700 mb-1">Alert Threshold Score</label>
+              <label className="block text-sm font-bold text-slate-700 mb-1">{t('settings.notifications.alertThreshold')}</label>
               <input type="number" min="0" max="100" className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm"
                 value={notifPrefs.alert_threshold} onChange={(e) => setNotifPrefs({ ...notifPrefs, alert_threshold: parseInt(e.target.value) || 0 })} />
             </div>
             <div>
-              <label className="block text-sm font-bold text-slate-700 mb-1">Email Frequency</label>
+              <label className="block text-sm font-bold text-slate-700 mb-1">{t('settings.notifications.emailFrequency')}</label>
               <select className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm"
                 value={notifPrefs.email_frequency} onChange={(e) => setNotifPrefs({ ...notifPrefs, email_frequency: e.target.value })}>
-                <option value="immediate">Immediate</option>
-                <option value="daily">Daily Digest</option>
-                <option value="weekly">Weekly Digest</option>
+                <option value="immediate">{t('settings.notifications.frequencyImmediate')}</option>
+                <option value="daily">{t('settings.notifications.frequencyDaily')}</option>
+                <option value="weekly">{t('settings.notifications.frequencyWeekly')}</option>
               </select>
             </div>
             <button onClick={handleNotifSave} className="flex items-center gap-2 px-6 py-2.5 bg-brand-600 text-white rounded-xl font-bold hover:bg-brand-700 shadow-md">
-              <Save className="w-4 h-4" /> Save Preferences
+              <Save className="w-4 h-4" /> {t('settings.notifications.savePreferences')}
             </button>
           </div>
         )}

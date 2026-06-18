@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react';
 
 /**
@@ -7,6 +8,7 @@ import { X } from 'lucide-react';
  * Closes on Escape key and on backdrop click. Locks body scroll while open.
  */
 const Modal = ({ open, onClose, title, subtitle, icon: Icon, children, maxWidth = 'max-w-lg' }) => {
+  const { t } = useTranslation();
   useEffect(() => {
     if (!open) return undefined;
     const onKey = (e) => { if (e.key === 'Escape') onClose(); };
@@ -46,7 +48,7 @@ const Modal = ({ open, onClose, title, subtitle, icon: Icon, children, maxWidth 
             <button
               onClick={onClose}
               className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500 flex-shrink-0"
-              aria-label="Close"
+              aria-label={t('common.close')}
             >
               <X className="w-5 h-5" />
             </button>

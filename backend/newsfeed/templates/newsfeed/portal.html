@@ -8,30 +8,37 @@
   <style>
     body { font-family: 'Georgia', 'Times New Roman', serif; }
     .ui { font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif; }
+    .lang-btn.active { background:#1c1917; color:#fff; }
   </style>
 </head>
 <body class="bg-stone-100 text-stone-900 min-h-screen">
 
   <!-- This page is a SELF-CONTAINED external application. It is not part of the
        VerifyAI dashboard SPA — it authenticates against and consumes the public
-       VerifyAI REST API exactly as a third-party news site would. -->
+       VerifyAI REST API exactly as a third-party news site would.
+       It is bilingual (English / Kinyarwanda); see the I18N dictionary below. -->
 
   <!-- Masthead -->
   <header class="border-b-4 border-stone-900 bg-white">
     <div class="max-w-6xl mx-auto px-4 py-5 flex items-center justify-between gap-4 flex-wrap">
       <div>
         <h1 class="text-4xl sm:text-5xl font-black tracking-tight">THE CIVIC WIRE</h1>
-        <p class="text-stone-500 italic text-sm mt-1">Independent community news — every story fact-checked by AI before it runs.</p>
+        <p class="text-stone-500 italic text-sm mt-1" data-i18n="tagline">Independent community news — every story fact-checked by AI before it runs.</p>
       </div>
       <div class="text-right ui flex flex-col items-end gap-2">
+        <!-- Language switch -->
+        <div class="inline-flex rounded-lg border border-stone-200 overflow-hidden text-xs font-bold">
+          <button id="langEn" class="lang-btn px-2.5 py-1 hover:bg-stone-100 transition-colors" lang="en">EN</button>
+          <button id="langRw" class="lang-btn px-2.5 py-1 hover:bg-stone-100 transition-colors border-l border-stone-200" lang="rw">RW</button>
+        </div>
         <span class="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-3 py-1">
-          <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Powered by VerifyAI API
+          <span class="w-2 h-2 rounded-full bg-emerald-500"></span> <span data-i18n="poweredBy">Powered by VerifyAI API</span>
         </span>
         <div class="flex items-center gap-2">
           <p id="connStatus" class="text-xs text-stone-400">Not connected</p>
-          <button id="settingsBtn" title="API settings" class="inline-flex items-center gap-1.5 text-xs font-bold text-stone-600 bg-stone-100 border border-stone-200 rounded-lg px-3 py-1.5 hover:bg-stone-200 transition-colors">
+          <button id="settingsBtn" data-i18n-title="settingsTitle" title="API settings" class="inline-flex items-center gap-1.5 text-xs font-bold text-stone-600 bg-stone-100 border border-stone-200 rounded-lg px-3 py-1.5 hover:bg-stone-200 transition-colors">
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-            Settings
+            <span data-i18n="settings">Settings</span>
           </button>
         </div>
       </div>
@@ -45,19 +52,19 @@
 
       <!-- Submit story panel -->
       <div class="bg-white rounded-2xl border border-stone-200 shadow-sm p-5">
-        <h2 class="font-bold text-stone-900 mb-1">✍️ Submit a story</h2>
-        <p class="text-xs text-stone-500 mb-4">The AI ensemble verifies your story. Only stories classified <b class="text-emerald-700">REAL</b> are published to the wire.</p>
+        <h2 class="font-bold text-stone-900 mb-1" data-i18n="submitTitle">✍️ Submit a story</h2>
+        <p class="text-xs text-stone-500 mb-4" data-i18n-html="submitHint">The AI ensemble verifies your story. Only stories classified <b class="text-emerald-700">REAL</b> are published to the wire.</p>
 
-        <div id="needConnect" class="hidden mb-4 text-xs bg-amber-50 border border-amber-200 text-amber-800 rounded-lg px-3 py-2">
+        <div id="needConnect" class="hidden mb-4 text-xs bg-amber-50 border border-amber-200 text-amber-800 rounded-lg px-3 py-2" data-i18n-html="needConnect">
           Connect to the VerifyAI API first — open <button type="button" id="openSettingsInline" class="font-bold underline">⚙ Settings</button>.
         </div>
 
         <form id="submitForm" class="space-y-3">
-          <input id="title" type="text" maxlength="500" placeholder="Headline" required class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm font-semibold" />
-          <textarea id="content" rows="6" placeholder="Full story text (min 50 characters)…" required class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm resize-none"></textarea>
-          <input id="sourceUrl" type="url" placeholder="Source link (https://…) — optional; unsourced stories are flagged for moderators" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm" />
-          <input id="source" type="text" placeholder="Source name (optional)" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm" />
-          <button id="submitBtn" type="submit" disabled class="w-full bg-emerald-600 text-white rounded-lg py-2.5 text-sm font-bold hover:bg-emerald-700 transition-colors disabled:bg-stone-300 disabled:cursor-not-allowed">Verify &amp; Publish</button>
+          <input id="title" type="text" maxlength="500" data-i18n-ph="phHeadline" placeholder="Headline" required class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm font-semibold" />
+          <textarea id="content" rows="6" data-i18n-ph="phContent" placeholder="Full story text (min 50 characters)…" required class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm resize-none"></textarea>
+          <input id="sourceUrl" type="url" data-i18n-ph="phSourceUrl" placeholder="Source link (https://…) — optional; unsourced stories are flagged for moderators" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm" />
+          <input id="source" type="text" data-i18n-ph="phSourceName" placeholder="Source name (optional)" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm" />
+          <button id="submitBtn" type="submit" disabled data-i18n="submitBtn" class="w-full bg-emerald-600 text-white rounded-lg py-2.5 text-sm font-bold hover:bg-emerald-700 transition-colors disabled:bg-stone-300 disabled:cursor-not-allowed">Verify &amp; Publish</button>
         </form>
 
         <div id="verdict" class="hidden mt-4 rounded-xl border p-4 text-sm"></div>
@@ -67,11 +74,11 @@
     <!-- Right column: the wire (approved feed) -->
     <section class="lg:col-span-2">
       <div class="flex items-center justify-between border-b-2 border-stone-900 pb-2 mb-5">
-        <h2 class="text-2xl font-black tracking-tight">ON THE WIRE</h2>
-        <button id="refreshBtn" class="text-xs font-bold text-stone-500 hover:text-stone-900">↻ Refresh</button>
+        <h2 class="text-2xl font-black tracking-tight" data-i18n="onTheWire">ON THE WIRE</h2>
+        <button id="refreshBtn" class="text-xs font-bold text-stone-500 hover:text-stone-900" data-i18n="refresh">↻ Refresh</button>
       </div>
       <div id="feed" class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-        <p class="text-stone-400 text-sm">Loading the wire…</p>
+        <p class="text-stone-400 text-sm" data-i18n="feedLoading">Loading the wire…</p>
       </div>
     </section>
   </main>
@@ -82,42 +89,187 @@
     <div class="absolute inset-0 flex items-start sm:items-center justify-center p-4 overflow-y-auto">
       <div class="relative bg-white rounded-2xl shadow-xl border border-stone-200 w-full max-w-md p-6 my-8">
         <div class="flex items-center justify-between mb-1">
-          <h2 class="font-bold text-stone-900 flex items-center gap-2">🔌 API Connection</h2>
+          <h2 class="font-bold text-stone-900 flex items-center gap-2" data-i18n="apiConnTitle">🔌 API Connection</h2>
           <button id="closeSettings" class="text-stone-400 hover:text-stone-700 text-xl leading-none">&times;</button>
         </div>
-        <p class="text-xs text-stone-500 mb-4">This external app calls the VerifyAI API. Sign in to obtain a token, then submit stories for verification.</p>
+        <p class="text-xs text-stone-500 mb-4" data-i18n="apiConnDesc">This external app calls the VerifyAI API. Sign in to obtain a token, then submit stories for verification.</p>
 
         <div id="loginForm" class="space-y-3">
-          <label class="block text-xs font-semibold text-stone-600">API base URL</label>
+          <label class="block text-xs font-semibold text-stone-600" data-i18n="apiBaseLabel">API base URL</label>
           <input id="apiBase" type="text" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm" />
 
-          <label class="block text-xs font-semibold text-stone-600">Email</label>
+          <label class="block text-xs font-semibold text-stone-600" data-i18n="emailLabel">Email</label>
           <input id="email" type="email" placeholder="journalist@verifyai.demo" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm" />
 
-          <label class="block text-xs font-semibold text-stone-600">Password</label>
+          <label class="block text-xs font-semibold text-stone-600" data-i18n="passwordLabel">Password</label>
           <input id="password" type="password" placeholder="••••••••" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm" />
 
-          <button id="connectBtn" class="w-full bg-stone-900 text-white rounded-lg py-2.5 text-sm font-bold hover:bg-stone-700 transition-colors">Connect</button>
+          <button id="connectBtn" class="w-full bg-stone-900 text-white rounded-lg py-2.5 text-sm font-bold hover:bg-stone-700 transition-colors" data-i18n="connect">Connect</button>
           <p id="loginError" class="text-xs text-red-600 hidden"></p>
-          <p class="text-[11px] text-stone-400 leading-relaxed">Demo accounts (seeded): <code>journalist@verifyai.demo</code> / <code>JournoDemo!2026</code> · also <code>citizen@verifyai.demo</code>, <code>gov@verifyai.demo</code>, <code>admin@verifyai.demo</code> (passwords follow the same <code>RoleDemo!2026</code> pattern).</p>
+          <p class="text-[11px] text-stone-400 leading-relaxed" data-i18n-html="demoNote">Demo accounts (seeded): <code>journalist@verifyai.demo</code> / <code>JournoDemo!2026</code> · also <code>citizen@verifyai.demo</code>, <code>gov@verifyai.demo</code>, <code>admin@verifyai.demo</code> (passwords follow the same <code>RoleDemo!2026</code> pattern).</p>
         </div>
 
         <div id="connectedBox" class="hidden">
           <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-sm">
-            <p class="font-bold text-emerald-800">Connected ✓</p>
+            <p class="font-bold text-emerald-800" data-i18n="connected">Connected ✓</p>
             <p id="connectedAs" class="text-emerald-700 text-xs mt-0.5"></p>
           </div>
-          <button id="disconnectBtn" class="mt-3 w-full border border-stone-300 text-stone-600 rounded-lg py-2 text-sm font-semibold hover:bg-stone-50">Disconnect</button>
+          <button id="disconnectBtn" class="mt-3 w-full border border-stone-300 text-stone-600 rounded-lg py-2 text-sm font-semibold hover:bg-stone-50" data-i18n="disconnect">Disconnect</button>
         </div>
       </div>
     </div>
   </div>
 
-  <footer class="max-w-6xl mx-auto px-4 py-8 text-center text-xs text-stone-400 ui">
+  <footer class="max-w-6xl mx-auto px-4 py-8 text-center text-xs text-stone-400 ui" data-i18n="footer">
     The Civic Wire is a demonstration external client of the VerifyAI fact-checking API.
   </footer>
 
   <script>
+    // ---- i18n dictionary (English / Kinyarwanda) ----
+    // Proper nouns kept verbatim: "THE CIVIC WIRE", "VerifyAI", demo emails.
+    const I18N = {
+      en: {
+        docTitle: 'Civic Wire — Community News, Verified by AI',
+        tagline: 'Independent community news — every story fact-checked by AI before it runs.',
+        poweredBy: 'Powered by VerifyAI API',
+        settings: 'Settings',
+        settingsTitle: 'API settings',
+        notConnected: 'Not connected',
+        connecting: 'Connecting…',
+        connectedAs: 'Connected as {email}',
+        submitTitle: '✍️ Submit a story',
+        submitHint: 'The AI ensemble verifies your story. Only stories classified <b class="text-emerald-700">REAL</b> are published to the wire.',
+        needConnect: 'Connect to the VerifyAI API first — open <button type="button" id="openSettingsInline" class="font-bold underline">⚙ Settings</button>.',
+        phHeadline: 'Headline',
+        phContent: 'Full story text (min 50 characters)…',
+        phSourceUrl: 'Source link (https://…) — optional; unsourced stories are flagged for moderators',
+        phSourceName: 'Source name (optional)',
+        submitBtn: 'Verify & Publish',
+        verifying: 'Verifying…',
+        onTheWire: 'ON THE WIRE',
+        refresh: '↻ Refresh',
+        feedLoading: 'Loading the wire…',
+        apiConnTitle: '🔌 API Connection',
+        apiConnDesc: 'This external app calls the VerifyAI API. Sign in to obtain a token, then submit stories for verification.',
+        apiBaseLabel: 'API base URL',
+        emailLabel: 'Email',
+        passwordLabel: 'Password',
+        connect: 'Connect',
+        demoNote: 'Demo accounts (seeded): <code>journalist@verifyai.demo</code> / <code>JournoDemo!2026</code> · also <code>citizen@verifyai.demo</code>, <code>gov@verifyai.demo</code>, <code>admin@verifyai.demo</code> (passwords follow the same <code>RoleDemo!2026</code> pattern).',
+        connected: 'Connected ✓',
+        disconnect: 'Disconnect',
+        footer: 'The Civic Wire is a demonstration external client of the VerifyAI fact-checking API.',
+        // Dynamic / JS messages
+        enterCreds: 'Enter email and password.',
+        loginFailed: 'Login failed.',
+        couldNotReach: 'Could not reach the API at {base}',
+        tooShort: 'Story must be at least 50 characters for the AI to verify it.',
+        submissionFailed: 'Submission failed.',
+        networkError: 'Network error contacting the API.',
+        verdictReal: 'REAL',
+        approvedTitle: 'Approved — published to the wire.',
+        approvedBody: 'AI verdict: {verdict} · credibility {score}.',
+        unsourcedNote: 'Published as an unsourced eyewitness report — moderators have been notified to verify it.',
+        reviewTitle: 'Held for editorial review.',
+        reviewDefault: 'A moderator will review this eyewitness report before it publishes.',
+        notApprovedTitle: 'Not approved.',
+        notCredible: 'not credible',
+        rejectedBody: 'AI verdict: {verdict} · credibility {score}. Only REAL stories are published.',
+        verificationFailed: 'Verification failed.',
+        feedEmpty: 'No verified stories yet. Be the first to publish one.',
+        sourceFallback: 'Source',
+        communityFallback: 'Community',
+        feedLoadError: 'Could not load the wire from {base}',
+      },
+      rw: {
+        docTitle: 'Civic Wire — Amakuru y\'Abaturage, Yagenzuwe na AI',
+        tagline: 'Amakuru yigenga y\'abaturage — buri nkuru igenzurwa na AI mbere yo gutangazwa.',
+        poweredBy: 'Bikoreshwa na VerifyAI API',
+        settings: 'Igenamiterere',
+        settingsTitle: 'Igenamiterere rya API',
+        notConnected: 'Ntabwo wahujwe',
+        connecting: 'Birimo guhuza…',
+        connectedAs: 'Wahujwe nka {email}',
+        submitTitle: '✍️ Ohereza inkuru',
+        submitHint: 'Itsinda rya AI rigenzura inkuru yawe. Inkuru gusa zashyizwe mu cyiciro cy\'<b class="text-emerald-700">UKURI</b> ni zo zitangazwa.',
+        needConnect: 'Banza uhuze na VerifyAI API — fungura <button type="button" id="openSettingsInline" class="font-bold underline">⚙ Igenamiterere</button>.',
+        phHeadline: 'Umutwe w\'inkuru',
+        phContent: 'Inyandiko yuzuye y\'inkuru (nibura inyuguti 50)…',
+        phSourceUrl: 'Aderesi y\'inkomoko (https://…) — ntibitegetswe; inkuru zidafite inkomoko zoherezwa ku bagenzuzi',
+        phSourceName: 'Izina ry\'inkomoko (ntibitegetswe)',
+        submitBtn: 'Genzura & Tangaza',
+        verifying: 'Birimo kugenzurwa…',
+        onTheWire: 'AMAKURU AGEZWEHO',
+        refresh: '↻ Vugurura',
+        feedLoading: 'Birimo gupakira amakuru…',
+        apiConnTitle: '🔌 Guhuza na API',
+        apiConnDesc: 'Iyi porogaramu yo hanze ikoresha VerifyAI API. Injira kugira ngo ubone token, hanyuma wohereze inkuru zigenzurwe.',
+        apiBaseLabel: 'Aderesi y\'ibanze ya API',
+        emailLabel: 'Imeyili',
+        passwordLabel: 'Ijambobanga',
+        connect: 'Huza',
+        demoNote: 'Konti z\'igeragezwa (zashyizweho): <code>journalist@verifyai.demo</code> / <code>JournoDemo!2026</code> · n\'izindi <code>citizen@verifyai.demo</code>, <code>gov@verifyai.demo</code>, <code>admin@verifyai.demo</code> (amajambobanga akurikiza uburyo bumwe bwa <code>RoleDemo!2026</code>).',
+        connected: 'Wahujwe ✓',
+        disconnect: 'Hagarika ihuza',
+        footer: 'The Civic Wire ni urugero rw\'umukoresha wo hanze wa API ya VerifyAI igenzura ukuri kw\'amakuru.',
+        // Dynamic / JS messages
+        enterCreds: 'Andika imeyili n\'ijambobanga.',
+        loginFailed: 'Kwinjira byanze.',
+        couldNotReach: 'Ntibyashobotse kugera kuri API kuri {base}',
+        tooShort: 'Inkuru igomba kuba nibura inyuguti 50 kugira ngo AI ishobore kuyigenzura.',
+        submissionFailed: 'Kohereza byanze.',
+        networkError: 'Ikibazo cy\'umurongo mu guhamagara API.',
+        verdictReal: 'UKURI',
+        approvedTitle: 'Byemejwe — byatangajwe ku rubuga.',
+        approvedBody: 'Icyemezo cya AI: {verdict} · ikizere {score}.',
+        unsourcedNote: 'Byatangajwe nk\'inkuru y\'uwabibonye idafite inkomoko — abagenzuzi bamenyeshejwe kugira ngo bayigenzure.',
+        reviewTitle: 'Bitegereje isuzuma ry\'abanditsi.',
+        reviewDefault: 'Umugenzuzi azasuzuma iyi nkuru y\'uwabibonye mbere yuko itangazwa.',
+        notApprovedTitle: 'Ntibyemejwe.',
+        notCredible: 'bidafite ikizere',
+        rejectedBody: 'Icyemezo cya AI: {verdict} · ikizere {score}. Inkuru z\'UKURI gusa ni zo zitangazwa.',
+        verificationFailed: 'Igenzura ryanze.',
+        feedEmpty: 'Nta nkuru zigenzuwe zihari. Ba uwa mbere mu kuzitangaza.',
+        sourceFallback: 'Inkomoko',
+        communityFallback: 'Abaturage',
+        feedLoadError: 'Ntibyashobotse gupakira amakuru ava kuri {base}',
+      },
+    };
+
+    let lang = localStorage.getItem('cw_lang')
+      || ((navigator.language || '').toLowerCase().startsWith('rw') ? 'rw' : 'en');
+
+    function t(key, vars) {
+      let s = (I18N[lang] && I18N[lang][key] != null) ? I18N[lang][key] : (I18N.en[key] != null ? I18N.en[key] : key);
+      if (vars) for (const k in vars) s = s.split('{' + k + '}').join(vars[k]);
+      return s;
+    }
+
+    // Apply all static translations marked with data-i18n* attributes.
+    function applyI18n() {
+      document.documentElement.lang = lang;
+      document.title = t('docTitle');
+      document.querySelectorAll('[data-i18n]').forEach((el) => { el.textContent = t(el.dataset.i18n); });
+      document.querySelectorAll('[data-i18n-html]').forEach((el) => { el.innerHTML = t(el.dataset.i18nHtml); });
+      document.querySelectorAll('[data-i18n-ph]').forEach((el) => { el.placeholder = t(el.dataset.i18nPh); });
+      document.querySelectorAll('[data-i18n-title]').forEach((el) => { el.title = t(el.dataset.i18nTitle); });
+      // data-i18n-html replaces inner nodes, so (re)bind the inline Settings link.
+      const inline = document.getElementById('openSettingsInline');
+      if (inline) inline.addEventListener('click', openSettings);
+      // Reflect the active language button.
+      document.getElementById('langEn').classList.toggle('active', lang === 'en');
+      document.getElementById('langRw').classList.toggle('active', lang === 'rw');
+      // Refresh dynamic UI text that isn't attribute-driven.
+      setConnected(!!access);
+    }
+
+    function setLang(next) {
+      lang = next;
+      localStorage.setItem('cw_lang', next);
+      applyI18n();
+      loadFeed(); // re-render feed fallbacks ("Source"/"Community"/empty) in the new language
+    }
+
     // ---- State ----
     const LS = {
       base: 'cw_api_base',
@@ -146,10 +298,10 @@
       if (isConn && user) {
         const label = (user.full_name || user.email) + ' · ' + (user.role || 'user');
         $('connectedAs').textContent = label;
-        $('connStatus').textContent = 'Connected as ' + (user.email || 'user');
+        $('connStatus').textContent = t('connectedAs', { email: user.email || 'user' });
         $('connStatus').className = 'text-xs text-emerald-600 mt-2 font-semibold';
       } else {
-        $('connStatus').textContent = 'Not connected';
+        $('connStatus').textContent = t('notConnected');
         $('connStatus').className = 'text-xs text-stone-400 mt-2';
       }
     }
@@ -157,6 +309,8 @@
     async function apiFetch(path, opts = {}, retried = false) {
       const headers = Object.assign({ 'Content-Type': 'application/json' }, opts.headers || {});
       if (access) headers['Authorization'] = 'Bearer ' + access;
+      // Tell the API which language to localize its messages in.
+      headers['Accept-Language'] = lang;
       const res = await fetch(apiBase + path, Object.assign({}, opts, { headers }));
       if (res.status === 401 && !retried) {
         // Access tokens expire after 15 min but stay cached in localStorage.
@@ -177,18 +331,18 @@
       apiBase = $('apiBase').value.trim() || defaultBase;
       const email = $('email').value.trim();
       const password = $('password').value;
-      if (!email || !password) { showLoginError('Enter email and password.'); return; }
+      if (!email || !password) { showLoginError(t('enterCreds')); return; }
 
-      $('connectBtn').textContent = 'Connecting…';
+      $('connectBtn').textContent = t('connecting');
       $('connectBtn').disabled = true;
       try {
         const res = await fetch(apiBase + '/auth/login', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'Accept-Language': lang },
           body: JSON.stringify({ email, password }),
         });
         const body = await res.json().catch(() => ({}));
-        if (!res.ok) { showLoginError(typeof body.error === 'string' ? body.error : 'Login failed.'); return; }
+        if (!res.ok) { showLoginError(typeof body.error === 'string' ? body.error : t('loginFailed')); return; }
         const d = body.data || {};
         access = d.access; user = d.user;
         localStorage.setItem(LS.base, apiBase);
@@ -198,9 +352,9 @@
         setConnected(true);
         closeSettings();
       } catch (e) {
-        showLoginError('Could not reach the API at ' + apiBase);
+        showLoginError(t('couldNotReach', { base: apiBase }));
       } finally {
-        $('connectBtn').textContent = 'Connect';
+        $('connectBtn').textContent = t('connect');
         $('connectBtn').disabled = false;
       }
     }
@@ -212,8 +366,8 @@
     }
 
     // True when a stored JWT is missing, malformed, or within 30s of expiry.
-    function tokenExpired(t) {
-      try { return JSON.parse(atob(t.split('.')[1])).exp * 1000 < Date.now() + 30000; }
+    function tokenExpired(tok) {
+      try { return JSON.parse(atob(tok.split('.')[1])).exp * 1000 < Date.now() + 30000; }
       catch { return true; }
     }
 
@@ -227,11 +381,11 @@
         disconnect();
         return;
       }
-      $('connStatus').textContent = 'Connecting…';
+      $('connStatus').textContent = t('connecting');
       try {
         const res = await fetch(apiBase + '/auth/login', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'Accept-Language': lang },
           body: JSON.stringify(PORTAL_CREDS),
         });
         const body = await res.json().catch(() => ({}));
@@ -265,10 +419,10 @@
       const content = $('content').value.trim();
       const source_url = $('sourceUrl').value.trim();
       const source_name = $('source').value.trim();
-      if (content.length < 50) { showVerdict('error', 'Story must be at least 50 characters for the AI to verify it.'); return; }
+      if (content.length < 50) { showVerdict('error', t('tooShort')); return; }
 
       $('submitBtn').disabled = true;
-      $('submitBtn').textContent = 'Verifying…';
+      $('submitBtn').textContent = t('verifying');
       try {
         const { ok, body } = await apiFetch('/newsfeed/posts', {
           method: 'POST',
@@ -276,7 +430,7 @@
         });
         if (!ok) {
           const err = body.error;
-          showVerdict('error', typeof err === 'string' ? err : JSON.stringify(err) || 'Submission failed.');
+          showVerdict('error', typeof err === 'string' ? err : JSON.stringify(err) || t('submissionFailed'));
           return;
         }
         const post = body.data;
@@ -286,27 +440,28 @@
           loadFeed();
         }
       } catch (e) {
-        showVerdict('error', 'Network error contacting the API.');
+        showVerdict('error', t('networkError'));
       } finally {
         $('submitBtn').disabled = false;
-        $('submitBtn').textContent = 'Verify & Publish';
+        $('submitBtn').textContent = t('submitBtn');
       }
     }
 
     function renderVerdict(post) {
       const score = post.credibility_score != null ? Math.round(post.credibility_score) + '%' : '—';
       if (post.status === 'approved') {
-        const note = post.source_url ? '' : '<br>Published as an unsourced eyewitness report — moderators have been notified to verify it.';
-        showVerdict('ok', `<b>Approved — published to the wire.</b><br>AI verdict: REAL · credibility ${score}.${note}`);
+        const note = post.source_url ? '' : '<br>' + t('unsourcedNote');
+        const body = t('approvedBody', { verdict: t('verdictReal'), score });
+        showVerdict('ok', `<b>${t('approvedTitle')}</b><br>${body}${note}`);
       } else if (post.status === 'review') {
-        showVerdict('warn', `<b>Held for editorial review.</b><br>${esc(post.error_message || 'A moderator will review this eyewitness report before it publishes.')}`);
+        showVerdict('warn', `<b>${t('reviewTitle')}</b><br>${esc(post.error_message || t('reviewDefault'))}`);
       } else if (post.status === 'rejected') {
         const reason = post.error_message
           ? esc(post.error_message)
-          : `AI verdict: ${post.classification || 'not credible'} · credibility ${score}. Only REAL stories are published.`;
-        showVerdict('warn', `<b>Not approved.</b><br>${reason}`);
+          : t('rejectedBody', { verdict: post.classification || t('notCredible'), score });
+        showVerdict('warn', `<b>${t('notApprovedTitle')}</b><br>${reason}`);
       } else {
-        showVerdict('error', '<b>Verification failed.</b> ' + (post.error_message || ''));
+        showVerdict('error', '<b>' + t('verificationFailed') + '</b> ' + (post.error_message || ''));
       }
     }
 
@@ -331,17 +486,19 @@
     }
     function fmtDate(d) {
       if (!d) return '';
-      try { return new Date(d).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }); } catch { return ''; }
+      // Locale-aware month/day formatting follows the active language.
+      const locale = lang === 'rw' ? 'rw-RW' : undefined;
+      try { return new Date(d).toLocaleDateString(locale, { year: 'numeric', month: 'short', day: 'numeric' }); } catch { return ''; }
     }
 
     async function loadFeed() {
       const feed = $('feed');
       try {
-        const res = await fetch(apiBase + '/newsfeed/feed');
+        const res = await fetch(apiBase + '/newsfeed/feed', { headers: { 'Accept-Language': lang } });
         const body = await res.json();
         const posts = body.data || [];
         if (!posts.length) {
-          feed.innerHTML = '<p class="text-stone-400 text-sm">No verified stories yet. Be the first to publish one.</p>';
+          feed.innerHTML = '<p class="text-stone-400 text-sm">' + t('feedEmpty') + '</p>';
           return;
         }
         feed.innerHTML = posts.map((p) => `
@@ -350,27 +507,28 @@
             <p class="text-sm text-stone-600 leading-relaxed flex-1">${esc(p.excerpt)}</p>
             <div class="ui flex items-center justify-between text-[11px] text-stone-400 pt-2 border-t border-stone-100">
               <span>${p.source_url
-                ? `<a href="${esc(p.source_url)}" target="_blank" rel="noopener" class="underline hover:text-stone-700">${esc(p.source_name || hostOf(p.source_url) || 'Source')}</a>`
-                : esc(p.source_name || p.submitted_by || 'Community')}</span>
+                ? `<a href="${esc(p.source_url)}" target="_blank" rel="noopener" class="underline hover:text-stone-700">${esc(p.source_name || hostOf(p.source_url) || t('sourceFallback'))}</a>`
+                : esc(p.source_name || p.submitted_by || t('communityFallback'))}</span>
               <span>${fmtDate(p.published_at)}</span>
             </div>
           </article>`).join('');
       } catch (e) {
-        feed.innerHTML = '<p class="text-red-500 text-sm">Could not load the wire from ' + esc(apiBase) + '</p>';
+        feed.innerHTML = '<p class="text-red-500 text-sm">' + t('feedLoadError', { base: esc(apiBase) }) + '</p>';
       }
     }
 
     // ---- Init ----
     $('apiBase').value = apiBase;
-    setConnected(!!access);
     $('connectBtn').addEventListener('click', connect);
     $('disconnectBtn').addEventListener('click', disconnect);
     $('submitForm').addEventListener('submit', submitStory);
     $('refreshBtn').addEventListener('click', loadFeed);
     $('settingsBtn').addEventListener('click', openSettings);
-    $('openSettingsInline').addEventListener('click', openSettings);
     $('closeSettings').addEventListener('click', closeSettings);
     $('settingsOverlay').addEventListener('click', closeSettings);
+    $('langEn').addEventListener('click', () => setLang('en'));
+    $('langRw').addEventListener('click', () => setLang('rw'));
+    applyI18n();   // paints all static text + binds the inline Settings link
     loadFeed();
     autoConnect();
   </script>

@@ -1,0 +1,60 @@
+{
+  "citizenDash": {
+    "workspace": "Citizen workspace",
+    "greeting": "Hi {{name}} — verify before you share.",
+    "subtitle": "Paste a link, get a verdict in seconds.",
+    "fallbackName": "there",
+    "tipOfTheDay": "Tip of the day",
+    "quickAnalyze": {
+      "title": "Is it real?",
+      "subtitle": "Paste a link or article excerpt. We'll run it through three models in seconds."
+    },
+    "trust": {
+      "label": "Personal trust score",
+      "copyNone": "Run your first check to see your personal trust score.",
+      "copyHigh": "Most of what you check turns out to be credible. Keep verifying before you share.",
+      "copyMixed": "Mixed signals — stay alert before sharing what you read.",
+      "copyLow": "You catch a lot of suspect content. That vigilance protects everyone around you.",
+      "basedOn_one": "Based on {{count}} check",
+      "basedOn_other": "Based on {{count}} checks"
+    },
+    "recent": {
+      "heading": "Your recent checks",
+      "subtitle": "The reasoning shown is the model's top flag for each item.",
+      "untitled": "Untitled article",
+      "noReason": "No additional reasoning available.",
+      "emptyTitle": "Nothing checked yet",
+      "emptyBody": "Paste a link in the box above to run your first verification."
+    },
+    "tips": {
+      "emotionalHeadlines": {
+        "title": "Watch for emotional headlines",
+        "body": "Sensationalist or fear-inducing headlines are a common signal of low-credibility content. Pause before sharing."
+      },
+      "checkSource": {
+        "title": "Check the source",
+        "body": "Unfamiliar domains, lookalike URLs, and missing author bylines are red flags. Search the outlet name independently."
+      },
+      "crossReference": {
+        "title": "Cross-reference the story",
+        "body": "Real news is rarely reported by only one outlet. If no other credible source covers it, treat it with suspicion."
+      },
+      "readPastHeadline": {
+        "title": "Read past the headline",
+        "body": "Many misleading articles have headlines that don't match the actual content. Read the full piece before forming an opinion."
+      },
+      "reverseImage": {
+        "title": "Reverse-image search photos",
+        "body": "Images are often reused out of context. A quick reverse search can reveal the original date and source."
+      },
+      "checkDate": {
+        "title": "Check the date",
+        "body": "Old stories often resurface as if they were new. Always check publication dates before reacting."
+      },
+      "perfectQuotes": {
+        "title": "Beware perfect quotes",
+        "body": "Fabricated stories often include suspiciously polished quotes from public figures that can't be verified elsewhere."
+      }
+    }
+  }
+}

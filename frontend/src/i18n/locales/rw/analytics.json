@@ -1,0 +1,55 @@
+{
+  "analytics": {
+    "title": "Isesengura ry'imibare n'Inyandiko",
+    "subtitle": "Incamake ku bikorwa byawe byo gusesengura ibikubiyemo.",
+    "exportPdf": "Kohereza PDF",
+    "exportCsv": "Kohereza CSV",
+    "report": {
+      "title": "Raporo y'Isesengura rya VerifyAI",
+      "heading": "VerifyAI — Raporo y'Isesengura",
+      "generated": "Yakozwe {{datetime}}",
+      "generatedLabel": "Yakozwe",
+      "noData": "Nta makuru.",
+      "printSave": "Sohora / Bika nka PDF",
+      "popupBlocked": "Emerera amadirishya yivugurura kugira ngo wohereze raporo ya PDF."
+    },
+    "trends": {
+      "title": "Imigendekere yo Kumenya (Iminsi 30)",
+      "csvSection": "Imigendekere yo kumenya (iminsi 30)",
+      "empty": "Nta makuru y'imigendekere arahaboneka."
+    },
+    "topics": {
+      "title": "Igabanya ry'Ingingo",
+      "csvSection": "Igabanya ry'ingingo",
+      "empty": "Nta makuru y'ingingo arahaboneka."
+    },
+    "sources": {
+      "title": "Ukwizerwa kw'Inkomoko",
+      "csvSection": "Ukwizerwa kw'inkomoko",
+      "articles_one": "inkuru {{count}}",
+      "articles_other": "inkuru {{count}}",
+      "empty": "Nta makuru y'inkomoko arahaboneka."
+    },
+    "keywords": {
+      "title": "Amagambo y'ingenzi Akunze Kugaragara",
+      "inFake": "Mu Nkuru z'Ibinyoma",
+      "inReal": "Mu Nkuru z'Ukuri",
+      "csvFakeSection": "Amagambo y'ingenzi akunze kugaragara mu nkuru z'ibinyoma",
+      "csvRealSection": "Amagambo y'ingenzi akunze kugaragara mu nkuru z'ukuri",
+      "pdfFakeSection": "Amagambo y'ingenzi — inkuru z'ibinyoma",
+      "pdfRealSection": "Amagambo y'ingenzi — inkuru z'ukuri",
+      "empty": "Nta makuru arahaboneka"
+    },
+    "columns": {
+      "date": "Itariki",
+      "real": "Ukuri",
+      "fake": "Ibinyoma",
+      "source": "Inkomoko",
+      "articles": "Inkuru",
+      "avgCredibility": "Impuzandengo y'ukwizerwa %",
+      "topic": "Ingingo",
+      "count": "Umubare",
+      "keyword": "Ijambo ry'ingenzi"
+    }
+  }
+}

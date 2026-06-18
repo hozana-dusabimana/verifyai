@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import {
   FileText, Activity, Bell, TrendingUp,
@@ -19,6 +20,7 @@ const tierStyles = (score) => {
 };
 
 const JournalistDashboard = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [stats, setStats] = useState({ total_analyzed: 0, average_credibility: 0, active_alerts: 0, fake_count: 0 });
   const [recent, setRecent] = useState([]);
@@ -64,8 +66,8 @@ const JournalistDashboard = () => {
     })();
   }, []);
 
-  const displayName = user?.full_name || user?.first_name || 'journalist';
-  const orgName = user?.organization || 'Independent';
+  const displayName = user?.full_name || user?.first_name || t('journoDash.fallbackName');
+  const orgName = user?.organization || t('journoDash.independent');
 
   return (
     <div className="flex flex-col gap-6">
@@ -74,14 +76,14 @@ const JournalistDashboard = () => {
           <p className="text-xs font-bold uppercase tracking-widest text-brand-600 mb-1 flex items-center gap-1.5">
             <Newspaper className="w-3.5 h-3.5" /> {orgName}
           </p>
-          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Newsroom briefing</h1>
-          <p className="text-slate-500 font-medium mt-1">Source intelligence and narrative tracking for {displayName}.</p>
+          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">{t('journoDash.title')}</h1>
+          <p className="text-slate-500 font-medium mt-1">{t('journoDash.subtitle', { name: displayName })}</p>
         </div>
         <Link
           to="/analyze"
           className="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-900 text-white rounded-xl font-semibold shadow-md hover:bg-slate-800 hover:shadow-lg transition-all w-fit"
         >
-          <Search className="w-4 h-4" /> Vet new article
+          <Search className="w-4 h-4" /> {t('journoDash.vetNewArticle')}
         </Link>
       </header>
 
@@ -90,27 +92,27 @@ const JournalistDashboard = () => {
       ) : (
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard
-            label="Articles vetted"
+            label={t('journoDash.stats.articlesVetted')}
             value={stats.total_analyzed?.toLocaleString() || '0'}
             icon={<FileText className="w-6 h-6" />}
             color="bg-blue-50 text-blue-600"
           />
           <StatCard
-            label="Avg credibility"
+            label={t('journoDash.stats.avgCredibility')}
             value={`${Math.round(stats.average_credibility || 0)}%`}
             icon={<Activity className="w-6 h-6" />}
             color="bg-emerald-50 text-emerald-600"
           />
           <StatCard
-            label="Sources flagged"
+            label={t('journoDash.stats.sourcesFlagged')}
             value={sourcesFlagged.toString()}
             icon={<ShieldAlert className="w-6 h-6" />}
             color="bg-red-50 text-red-600"
             alert={sourcesFlagged > 0}
-            hint="Avg credibility below 50%"
+            hint={t('journoDash.stats.sourcesFlaggedHint')}
           />
           <StatCard
-            label="Open alerts"
+            label={t('journoDash.stats.openAlerts')}
             value={stats.active_alerts?.toString() || '0'}
             icon={<Bell className="w-6 h-6" />}
             color="bg-amber-50 text-amber-600"
@@ -125,21 +127,21 @@ const JournalistDashboard = () => {
           <div className="flex justify-between items-start mb-4">
             <div>
               <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                <Building2 className="w-5 h-5 text-brand-600" /> Your organization — {org.organization}
+                <Building2 className="w-5 h-5 text-brand-600" /> {t('journoDash.org.heading', { org: org.organization })}
               </h2>
-              <p className="text-xs text-slate-500 mt-0.5">How your newsroom is performing across all its members.</p>
+              <p className="text-xs text-slate-500 mt-0.5">{t('journoDash.org.subtitle')}</p>
             </div>
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-brand-50 text-brand-700 border border-brand-100">
-              <Users className="w-3.5 h-3.5" /> {org.journalist_count} journalists
+              <Users className="w-3.5 h-3.5" /> {t('journoDash.org.journalistCount', { count: org.journalist_count })}
             </span>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
             {[
-              { label: 'Members', value: org.member_count, icon: <Users className="w-4 h-4" />, color: 'text-slate-900' },
-              { label: 'Org analyses', value: org.org_total_analyses, icon: <Activity className="w-4 h-4" />, color: 'text-blue-600' },
-              { label: 'Avg credibility', value: `${Math.round(org.org_average_credibility || 0)}%`, icon: <Award className="w-4 h-4" />, color: 'text-emerald-600' },
-              { label: 'Open alerts', value: org.org_open_alerts, icon: <Bell className="w-4 h-4" />, color: org.org_open_alerts > 0 ? 'text-red-600' : 'text-slate-900' },
+              { label: t('journoDash.org.members'), value: org.member_count, icon: <Users className="w-4 h-4" />, color: 'text-slate-900' },
+              { label: t('journoDash.org.orgAnalyses'), value: org.org_total_analyses, icon: <Activity className="w-4 h-4" />, color: 'text-blue-600' },
+              { label: t('journoDash.stats.avgCredibility'), value: `${Math.round(org.org_average_credibility || 0)}%`, icon: <Award className="w-4 h-4" />, color: 'text-emerald-600' },
+              { label: t('journoDash.stats.openAlerts'), value: org.org_open_alerts, icon: <Bell className="w-4 h-4" />, color: org.org_open_alerts > 0 ? 'text-red-600' : 'text-slate-900' },
             ].map((m, i) => (
               <div key={i} className="bg-slate-50/70 rounded-xl p-4">
                 <div className="flex items-center gap-1.5 text-slate-400 mb-1">{m.icon}<span className="text-[11px] font-bold uppercase tracking-wider">{m.label}</span></div>
@@ -150,7 +152,7 @@ const JournalistDashboard = () => {
 
           {org.colleagues?.length > 0 && (
             <div>
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Most active colleagues</h3>
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">{t('journoDash.org.mostActive')}</h3>
               <ul className="divide-y divide-slate-100">
                 {org.colleagues.map((c, idx) => (
                   <li key={idx} className="flex items-center justify-between py-2">
@@ -161,7 +163,7 @@ const JournalistDashboard = () => {
                       <span className="text-sm font-semibold text-slate-800 truncate">{c.name}</span>
                     </div>
                     <div className="flex items-center gap-3 text-xs flex-shrink-0">
-                      <span className="text-slate-500 tabular-nums">{c.total} vetted</span>
+                      <span className="text-slate-500 tabular-nums">{t('journoDash.org.vettedCount', { count: c.total })}</span>
                       <span className="font-bold text-emerald-600 tabular-nums">{Math.round(c.average_credibility)}%</span>
                     </div>
                   </li>
@@ -176,9 +178,9 @@ const JournalistDashboard = () => {
         <div className="flex justify-between items-start mb-4">
           <div>
             <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-brand-600" /> Real vs Fake — last 30 days
+              <TrendingUp className="w-5 h-5 text-brand-600" /> {t('journoDash.trends.title')}
             </h2>
-            <p className="text-xs text-slate-500 mt-0.5">Daily classifications across all articles you've vetted.</p>
+            <p className="text-xs text-slate-500 mt-0.5">{t('journoDash.trends.subtitle')}</p>
           </div>
         </div>
         <div className="h-64 w-full">
@@ -190,14 +192,14 @@ const JournalistDashboard = () => {
                 <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} allowDecimals={false} />
                 <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 25px -5px rgb(0 0 0 / 0.1)' }} />
                 <Legend wrapperStyle={{ paddingTop: 10, fontSize: 12 }} iconType="circle" />
-                <Line type="monotone" dataKey="real" name="Real" stroke="#10b981" strokeWidth={2.5} dot={{ r: 3, fill: '#10b981' }} activeDot={{ r: 5 }} />
-                <Line type="monotone" dataKey="fake" name="Fake" stroke="#ef4444" strokeWidth={2.5} dot={{ r: 3, fill: '#ef4444' }} activeDot={{ r: 5 }} />
+                <Line type="monotone" dataKey="real" name={t('common.verdict.real')} stroke="#10b981" strokeWidth={2.5} dot={{ r: 3, fill: '#10b981' }} activeDot={{ r: 5 }} />
+                <Line type="monotone" dataKey="fake" name={t('common.verdict.fake')} stroke="#ef4444" strokeWidth={2.5} dot={{ r: 3, fill: '#ef4444' }} activeDot={{ r: 5 }} />
               </LineChart>
             </ResponsiveContainer>
           ) : (
             <div className="h-full flex flex-col items-center justify-center text-slate-400">
               <TrendingUp className="w-8 h-8 text-slate-300 mb-2" />
-              <p className="text-sm">No trend data yet — vet some articles to see the breakdown.</p>
+              <p className="text-sm">{t('journoDash.trends.empty')}</p>
             </div>
           )}
         </div>
@@ -208,9 +210,9 @@ const JournalistDashboard = () => {
           <div className="flex justify-between items-start mb-4">
             <div>
               <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                <ShieldAlert className="w-5 h-5 text-red-500" /> Source reliability matrix
+                <ShieldAlert className="w-5 h-5 text-red-500" /> {t('journoDash.sources.title')}
               </h2>
-              <p className="text-xs text-slate-500 mt-0.5">Outlets ranked by average credibility across your analyses.</p>
+              <p className="text-xs text-slate-500 mt-0.5">{t('journoDash.sources.subtitle')}</p>
             </div>
           </div>
           {sources.length > 0 ? (
@@ -218,9 +220,9 @@ const JournalistDashboard = () => {
               <table className="min-w-full">
                 <thead>
                   <tr className="border-b border-slate-200">
-                    <th className="px-2 py-2 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">Source</th>
-                    <th className="px-2 py-2 text-right text-[11px] font-bold text-slate-500 uppercase tracking-wider">Articles</th>
-                    <th className="px-2 py-2 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider w-1/3">Credibility</th>
+                    <th className="px-2 py-2 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">{t('journoDash.sources.colSource')}</th>
+                    <th className="px-2 py-2 text-right text-[11px] font-bold text-slate-500 uppercase tracking-wider">{t('journoDash.sources.colArticles')}</th>
+                    <th className="px-2 py-2 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider w-1/3">{t('journoDash.sources.colCredibility')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -250,17 +252,17 @@ const JournalistDashboard = () => {
           ) : (
             <div className="text-center py-10 px-6 border-2 border-dashed border-slate-200 rounded-xl">
               <ShieldAlert className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-              <p className="text-sm text-slate-700 font-semibold">No source data yet</p>
-              <p className="text-xs text-slate-500 mt-1">Vet articles with a known source to populate this matrix.</p>
+              <p className="text-sm text-slate-700 font-semibold">{t('journoDash.sources.emptyTitle')}</p>
+              <p className="text-xs text-slate-500 mt-1">{t('journoDash.sources.emptyBody')}</p>
             </div>
           )}
         </div>
 
         <div className="glass rounded-2xl p-6 shadow-sm">
           <h3 className="text-lg font-bold text-slate-900 mb-1 flex items-center gap-2">
-            <Megaphone className="w-5 h-5 text-red-500" /> Disinfo narratives
+            <Megaphone className="w-5 h-5 text-red-500" /> {t('journoDash.narratives.title')}
           </h3>
-          <p className="text-xs text-slate-500 mb-4">Top keywords from FAKE-classified articles.</p>
+          <p className="text-xs text-slate-500 mb-4">{t('journoDash.narratives.subtitle')}</p>
           {keywords.length > 0 ? (
             <ul className="space-y-2.5">
               {keywords.map((k, idx) => {
@@ -280,7 +282,7 @@ const JournalistDashboard = () => {
           ) : (
             <div className="text-center py-8">
               <Megaphone className="w-7 h-7 text-slate-300 mx-auto mb-2" />
-              <p className="text-xs text-slate-500">No narratives detected yet.</p>
+              <p className="text-xs text-slate-500">{t('journoDash.narratives.empty')}</p>
             </div>
           )}
         </div>

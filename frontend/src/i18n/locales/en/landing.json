@@ -1,0 +1,102 @@
+{
+  "landing": {
+    "hero": {
+      "title": "Truth. Detected.",
+      "subtitle": "VerifyAI is the advanced AI-powered fake news detection system. We help journalists, governments, and citizens identify misinformation before it spreads.",
+      "searchPlaceholder": "Paste an article URL or headline...",
+      "analyzeNow": "Analyze Now"
+    },
+    "stats": {
+      "articlesAnalyzed": "Articles Analyzed",
+      "detectionAccuracy": "Detection Accuracy",
+      "avgAnalysisTime": "Avg. Analysis Time"
+    },
+    "howItWorks": {
+      "eyebrow": "Process",
+      "heading": "Verification in 3 simple steps",
+      "steps": {
+        "submit": {
+          "title": "Submit Content",
+          "desc": "Paste text, URL, or upload a document directly to the platform."
+        },
+        "analyze": {
+          "title": "AI Analysis",
+          "desc": "Our ensemble ML pipeline uses NLP and DistilBERT to scrutinize the sentiment, tone, and facts."
+        },
+        "review": {
+          "title": "Review Results",
+          "desc": "Get an actionable credibility score alongside plain-language explanations of any flagged content."
+        }
+      }
+    },
+    "useCases": {
+      "heading": "Built for everyone seeking the truth",
+      "journalists": {
+        "title": "Journalists",
+        "desc": "Fast-track fact-checking during breaking news with automated analysis."
+      },
+      "governments": {
+        "title": "Governments",
+        "desc": "Monitor state-sponsored disinformation and protect public trust."
+      },
+      "citizens": {
+        "title": "Citizens",
+        "desc": "Verify articles from social media before sharing with your network."
+      }
+    },
+    "pricing": {
+      "eyebrow": "Pricing",
+      "heading": "Start verifying today",
+      "mostPopular": "Most Popular",
+      "getStarted": "Get Started",
+      "features": {
+        "ensemble": "Ensemble ML Pipeline",
+        "explainability": "Detailed Explainability"
+      },
+      "tiers": {
+        "citizen": {
+          "name": "Citizen",
+          "price": "Free",
+          "desc": "Perfect for personal use.",
+          "limits": "20 analyses / hour"
+        },
+        "pro": {
+          "name": "Pro",
+          "price": "$49/mo",
+          "desc": "For independent journalists.",
+          "limits": "200 analyses / hour"
+        },
+        "enterprise": {
+          "name": "Enterprise",
+          "price": "Custom",
+          "desc": "For newsrooms and gov.",
+          "limits": "Unlimited + API access"
+        }
+      }
+    },
+    "about": {
+      "eyebrow": "About Us",
+      "heading": "Our Mission",
+      "body": "At VerifyAI, we believe in a world where truth prevails. Our team of leading researchers, software engineers, and journalists collaborate to stay one step ahead of synthetic media and coordinated disinformation campaigns. We are an independent organization committed to building transparent, unbiased AI tools for the public good."
+    },
+    "contact": {
+      "eyebrow": "Contact Us",
+      "heading": "Get in Touch",
+      "nameLabel": "Name",
+      "namePlaceholder": "Jane Doe",
+      "emailLabel": "Email",
+      "emailPlaceholder": "jane@example.com",
+      "messageLabel": "Message",
+      "messagePlaceholder": "How can we help you?",
+      "sendMessage": "Send Message"
+    },
+    "footer": {
+      "about": "About",
+      "documentation": "Documentation",
+      "contact": "Contact",
+      "privacy": "Privacy Policy",
+      "terms": "Terms of Service",
+      "rights": "© {{year}} VerifyAI Platform. All rights reserved."
+    }
+  }
+}

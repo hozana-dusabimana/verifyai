@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   Building2, Activity, AlertTriangle, Users, Flame,
   ShieldAlert, Layers, RefreshCw, CheckCircle2, Newspaper,
@@ -10,7 +11,7 @@ import { analyticsAPI } from '../../services/api';
 import StatCard from '../../components/dashboard/StatCard';
 import StatusBadge from '../../components/dashboard/StatusBadge';
 import { StatRowSkeleton } from '../../components/dashboard/Skeleton';
-import { roleLabel } from '../../utils/roles';
+import { roleLabel, roleLabelKey } from '../../utils/roles';
 
 const SEVERITY = {
   high:   { dot: 'bg-red-500',    cls: 'bg-red-50 text-red-800 border-red-200' },
@@ -40,17 +41,18 @@ const ROLE_BADGE = {
   citizen: 'bg-slate-100 text-slate-700 border-slate-200',
 };
 
-const relativeTime = (iso) => {
-  if (!iso) return 'never';
+const relativeTime = (iso, t) => {
+  if (!iso) return t('govDash.relativeTime.never');
   const diff = Date.now() - new Date(iso).getTime();
   const days = Math.floor(diff / 86400000);
-  if (days === 0) return 'today';
-  if (days === 1) return 'yesterday';
-  if (days < 30) return `${days}d ago`;
+  if (days === 0) return t('govDash.relativeTime.today');
+  if (days === 1) return t('govDash.relativeTime.yesterday');
+  if (days < 30) return t('govDash.relativeTime.daysAgo', { count: days });
   return new Date(iso).toLocaleDateString();
 };
 
 const GovernmentDashboard = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [summary, setSummary] = useState(null);
   const [feed, setFeed] = useState({ escalation_queue: [], top_sources_by_fake: [], topic_distribution: [], heatmap: [] });
@@ -124,7 +126,7 @@ const GovernmentDashboard = () => {
     [feed.heatmap],
   );
 
-  const orgName = summary?.organization || user?.organization || 'Your organization';
+  const orgName = summary?.organization || user?.organization || t('govDash.orgFallback');
   const queueCount = feed.escalation_queue.length;
   const journalists = members.filter((m) => m.role === 'journalist');
   const roster = useMemo(
@@ -139,15 +141,15 @@ const GovernmentDashboard = () => {
           <p className="text-xs font-bold uppercase tracking-widest text-brand-600 mb-1 flex items-center gap-1.5">
             <Building2 className="w-3.5 h-3.5" /> {orgName}
           </p>
-          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Management console</h1>
-          <p className="text-slate-500 font-medium mt-1">Manage and evaluate the journalists in your organization.</p>
+          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">{t('govDash.title')}</h1>
+          <p className="text-slate-500 font-medium mt-1">{t('govDash.subtitle')}</p>
         </div>
         <div className="flex gap-2">
           <Link
             to="/org/members"
             className="inline-flex items-center gap-2 px-4 py-2.5 bg-brand-600 text-white rounded-xl font-semibold shadow-md hover:bg-brand-700 transition-colors w-fit"
           >
-            <UserCog className="w-4 h-4" /> Manage members
+            <UserCog className="w-4 h-4" /> {t('govDash.manageMembers')}
           </Link>
           <button
             onClick={() => fetchAll({ silent: true })}
@@ -155,7 +157,7 @@ const GovernmentDashboard = () => {
             className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-xl font-semibold hover:bg-slate-50 transition-colors w-fit disabled:opacity-50"
           >
             <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-            {refreshing ? 'Refreshing…' : 'Refresh'}
+            {refreshing ? t('govDash.refreshing') : t('common.refresh')}
           </button>
         </div>
       </header>
@@ -165,26 +167,26 @@ const GovernmentDashboard = () => {
       ) : (
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard
-            label="Journalists"
+            label={t('govDash.stats.journalists')}
             value={journalists.length.toString()}
             icon={<Newspaper className="w-6 h-6" />}
             color="bg-amber-50 text-amber-600"
-            hint="Members with the journalist role"
+            hint={t('govDash.stats.journalistsHint')}
           />
           <StatCard
-            label="Org analyses (30d)"
+            label={t('govDash.stats.orgAnalyses')}
             value={summary?.org_total?.toLocaleString() || '0'}
             icon={<Activity className="w-6 h-6" />}
             color="bg-blue-50 text-blue-600"
           />
           <StatCard
-            label="Org avg credibility"
+            label={t('govDash.stats.orgAvgCredibility')}
             value={`${Math.round(summary?.org_average_credibility || 0)}%`}
             icon={<Award className="w-6 h-6" />}
             color="bg-emerald-50 text-emerald-600"
           />
           <StatCard
-            label="Open + escalated"
+            label={t('govDash.stats.openEscalated')}
             value={summary?.open_alerts?.toString() || '0'}
             icon={<AlertTriangle className="w-6 h-6" />}
             color="bg-red-50 text-red-600"
@@ -198,11 +200,11 @@ const GovernmentDashboard = () => {
         <div className="flex justify-between items-start mb-4">
           <div>
             <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-              <Users className="w-5 h-5 text-brand-600" /> Team roster & evaluation
+              <Users className="w-5 h-5 text-brand-600" /> {t('govDash.roster.title')}
             </h2>
-            <p className="text-xs text-slate-500 mt-0.5">Performance of every member in your organization.</p>
+            <p className="text-xs text-slate-500 mt-0.5">{t('govDash.roster.subtitle')}</p>
           </div>
-          <Link to="/org/members" className="text-xs font-bold text-brand-600 hover:text-brand-700">Manage →</Link>
+          <Link to="/org/members" className="text-xs font-bold text-brand-600 hover:text-brand-700">{t('govDash.roster.manage')}</Link>
         </div>
 
         {loading ? (
@@ -212,14 +214,14 @@ const GovernmentDashboard = () => {
             <table className="min-w-full">
               <thead>
                 <tr className="border-b border-slate-200">
-                  <th className="px-2 py-2 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">Member</th>
-                  <th className="px-2 py-2 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">Role</th>
-                  <th className="px-2 py-2 text-right text-[11px] font-bold text-slate-500 uppercase tracking-wider">Vetted</th>
-                  <th className="px-2 py-2 text-right text-[11px] font-bold text-slate-500 uppercase tracking-wider hidden sm:table-cell">30d</th>
-                  <th className="px-2 py-2 text-right text-[11px] font-bold text-slate-500 uppercase tracking-wider">Fake</th>
-                  <th className="px-2 py-2 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider w-40">Avg credibility</th>
-                  <th className="px-2 py-2 text-right text-[11px] font-bold text-slate-500 uppercase tracking-wider">Alerts</th>
-                  <th className="px-2 py-2 text-right text-[11px] font-bold text-slate-500 uppercase tracking-wider hidden md:table-cell">Active</th>
+                  <th className="px-2 py-2 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">{t('govDash.roster.member')}</th>
+                  <th className="px-2 py-2 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">{t('govDash.roster.role')}</th>
+                  <th className="px-2 py-2 text-right text-[11px] font-bold text-slate-500 uppercase tracking-wider">{t('govDash.roster.vetted')}</th>
+                  <th className="px-2 py-2 text-right text-[11px] font-bold text-slate-500 uppercase tracking-wider hidden sm:table-cell">{t('govDash.roster.recent')}</th>
+                  <th className="px-2 py-2 text-right text-[11px] font-bold text-slate-500 uppercase tracking-wider">{t('govDash.roster.fake')}</th>
+                  <th className="px-2 py-2 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider w-40">{t('govDash.roster.avgCredibility')}</th>
+                  <th className="px-2 py-2 text-right text-[11px] font-bold text-slate-500 uppercase tracking-wider">{t('govDash.roster.alerts')}</th>
+                  <th className="px-2 py-2 text-right text-[11px] font-bold text-slate-500 uppercase tracking-wider hidden md:table-cell">{t('govDash.roster.active')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -233,7 +235,7 @@ const GovernmentDashboard = () => {
                         <p className="text-xs text-slate-500 truncate max-w-[180px]">{m.email}</p>
                       </td>
                       <td className="px-2 py-3">
-                        <span className={`inline-flex px-2 py-0.5 rounded text-[11px] font-bold border capitalize ${ROLE_BADGE[m.role] || 'border-slate-200'}`}>{roleLabel(m.role)}</span>
+                        <span className={`inline-flex px-2 py-0.5 rounded text-[11px] font-bold border capitalize ${ROLE_BADGE[m.role] || 'border-slate-200'}`}>{t(roleLabelKey(m.role), { defaultValue: roleLabel(m.role) })}</span>
                       </td>
                       <td className="px-2 py-3 text-sm text-right font-bold text-slate-800 tabular-nums">{m.total_analyzed}</td>
                       <td className="px-2 py-3 text-sm text-right text-slate-500 tabular-nums hidden sm:table-cell">{m.recent_analyzed}</td>
@@ -249,7 +251,7 @@ const GovernmentDashboard = () => {
                         </div>
                       </td>
                       <td className={`px-2 py-3 text-sm text-right font-bold tabular-nums ${m.open_alerts > 0 ? 'text-red-600' : 'text-slate-400'}`}>{m.open_alerts}</td>
-                      <td className="px-2 py-3 text-xs text-right text-slate-500 hidden md:table-cell whitespace-nowrap">{relativeTime(m.last_active)}</td>
+                      <td className="px-2 py-3 text-xs text-right text-slate-500 hidden md:table-cell whitespace-nowrap">{relativeTime(m.last_active, t)}</td>
                     </tr>
                   );
                 })}
@@ -259,10 +261,10 @@ const GovernmentDashboard = () => {
         ) : (
           <div className="text-center py-10 px-6 border-2 border-dashed border-slate-200 rounded-xl">
             <Users className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-            <p className="text-sm text-slate-700 font-semibold">No members yet</p>
-            <p className="text-xs text-slate-500 mt-1 mb-3">Add journalists to your organization to start evaluating them.</p>
+            <p className="text-sm text-slate-700 font-semibold">{t('govDash.roster.emptyTitle')}</p>
+            <p className="text-xs text-slate-500 mt-1 mb-3">{t('govDash.roster.emptyBody')}</p>
             <Link to="/org/members" className="inline-flex items-center gap-2 px-4 py-2 bg-brand-600 text-white rounded-lg text-sm font-bold hover:bg-brand-700">
-              <UserCog className="w-4 h-4" /> Manage members
+              <UserCog className="w-4 h-4" /> {t('govDash.manageMembers')}
             </Link>
           </div>
         )}
@@ -273,12 +275,12 @@ const GovernmentDashboard = () => {
         <div className="flex justify-between items-start mb-4">
           <div>
             <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-              <AlertTriangle className="w-5 h-5 text-red-500" /> Alerts — your analysts' analyses
+              <AlertTriangle className="w-5 h-5 text-red-500" /> {t('govDash.alerts.title')}
             </h2>
-            <p className="text-xs text-slate-500 mt-0.5">Open and escalated alerts raised on analyses submitted by your members.</p>
+            <p className="text-xs text-slate-500 mt-0.5">{t('govDash.alerts.subtitle')}</p>
           </div>
           <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold ${queueCount > 0 ? 'bg-red-100 text-red-800' : 'bg-emerald-100 text-emerald-800'}`}>
-            {queueCount} pending
+            {t('govDash.alerts.pending', { count: queueCount })}
           </span>
         </div>
         {queueCount > 0 ? (
@@ -286,10 +288,10 @@ const GovernmentDashboard = () => {
             <table className="min-w-full">
               <thead>
                 <tr className="border-b border-slate-200">
-                  <th className="px-2 py-2 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">Article</th>
-                  <th className="px-2 py-2 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider hidden md:table-cell">Submitted by</th>
-                  <th className="px-2 py-2 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">Severity</th>
-                  <th className="px-2 py-2 text-right text-[11px] font-bold text-slate-500 uppercase tracking-wider">Actions</th>
+                  <th className="px-2 py-2 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">{t('govDash.alerts.article')}</th>
+                  <th className="px-2 py-2 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider hidden md:table-cell">{t('govDash.alerts.submittedBy')}</th>
+                  <th className="px-2 py-2 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">{t('govDash.alerts.severity')}</th>
+                  <th className="px-2 py-2 text-right text-[11px] font-bold text-slate-500 uppercase tracking-wider">{t('common.actions')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -307,7 +309,7 @@ const GovernmentDashboard = () => {
                       <td className="px-2 py-3 text-sm text-slate-600 hidden md:table-cell truncate max-w-[140px]">{item.submitted_by}</td>
                       <td className="px-2 py-3">
                         <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-bold border uppercase tracking-wider ${sev.cls}`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${sev.dot}`} /> {item.severity}
+                          <span className={`w-1.5 h-1.5 rounded-full ${sev.dot}`} /> {t(`govDash.severity.${item.severity}`, { defaultValue: item.severity })}
                         </span>
                       </td>
                       <td className="px-2 py-3 text-right">
@@ -317,15 +319,15 @@ const GovernmentDashboard = () => {
                             disabled={!!acting[item.alert_id]}
                             className="text-xs font-bold px-2.5 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-100 disabled:opacity-50"
                           >
-                            {acting[item.alert_id] === 'resolve' ? '…' : 'Resolve'}
+                            {acting[item.alert_id] === 'resolve' ? '…' : t('govDash.alerts.resolve')}
                           </button>
                           <button
                             onClick={() => handleAction(item.alert_id, 'escalate')}
                             disabled={!!acting[item.alert_id] || item.status === 'escalated'}
                             className="text-xs font-bold px-2.5 py-1.5 rounded-lg bg-red-50 text-red-700 hover:bg-red-100 border border-red-100 disabled:opacity-50 disabled:cursor-not-allowed"
-                            title={item.status === 'escalated' ? 'Already escalated' : 'Escalate this alert'}
+                            title={item.status === 'escalated' ? t('govDash.alerts.alreadyEscalated') : t('govDash.alerts.escalateTitle')}
                           >
-                            {acting[item.alert_id] === 'escalate' ? '…' : 'Escalate'}
+                            {acting[item.alert_id] === 'escalate' ? '…' : t('govDash.alerts.escalate')}
                           </button>
                         </div>
                       </td>
@@ -338,8 +340,8 @@ const GovernmentDashboard = () => {
         ) : (
           <div className="text-center py-12 px-6 border-2 border-dashed border-emerald-200 rounded-xl bg-emerald-50/40">
             <CheckCircle2 className="w-10 h-10 text-emerald-500 mx-auto mb-3" />
-            <p className="text-sm text-slate-800 font-bold">Queue is clear</p>
-            <p className="text-xs text-slate-500 mt-1">No pending alerts on your members' analyses right now.</p>
+            <p className="text-sm text-slate-800 font-bold">{t('govDash.alerts.clearTitle')}</p>
+            <p className="text-xs text-slate-500 mt-1">{t('govDash.alerts.clearBody')}</p>
           </div>
         )}
       </div>
@@ -349,12 +351,12 @@ const GovernmentDashboard = () => {
         <div className="flex justify-between items-start mb-4">
           <div>
             <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-              <Flame className="w-5 h-5 text-red-500" /> Fake content heatmap
+              <Flame className="w-5 h-5 text-red-500" /> {t('govDash.heatmap.title')}
             </h2>
-            <p className="text-xs text-slate-500 mt-0.5">Daily FAKE classifications across the organization, last 30 days.</p>
+            <p className="text-xs text-slate-500 mt-0.5">{t('govDash.heatmap.subtitle')}</p>
           </div>
           <div className="text-right">
-            <p className="text-xs uppercase tracking-wider text-slate-500 font-bold">Total</p>
+            <p className="text-xs uppercase tracking-wider text-slate-500 font-bold">{t('govDash.heatmap.total')}</p>
             <p className="text-2xl font-extrabold text-red-600 tabular-nums">{totalFake30d}</p>
           </div>
         </div>
@@ -370,7 +372,7 @@ const GovernmentDashboard = () => {
                   {row.map((d, cIdx) => d ? (
                     <div
                       key={d.date}
-                      title={`${d.label}: ${d.count} fake ${d.count === 1 ? 'article' : 'articles'}`}
+                      title={t('govDash.heatmap.tooltip', { count: d.count, label: d.label })}
                       className={`aspect-square rounded border ${heatClass(d.count)} cursor-default transition-transform hover:scale-110`}
                     />
                   ) : (
@@ -382,7 +384,7 @@ const GovernmentDashboard = () => {
           </div>
 
           <div className="flex flex-col gap-1.5 text-xs text-slate-500 min-w-[80px]">
-            <span className="font-bold uppercase tracking-wider text-slate-600 mb-1 text-[10px]">Density</span>
+            <span className="font-bold uppercase tracking-wider text-slate-600 mb-1 text-[10px]">{t('govDash.heatmap.density')}</span>
             <div className="flex items-center gap-2"><span className="w-3.5 h-3.5 rounded bg-slate-100 border border-slate-200" /> 0</div>
             <div className="flex items-center gap-2"><span className="w-3.5 h-3.5 rounded bg-amber-100 border border-amber-200" /> 1</div>
             <div className="flex items-center gap-2"><span className="w-3.5 h-3.5 rounded bg-amber-300 border border-amber-400" /> 2–3</div>
@@ -395,17 +397,17 @@ const GovernmentDashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 glass rounded-2xl p-6 shadow-sm">
           <h2 className="text-lg font-bold text-slate-900 mb-1 flex items-center gap-2">
-            <ShieldAlert className="w-5 h-5 text-red-500" /> Top spreading sources
+            <ShieldAlert className="w-5 h-5 text-red-500" /> {t('govDash.topSources.title')}
           </h2>
-          <p className="text-xs text-slate-500 mb-4">Outlets ranked by FAKE-classified article volume in the last 30 days.</p>
+          <p className="text-xs text-slate-500 mb-4">{t('govDash.topSources.subtitle')}</p>
           {feed.top_sources_by_fake.length > 0 ? (
             <div className="overflow-x-auto -mx-2">
               <table className="min-w-full">
                 <thead>
                   <tr className="border-b border-slate-200">
-                    <th className="px-3 py-2 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">Source</th>
-                    <th className="px-3 py-2 text-right text-[11px] font-bold text-slate-500 uppercase tracking-wider">Fake articles</th>
-                    <th className="px-3 py-2 text-right text-[11px] font-bold text-slate-500 uppercase tracking-wider">Avg credibility</th>
+                    <th className="px-3 py-2 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">{t('govDash.topSources.source')}</th>
+                    <th className="px-3 py-2 text-right text-[11px] font-bold text-slate-500 uppercase tracking-wider">{t('govDash.topSources.fakeArticles')}</th>
+                    <th className="px-3 py-2 text-right text-[11px] font-bold text-slate-500 uppercase tracking-wider">{t('govDash.topSources.avgCredibility')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -424,16 +426,16 @@ const GovernmentDashboard = () => {
           ) : (
             <div className="text-center py-10 px-6 border-2 border-dashed border-slate-200 rounded-xl">
               <ShieldAlert className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-              <p className="text-sm text-slate-700 font-semibold">No flagged sources yet</p>
+              <p className="text-sm text-slate-700 font-semibold">{t('govDash.topSources.empty')}</p>
             </div>
           )}
         </div>
 
         <div className="glass rounded-2xl p-6 shadow-sm">
           <h3 className="text-lg font-bold text-slate-900 mb-1 flex items-center gap-2">
-            <Layers className="w-5 h-5 text-brand-600" /> Topic mix
+            <Layers className="w-5 h-5 text-brand-600" /> {t('govDash.topics.title')}
           </h3>
-          <p className="text-xs text-slate-500 mb-4">Themes across analyses, last 30 days.</p>
+          <p className="text-xs text-slate-500 mb-4">{t('govDash.topics.subtitle')}</p>
           {feed.topic_distribution.length > 0 ? (
             <ul className="space-y-2.5">
               {feed.topic_distribution.map((t, idx) => {
@@ -453,7 +455,7 @@ const GovernmentDashboard = () => {
           ) : (
             <div className="text-center py-8">
               <Layers className="w-7 h-7 text-slate-300 mx-auto mb-2" />
-              <p className="text-xs text-slate-500">No topic data yet.</p>
+              <p className="text-xs text-slate-500">{t('govDash.topics.empty')}</p>
             </div>
           )}
         </div>

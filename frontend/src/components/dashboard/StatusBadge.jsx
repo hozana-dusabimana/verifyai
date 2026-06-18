@@ -1,4 +1,5 @@
 import { CheckCircle, ShieldAlert, HelpCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const STYLES = {
   REAL: 'bg-emerald-100 text-emerald-800 border-emerald-200',
@@ -13,10 +14,11 @@ const ICONS = {
 };
 
 const StatusBadge = ({ status, score }) => {
+  const { t } = useTranslation();
   const safe = STYLES[status] ? status : 'UNCERTAIN';
   return (
-    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border ${STYLES[safe]}`}>
-      {ICONS[safe]} {safe} {score != null && `(${Math.round(score)}%)`}
+    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border uppercase ${STYLES[safe]}`}>
+      {ICONS[safe]} {t(`common.verdict.${safe.toLowerCase()}`)} {score != null && `(${Math.round(score)}%)`}
     </span>
   );
 };

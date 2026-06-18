@@ -1,0 +1,17 @@
+{
+  "nav": {
+    "links": {
+      "dashboard": "Ikibaho",
+      "analyze": "Sesengura",
+      "news": "Amakuru",
+      "history": "Amateka",
+      "analytics": "Isesengura ry'imibare",
+      "howItWorks": "Uko bikora",
+      "pricing": "Ibiciro",
+      "about": "Abo turibo",
+      "contact": "Twandikire"
+    },
+    "adminPanel": "Igenzura rya Admin",
+    "profileSettings": "Umwirondoro n'Igenamiterere"
+  }
+}

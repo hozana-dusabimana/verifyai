@@ -1,0 +1,63 @@
+{
+  "register": {
+    "title": "Fungura konti yawe",
+    "subtitle": "Intambwe eshatu zoroshye zo gutangira kugenzura.",
+    "steps": {
+      "identity": "Umwirondoro",
+      "role": "Uruhare",
+      "security": "Umutekano"
+    },
+    "fields": {
+      "firstName": "Izina ribanza",
+      "lastName": "Izina rikurikira",
+      "email": "Aderesi imeyili",
+      "organization": "Ikigo cy'itangazamakuru cyangwa igitangazamakuru",
+      "password": "Ijambobanga (inyuguti 8+)",
+      "passwordConfirm": "Emeza ijambobanga"
+    },
+    "continue": "Komeza",
+    "step2": {
+      "heading": "Uzakoresha VerifyAI ute?",
+      "subtitle": "Hitamo uburambe bukugwa neza — ushobora gusaba guhindura uruhare nyuma.",
+      "notice": "<bold>Konti z'Ikigo cy'itangazamakuru n'iza Umuyobozi</bold> zishyirwaho n'umuyobozi w'urubuga. Niba umuryango wawe ukeneye imwe, nyamuneka vugana n'umuyobozi wawe nyuma yo gufungura konti y'Umuturage."
+    },
+    "roles": {
+      "citizen": {
+        "tagline": "Imikoreshereze bwite — genzura mbere yo gusangiza.",
+        "bullets": {
+          "checks": "Igenzura ryihuse rya \"Ese ni ukuri?\"",
+          "trust": "Amanota y'ikizere bwite",
+          "tips": "Inama z'igenzura za buri munsi"
+        }
+      },
+      "journalist": {
+        "tagline": "Imikorere y'ikigo cy'itangazamakuru — genzura inkomoko ukurikirane inkuru.",
+        "bullets": {
+          "matrix": "Imbonerahamwe y'ukwizerwa kw'inkomoko",
+          "tracker": "Mukurikiranyi w'inkuru z'ibinyoma",
+          "export": "Gusohora amasoko muri PDF"
+        }
+      }
+    },
+    "step3": {
+      "heading": "Rinda umutekano wa konti yawe",
+      "subtitlePlain": "Hitamo ijambobanga rikomeye.",
+      "subtitleJournalist": "Hitamo ijambobanga rikomeye wongereho ikigo cyawe cy'itangazamakuru."
+    },
+    "strength": {
+      "weak": "Rifite intege nke — ongeraho uburebure, inyuguti nkuru, imibare, cyangwa ibimenyetso.",
+      "fair": "Rishyitse — komeza.",
+      "strong": "Rikomeye.",
+      "excellent": "Rihebuje."
+    },
+    "passwordsMismatch": "Amagambobanga ntahuye",
+    "showPassword": "Erekana ijambobanga",
+    "hidePassword": "Hisha ijambobanga",
+    "createAccount": "Fungura konti",
+    "creatingAccount": "Konti irimo gufungurwa…",
+    "successMessage": "Kwiyandikisha byagenze neza! Nyamuneka reba imeyili yawe kugira ngo wemeze konti yawe.",
+    "failed": "Kwiyandikisha byanze.",
+    "alreadyHaveAccount": "Usanzwe ufite konti?",
+    "signInInstead": "Injira ahubwo"
+  }
+}

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
+import { useTranslation, Trans } from 'react-i18next';
 import {
   PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, Legend,
@@ -11,7 +12,7 @@ import {
   Download, SlidersHorizontal, Plus, Save,
 } from 'lucide-react';
 import { adminAPI, usersAPI } from '../../services/api';
-import { roleLabel } from '../../utils/roles';
+import { roleLabel, roleLabelKey } from '../../utils/roles';
 import Modal from '../../components/Modal';
 
 // Build a CSV string from an array of objects (or array of arrays) and trigger a download.
@@ -54,6 +55,7 @@ const SERVICE_ICON = {
 
 // ─── System Health ─────────────────────────────────────────────────
 function HealthPanel() {
+  const { t } = useTranslation();
   const [health, setHealth] = useState(null);
   const [metrics, setMetrics] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -76,31 +78,31 @@ function HealthPanel() {
   const overall = health?.overall || 'unknown';
 
   const metricCards = [
-    { label: 'Total Users', value: metrics?.total_users },
-    { label: 'Articles', value: metrics?.total_articles },
-    { label: 'Total Analyses', value: metrics?.total_analyses },
-    { label: 'Completed', value: metrics?.completed_analyses },
-    { label: 'Pending', value: metrics?.pending_analyses },
-    { label: 'Open Alerts', value: metrics?.open_alerts },
-    { label: 'Escalated', value: metrics?.escalated_alerts },
+    { label: t('admin.health.metrics.totalUsers'), value: metrics?.total_users },
+    { label: t('admin.health.metrics.articles'), value: metrics?.total_articles },
+    { label: t('admin.health.metrics.totalAnalyses'), value: metrics?.total_analyses },
+    { label: t('admin.health.metrics.completed'), value: metrics?.completed_analyses },
+    { label: t('admin.health.metrics.pending'), value: metrics?.pending_analyses },
+    { label: t('admin.health.metrics.openAlerts'), value: metrics?.open_alerts },
+    { label: t('admin.health.metrics.escalated'), value: metrics?.escalated_alerts },
   ];
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-extrabold text-slate-900">System Health</h2>
-          <p className="text-sm text-slate-500 mt-0.5">Live status of every platform service.</p>
+          <h2 className="text-2xl font-extrabold text-slate-900">{t('admin.health.title')}</h2>
+          <p className="text-sm text-slate-500 mt-0.5">{t('admin.health.subtitle')}</p>
         </div>
         <button onClick={fetchHealth} className="flex items-center gap-2 px-4 py-2 bg-slate-100 rounded-xl text-sm font-bold hover:bg-slate-200">
-          <RefreshCw className="w-4 h-4" /> Refresh
+          <RefreshCw className="w-4 h-4" /> {t('common.refresh')}
         </button>
       </div>
 
       <div className={`rounded-2xl p-4 border flex items-center gap-3 ${overall === 'healthy' ? 'bg-emerald-50 border-emerald-200' : 'bg-amber-50 border-amber-200'}`}>
         <span className={`w-3 h-3 rounded-full ${statusDot(overall)}`} />
         <p className={`text-sm font-bold capitalize ${overall === 'healthy' ? 'text-emerald-700' : 'text-amber-700'}`}>
-          Overall status: {overall}
+          {t('admin.health.overallStatus', { status: overall })}
         </p>
       </div>
 
@@ -143,6 +145,7 @@ const ROLE_BADGES = {
 };
 
 function CreateUserModal({ open, onClose, onCreated }) {
+  const { t } = useTranslation();
   const [form, setForm] = useState({
     first_name: '', last_name: '', email: '',
     organization: '', role: 'government', password: '',
@@ -155,7 +158,7 @@ function CreateUserModal({ open, onClose, onCreated }) {
   const submit = async (e) => {
     e.preventDefault();
     if (form.password.length < 8) {
-      setError('Password must be at least 8 characters.');
+      setError(t('admin.users.modal.passwordTooShort'));
       return;
     }
     setError('');
@@ -169,7 +172,7 @@ function CreateUserModal({ open, onClose, onCreated }) {
       if (typeof data === 'object') {
         setError(Object.entries(data).map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : v}`).join(' | '));
       } else {
-        setError(data || 'Failed to create user.');
+        setError(data || t('admin.users.modal.createFailed'));
       }
     } finally {
       setSubmitting(false);
@@ -181,8 +184,8 @@ function CreateUserModal({ open, onClose, onCreated }) {
       open={open}
       onClose={onClose}
       icon={UserPlus}
-      title="Create user"
-      subtitle="Provision an account with any role, including Media House and Admin."
+      title={t('admin.users.createUser')}
+      subtitle={t('admin.users.modal.subtitle')}
     >
       <form onSubmit={submit} className="p-6 space-y-4">
           {error && (
@@ -190,35 +193,35 @@ function CreateUserModal({ open, onClose, onCreated }) {
           )}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-bold text-slate-600 mb-1 block">First name</label>
+              <label className="text-xs font-bold text-slate-600 mb-1 block">{t('admin.users.modal.firstName')}</label>
               <input name="first_name" required value={form.first_name} onChange={handleChange}
                 className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none" />
             </div>
             <div>
-              <label className="text-xs font-bold text-slate-600 mb-1 block">Last name</label>
+              <label className="text-xs font-bold text-slate-600 mb-1 block">{t('admin.users.modal.lastName')}</label>
               <input name="last_name" required value={form.last_name} onChange={handleChange}
                 className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none" />
             </div>
           </div>
           <div>
-            <label className="text-xs font-bold text-slate-600 mb-1 block">Email</label>
+            <label className="text-xs font-bold text-slate-600 mb-1 block">{t('common.email')}</label>
             <input name="email" type="email" required value={form.email} onChange={handleChange}
               className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-bold text-slate-600 mb-1 block">Role</label>
+              <label className="text-xs font-bold text-slate-600 mb-1 block">{t('admin.users.modal.role')}</label>
               <select name="role" value={form.role} onChange={handleChange}
                 className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm font-medium capitalize focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none bg-white">
-                <option value="citizen">Citizen</option>
-                <option value="journalist">Journalist</option>
-                <option value="government">Media House</option>
-                <option value="admin">Admin</option>
+                <option value="citizen">{t('admin.users.roleOptions.citizen')}</option>
+                <option value="journalist">{t('admin.users.roleOptions.journalist')}</option>
+                <option value="government">{t('admin.users.roleOptions.government')}</option>
+                <option value="admin">{t('admin.users.roleOptions.admin')}</option>
               </select>
             </div>
             <div>
               <label className="text-xs font-bold text-slate-600 mb-1 block">
-                Organization {(form.role === 'government' || form.role === 'journalist') && <span className="text-red-500">*</span>}
+                {t('admin.users.modal.organization')} {(form.role === 'government' || form.role === 'journalist') && <span className="text-red-500">*</span>}
               </label>
               <input name="organization" value={form.organization} onChange={handleChange}
                 required={form.role === 'government' || form.role === 'journalist'}
@@ -226,17 +229,17 @@ function CreateUserModal({ open, onClose, onCreated }) {
             </div>
           </div>
           <div>
-            <label className="text-xs font-bold text-slate-600 mb-1 block">Initial password (8+ chars)</label>
+            <label className="text-xs font-bold text-slate-600 mb-1 block">{t('admin.users.modal.password')}</label>
             <input name="password" type="text" required minLength={8} value={form.password} onChange={handleChange}
               className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm font-mono focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none" />
-            <p className="text-[11px] text-slate-500 mt-1">Share this with the user. They can change it after first login.</p>
+            <p className="text-[11px] text-slate-500 mt-1">{t('admin.users.modal.passwordHint')}</p>
           </div>
 
           <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
-            <button type="button" onClick={onClose} className="px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-100 rounded-lg">Cancel</button>
+            <button type="button" onClick={onClose} className="px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-100 rounded-lg">{t('common.cancel')}</button>
             <button type="submit" disabled={submitting}
               className="px-4 py-2 text-sm font-bold text-white bg-brand-600 hover:bg-brand-700 rounded-lg shadow-sm disabled:opacity-50 inline-flex items-center gap-2">
-              {submitting ? 'Creating…' : <>Create user <UserPlus className="w-4 h-4" /></>}
+              {submitting ? t('admin.users.creating') : <>{t('admin.users.createUser')} <UserPlus className="w-4 h-4" /></>}
             </button>
           </div>
         </form>
@@ -245,6 +248,7 @@ function CreateUserModal({ open, onClose, onCreated }) {
 }
 
 function UsersPanel() {
+  const { t } = useTranslation();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -274,7 +278,7 @@ function UsersPanel() {
   };
 
   const handleDeactivate = async (userId) => {
-    if (!confirm('Deactivate this user?')) return;
+    if (!confirm(t('admin.users.confirmDeactivate'))) return;
     try {
       await usersAPI.deactivateUser(userId);
       setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, is_active: false } : u)));
@@ -290,12 +294,12 @@ function UsersPanel() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-extrabold text-slate-900">User Management</h2>
-          <p className="text-sm text-slate-500 mt-0.5">Provision and manage all platform accounts.</p>
+          <h2 className="text-2xl font-extrabold text-slate-900">{t('admin.users.title')}</h2>
+          <p className="text-sm text-slate-500 mt-0.5">{t('admin.users.subtitle')}</p>
         </div>
         <button onClick={() => setShowCreate(true)}
           className="inline-flex items-center gap-2 px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl font-bold shadow-md hover:shadow-lg transition-all w-fit">
-          <UserPlus className="w-4 h-4" /> Create user
+          <UserPlus className="w-4 h-4" /> {t('admin.users.createUser')}
         </button>
       </div>
 
@@ -303,18 +307,18 @@ function UsersPanel() {
         <div className="flex flex-wrap gap-2">
           {['admin', 'government', 'journalist', 'citizen'].map((r) => (
             <span key={r} className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border capitalize ${ROLE_BADGES[r]}`}>
-              {roleLabel(r)} <span className="ml-1.5 px-1.5 rounded bg-white/60 tabular-nums">{counts[r] || 0}</span>
+              {t(roleLabelKey(r), { defaultValue: roleLabel(r) })} <span className="ml-1.5 px-1.5 rounded bg-white/60 tabular-nums">{counts[r] || 0}</span>
             </span>
           ))}
           <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border bg-white text-slate-700 border-slate-200">
-            Total <span className="ml-1.5 px-1.5 rounded bg-slate-100 tabular-nums">{users.length}</span>
+            {t('admin.users.total')} <span className="ml-1.5 px-1.5 rounded bg-slate-100 tabular-nums">{users.length}</span>
           </span>
         </div>
       )}
 
       <form onSubmit={(e) => { e.preventDefault(); fetchUsers(search); }} className="relative max-w-md">
         <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-        <input type="text" placeholder="Search by name, email, or organization…"
+        <input type="text" placeholder={t('admin.users.searchPlaceholder')}
           className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
           value={search} onChange={(e) => setSearch(e.target.value)} />
       </form>
@@ -326,9 +330,9 @@ function UsersPanel() {
       ) : users.length === 0 ? (
         <div className="glass rounded-2xl py-16 px-6 text-center">
           <Users className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-          <p className="text-sm font-bold text-slate-800">No users found</p>
+          <p className="text-sm font-bold text-slate-800">{t('admin.users.emptyTitle')}</p>
           <p className="text-xs text-slate-500 mt-1 mb-4">
-            {search ? 'Try a different search term.' : 'Create the first user to get started.'}
+            {search ? t('admin.users.emptySearch') : t('admin.users.emptyCreate')}
           </p>
         </div>
       ) : (
@@ -337,12 +341,12 @@ function UsersPanel() {
             <table className="min-w-full divide-y divide-slate-200">
               <thead className="bg-slate-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">User</th>
-                  <th className="px-6 py-3 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">Organization</th>
-                  <th className="px-6 py-3 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">Role</th>
-                  <th className="px-6 py-3 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">Joined</th>
-                  <th className="px-6 py-3 text-right text-[11px] font-bold text-slate-500 uppercase tracking-wider">Actions</th>
+                  <th className="px-6 py-3 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">{t('admin.users.colUser')}</th>
+                  <th className="px-6 py-3 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">{t('admin.users.colOrganization')}</th>
+                  <th className="px-6 py-3 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">{t('admin.users.colRole')}</th>
+                  <th className="px-6 py-3 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">{t('admin.users.colStatus')}</th>
+                  <th className="px-6 py-3 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">{t('admin.users.colJoined')}</th>
+                  <th className="px-6 py-3 text-right text-[11px] font-bold text-slate-500 uppercase tracking-wider">{t('admin.users.colActions')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 bg-white">
@@ -366,16 +370,16 @@ function UsersPanel() {
                         value={u.role}
                         onChange={(e) => handleRoleChange(u.id, e.target.value)}
                       >
-                        <option value="citizen">Citizen</option>
-                        <option value="journalist">Journalist</option>
-                        <option value="government">Media House</option>
-                        <option value="admin">Admin</option>
+                        <option value="citizen">{t('admin.users.roleOptions.citizen')}</option>
+                        <option value="journalist">{t('admin.users.roleOptions.journalist')}</option>
+                        <option value="government">{t('admin.users.roleOptions.government')}</option>
+                        <option value="admin">{t('admin.users.roleOptions.admin')}</option>
                       </select>
                     </td>
                     <td className="px-6 py-4">
                       <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-bold border ${u.is_active ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-red-50 text-red-700 border-red-200'}`}>
                         <span className={`w-1.5 h-1.5 rounded-full ${u.is_active ? 'bg-emerald-500' : 'bg-red-500'}`} />
-                        {u.is_active ? 'Active' : 'Inactive'}
+                        {u.is_active ? t('admin.users.active') : t('admin.users.inactive')}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-sm text-slate-500 tabular-nums">{new Date(u.created_at).toLocaleDateString()}</td>
@@ -384,14 +388,14 @@ function UsersPanel() {
                         onClick={() => setActivity(u.id)}
                         className="text-xs font-bold text-brand-600 hover:text-brand-700 px-2 py-1 rounded hover:bg-brand-50"
                       >
-                        View
+                        {t('common.view')}
                       </button>
                       {u.is_active && (
                         <button
                           onClick={() => handleDeactivate(u.id)}
                           className="text-xs font-bold text-red-600 hover:text-red-700 px-2 py-1 rounded hover:bg-red-50"
                         >
-                          Deactivate
+                          {t('admin.users.deactivate')}
                         </button>
                       )}
                     </td>
@@ -421,6 +425,7 @@ const CLS_BADGE = {
 };
 
 function UserActivityModal({ userId, onClose }) {
+  const { t } = useTranslation();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -447,26 +452,26 @@ function UserActivityModal({ userId, onClose }) {
   const s = data?.stats;
 
   return (
-    <Modal open={!!userId} onClose={onClose} icon={Users} title={u?.full_name || 'User activity'} subtitle={u?.email}>
+    <Modal open={!!userId} onClose={onClose} icon={Users} title={u?.full_name || t('admin.activity.title')} subtitle={u?.email}>
       <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
         {loading ? (
           <div className="flex justify-center py-10"><div className="animate-spin rounded-full h-8 w-8 border-2 border-brand-500 border-t-transparent" /></div>
         ) : !data ? (
-          <p className="text-sm text-slate-500 text-center py-8">Could not load activity.</p>
+          <p className="text-sm text-slate-500 text-center py-8">{t('admin.activity.loadFailed')}</p>
         ) : (
           <>
             <div className="flex flex-wrap gap-2 text-xs">
-              <span className={`px-2 py-1 rounded-full font-bold border capitalize ${ROLE_BADGES[u.role] || ''}`}>{roleLabel(u.role)}</span>
+              <span className={`px-2 py-1 rounded-full font-bold border capitalize ${ROLE_BADGES[u.role] || ''}`}>{t(roleLabelKey(u.role), { defaultValue: roleLabel(u.role) })}</span>
               <span className="px-2 py-1 rounded-full font-bold border bg-slate-50 text-slate-700 border-slate-200">{u.organization}</span>
-              <span className={`px-2 py-1 rounded-full font-bold border ${u.is_active ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-red-50 text-red-700 border-red-200'}`}>{u.is_active ? 'Active' : 'Inactive'}</span>
+              <span className={`px-2 py-1 rounded-full font-bold border ${u.is_active ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-red-50 text-red-700 border-red-200'}`}>{u.is_active ? t('admin.activity.active') : t('admin.activity.inactive')}</span>
             </div>
             <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
               {[
-                { label: 'Analyzed', value: s.total_analyzed },
-                { label: 'Fake', value: s.fake_count },
-                { label: 'Real', value: s.real_count },
-                { label: 'Avg cred.', value: `${Math.round(s.average_credibility)}%` },
-                { label: 'Open alerts', value: s.open_alerts },
+                { label: t('admin.activity.analyzed'), value: s.total_analyzed },
+                { label: t('admin.activity.fake'), value: s.fake_count },
+                { label: t('admin.activity.real'), value: s.real_count },
+                { label: t('admin.activity.avgCred'), value: `${Math.round(s.average_credibility)}%` },
+                { label: t('admin.activity.openAlerts'), value: s.open_alerts },
               ].map((m, i) => (
                 <div key={i} className="bg-slate-50 rounded-xl p-3 text-center">
                   <p className="text-lg font-bold text-slate-900 tabular-nums">{m.value}</p>
@@ -475,9 +480,9 @@ function UserActivityModal({ userId, onClose }) {
               ))}
             </div>
             <div>
-              <h4 className="text-sm font-bold text-slate-900 mb-2">Recent analyses (searches)</h4>
+              <h4 className="text-sm font-bold text-slate-900 mb-2">{t('admin.activity.recentTitle')}</h4>
               {data.recent_analyses.length === 0 ? (
-                <p className="text-xs text-slate-500 py-4 text-center">No analyses yet.</p>
+                <p className="text-xs text-slate-500 py-4 text-center">{t('admin.activity.noAnalyses')}</p>
               ) : (
                 <div className="space-y-1.5">
                   {data.recent_analyses.map((a) => (
@@ -503,6 +508,7 @@ function UserActivityModal({ userId, onClose }) {
 
 // ─── Dataset Manager ───────────────────────────────────────────────
 function DatasetsPanel() {
+  const { t } = useTranslation();
   const [datasets, setDatasets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -520,7 +526,7 @@ function DatasetsPanel() {
     try {
       const fd = new FormData();
       fd.append('name', file.name.replace(/\.[^.]+$/, ''));
-      fd.append('description', `Uploaded on ${new Date().toLocaleDateString()}`);
+      fd.append('description', t('admin.datasets.uploadedOn', { date: new Date().toLocaleDateString() }));
       fd.append('file', file);
       const res = await adminAPI.uploadDataset(fd);
       setDatasets(prev => [res.data.data, ...prev]);
@@ -529,7 +535,7 @@ function DatasetsPanel() {
       if (typeof data === 'object') {
         setError(Object.entries(data).map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : v}`).join(' | '));
       } else {
-        setError(data || 'Upload failed.');
+        setError(data || t('admin.datasets.uploadFailed'));
       }
     } finally {
       setUploading(false);
@@ -538,7 +544,7 @@ function DatasetsPanel() {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Delete this dataset? The file will be removed.')) return;
+    if (!confirm(t('admin.datasets.confirmDelete'))) return;
     try {
       await adminAPI.deleteDataset(id);
       setDatasets(prev => prev.filter(d => d.id !== id));
@@ -549,18 +555,17 @@ function DatasetsPanel() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-extrabold text-slate-900">Dataset Manager</h2>
-          <p className="text-sm text-slate-500 mt-0.5">Labeled training data for model retraining.</p>
+          <h2 className="text-2xl font-extrabold text-slate-900">{t('admin.datasets.title')}</h2>
+          <p className="text-sm text-slate-500 mt-0.5">{t('admin.datasets.subtitle')}</p>
         </div>
         <label className="flex items-center gap-2 px-4 py-2 bg-brand-600 text-white rounded-xl font-bold cursor-pointer hover:bg-brand-700 shadow-md">
-          <Upload className="w-4 h-4" /> {uploading ? 'Uploading…' : 'Upload Dataset'}
+          <Upload className="w-4 h-4" /> {uploading ? t('admin.datasets.uploading') : t('admin.datasets.upload')}
           <input type="file" className="hidden" accept=".csv,.json" onChange={handleUpload} disabled={uploading} />
         </label>
       </div>
 
       <div className="rounded-xl bg-blue-50 border border-blue-200 px-4 py-3 text-xs text-blue-800">
-        <strong>Format:</strong> CSV or JSON with a text column (<code>text</code>, <code>content</code>, <code>article</code>, or <code>body</code>) and a label
-        column (<code>label</code>, <code>target</code>, <code>class</code>, or <code>fake</code>). Labels accept <code>fake</code>/<code>real</code> or <code>1</code>/<code>0</code>. Minimum 20 rows with both classes.
+        <Trans i18nKey="admin.datasets.formatBody" components={[<strong key="0" />, <code key="1" />]} />
       </div>
 
       {error && (
@@ -577,11 +582,11 @@ function DatasetsPanel() {
             <div key={ds.id} className="glass rounded-2xl p-5 flex items-center justify-between gap-3">
               <div className="min-w-0">
                 <p className="font-bold text-slate-900 truncate">{ds.name}</p>
-                <p className="text-xs text-slate-500 mt-0.5 truncate">{ds.description} · {ds.uploaded_by_email || 'system'} · {new Date(ds.created_at).toLocaleDateString()}</p>
+                <p className="text-xs text-slate-500 mt-0.5 truncate">{ds.description} · {ds.uploaded_by_email || t('admin.datasets.system')} · {new Date(ds.created_at).toLocaleDateString()}</p>
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
-                <span className="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded-full font-bold tabular-nums">{ds.record_count} records</span>
-                <button onClick={() => handleDelete(ds.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg" title="Delete dataset">
+                <span className="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded-full font-bold tabular-nums">{t('admin.datasets.records', { count: ds.record_count })}</span>
+                <button onClick={() => handleDelete(ds.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg" title={t('admin.datasets.deleteTitle')}>
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>
@@ -591,7 +596,7 @@ function DatasetsPanel() {
       ) : (
         <div className="glass rounded-2xl p-12 text-center">
           <Database className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-          <p className="text-slate-500">No datasets uploaded yet.</p>
+          <p className="text-slate-500">{t('admin.datasets.empty')}</p>
         </div>
       )}
     </div>
@@ -600,6 +605,7 @@ function DatasetsPanel() {
 
 // ─── Audit Logs ────────────────────────────────────────────────────
 function AuditPanel() {
+  const { t } = useTranslation();
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -609,7 +615,7 @@ function AuditPanel() {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-extrabold text-slate-900">Audit Logs</h2>
+      <h2 className="text-2xl font-extrabold text-slate-900">{t('admin.audit.title')}</h2>
 
       {loading ? (
         <div className="flex justify-center py-16"><div className="animate-spin rounded-full h-8 w-8 border-2 border-brand-500 border-t-transparent" /></div>
@@ -619,18 +625,18 @@ function AuditPanel() {
             <table className="min-w-full divide-y divide-slate-200">
               <thead className="bg-slate-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Action</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">User</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Resource</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">IP</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Time</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.audit.colAction')}</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.audit.colUser')}</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.audit.colResource')}</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.audit.colIp')}</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('admin.audit.colTime')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 bg-white">
                 {logs.map((log) => (
                   <tr key={log.id} className="hover:bg-slate-50/50">
                     <td className="px-6 py-3 text-sm font-bold text-slate-900">{log.action}</td>
-                    <td className="px-6 py-3 text-sm text-slate-600">{log.user_email || 'system'}</td>
+                    <td className="px-6 py-3 text-sm text-slate-600">{log.user_email || t('admin.audit.system')}</td>
                     <td className="px-6 py-3 text-sm text-slate-500">{log.resource_type} {log.resource_id ? `#${log.resource_id.slice(0, 8)}` : ''}</td>
                     <td className="px-6 py-3 text-sm text-slate-500">{log.ip_address || '-'}</td>
                     <td className="px-6 py-3 text-sm text-slate-500">{new Date(log.created_at).toLocaleString()}</td>
@@ -643,7 +649,7 @@ function AuditPanel() {
       ) : (
         <div className="glass rounded-2xl p-12 text-center">
           <FileText className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-          <p className="text-slate-500">No audit logs recorded yet.</p>
+          <p className="text-slate-500">{t('admin.audit.empty')}</p>
         </div>
       )}
     </div>
@@ -663,32 +669,33 @@ function StatCardSmall({ label, value, color }) {
   );
 }
 
-function exportStats(stats) {
+function exportStats(stats, t) {
   const cls = stats.classification || {};
   const rows = [
-    ['Metric', 'Value'],
-    ['Window (days)', stats.window_days],
-    ['Total users', stats.total_users],
-    ['Active users', stats.active_users],
-    ['Total analyses', cls.total],
-    ['Fake', cls.fake],
-    ['Real', cls.real],
-    ['Uncertain', cls.uncertain],
-    ['Average credibility', cls.average_credibility],
+    [t('admin.stats.csv.metric'), t('admin.stats.csv.value')],
+    [t('admin.stats.csv.windowDays'), stats.window_days],
+    [t('admin.stats.csv.totalUsers'), stats.total_users],
+    [t('admin.stats.csv.activeUsers'), stats.active_users],
+    [t('admin.stats.csv.totalAnalyses'), cls.total],
+    [t('admin.stats.csv.fake'), cls.fake],
+    [t('admin.stats.csv.real'), cls.real],
+    [t('admin.stats.csv.uncertain'), cls.uncertain],
+    [t('admin.stats.csv.avgCredibility'), cls.average_credibility],
     [],
-    ['Users by role', 'Count'],
+    [t('admin.stats.csv.usersByRole'), t('admin.stats.csv.count')],
     ...Object.entries(stats.users_by_role || {}),
     [],
-    ['Top organizations', 'Analyses', 'Fake', 'Avg credibility'],
+    [t('admin.stats.csv.topOrgs'), t('admin.stats.csv.analyses'), t('admin.stats.csv.fake'), t('admin.stats.csv.avgCredibility')],
     ...(stats.top_organizations || []).map((o) => [o.organization, o.total, o.fake, o.average_credibility]),
     [],
-    ['Date', 'Real', 'Fake', 'Uncertain'],
-    ...(stats.trend || []).map((t) => [t.date, t.real_count, t.fake_count, t.uncertain_count]),
+    [t('admin.stats.csv.date'), t('admin.stats.csv.real'), t('admin.stats.csv.fake'), t('admin.stats.csv.uncertain')],
+    ...(stats.trend || []).map((row) => [row.date, row.real_count, row.fake_count, row.uncertain_count]),
   ];
   downloadCSV('verifyai_statistics.csv', rows);
 }
 
 function StatisticsPanel() {
+  const { t } = useTranslation();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -704,13 +711,13 @@ function StatisticsPanel() {
   useEffect(() => { fetchStats(); }, []);
 
   if (loading) return <div className="flex justify-center py-16"><div className="animate-spin rounded-full h-8 w-8 border-2 border-brand-500 border-t-transparent" /></div>;
-  if (!stats) return <p className="text-sm text-slate-500">Could not load statistics.</p>;
+  if (!stats) return <p className="text-sm text-slate-500">{t('admin.stats.loadFailed')}</p>;
 
   const cls = stats.classification || {};
   const pieData = [
-    { name: 'Real', key: 'real', value: cls.real || 0 },
-    { name: 'Fake', key: 'fake', value: cls.fake || 0 },
-    { name: 'Uncertain', key: 'uncertain', value: cls.uncertain || 0 },
+    { name: t('common.verdict.real'), key: 'real', value: cls.real || 0 },
+    { name: t('common.verdict.fake'), key: 'fake', value: cls.fake || 0 },
+    { name: t('common.verdict.uncertain'), key: 'uncertain', value: cls.uncertain || 0 },
   ].filter(d => d.value > 0);
 
   const roleData = Object.entries(stats.users_by_role || {}).map(([role, count]) => ({ role, count }));
@@ -723,29 +730,29 @@ function StatisticsPanel() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-extrabold text-slate-900">Platform Statistics</h2>
-          <p className="text-sm text-slate-500 mt-0.5">Last {stats.window_days} days · platform-wide.</p>
+          <h2 className="text-2xl font-extrabold text-slate-900">{t('admin.stats.title')}</h2>
+          <p className="text-sm text-slate-500 mt-0.5">{t('admin.stats.subtitle', { count: stats.window_days })}</p>
         </div>
         <div className="flex gap-2">
-          <button onClick={() => exportStats(stats)} className="flex items-center gap-2 px-4 py-2 bg-slate-100 rounded-xl text-sm font-bold hover:bg-slate-200">
-            <Download className="w-4 h-4" /> Export CSV
+          <button onClick={() => exportStats(stats, t)} className="flex items-center gap-2 px-4 py-2 bg-slate-100 rounded-xl text-sm font-bold hover:bg-slate-200">
+            <Download className="w-4 h-4" /> {t('admin.stats.exportCsv')}
           </button>
           <button onClick={fetchStats} className="flex items-center gap-2 px-4 py-2 bg-slate-100 rounded-xl text-sm font-bold hover:bg-slate-200">
-            <RefreshCw className="w-4 h-4" /> Refresh
+            <RefreshCw className="w-4 h-4" /> {t('common.refresh')}
           </button>
         </div>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCardSmall label="Total users" value={stats.total_users} />
-        <StatCardSmall label="Total analyses" value={cls.total} />
-        <StatCardSmall label="Avg credibility" value={`${Math.round(cls.average_credibility || 0)}%`} color="text-emerald-600" />
-        <StatCardSmall label={`New (${stats.window_days}d)`} value={stats.new_analyses_window} color="text-brand-600" />
+        <StatCardSmall label={t('admin.stats.totalUsers')} value={stats.total_users} />
+        <StatCardSmall label={t('admin.stats.totalAnalyses')} value={cls.total} />
+        <StatCardSmall label={t('admin.stats.avgCredibility')} value={`${Math.round(cls.average_credibility || 0)}%`} color="text-emerald-600" />
+        <StatCardSmall label={t('admin.stats.newWindow', { count: stats.window_days })} value={stats.new_analyses_window} color="text-brand-600" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="glass rounded-2xl p-6">
-          <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2"><PieChartIcon /> Classification mix</h3>
+          <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2"><PieChartIcon /> {t('admin.stats.classificationMix')}</h3>
           {pieData.length > 0 ? (
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
@@ -758,17 +765,17 @@ function StatisticsPanel() {
                 </PieChart>
               </ResponsiveContainer>
             </div>
-          ) : <p className="text-sm text-slate-500 py-10 text-center">No analyses yet.</p>}
+          ) : <p className="text-sm text-slate-500 py-10 text-center">{t('admin.stats.noAnalyses')}</p>}
         </div>
 
         <div className="glass rounded-2xl p-6">
-          <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2"><Users className="w-5 h-5 text-brand-600" /> Users by role</h3>
+          <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2"><Users className="w-5 h-5 text-brand-600" /> {t('admin.stats.usersByRole')}</h3>
           <div className="space-y-3 pt-2">
             {roleData.map((r) => {
               const max = Math.max(...roleData.map(x => x.count), 1);
               return (
                 <div key={r.role} className="flex items-center gap-3">
-                  <span className="text-xs font-bold text-slate-700 w-24 capitalize">{roleLabel(r.role)}</span>
+                  <span className="text-xs font-bold text-slate-700 w-24 capitalize">{t(roleLabelKey(r.role), { defaultValue: roleLabel(r.role) })}</span>
                   <div className="flex-1 h-3 bg-slate-100 rounded-full overflow-hidden">
                     <div className="h-full rounded-full" style={{ width: `${(r.count / max) * 100}%`, background: ROLE_COLORS[r.role] || '#64748b' }} />
                   </div>
@@ -781,7 +788,7 @@ function StatisticsPanel() {
       </div>
 
       <div className="glass rounded-2xl p-6">
-        <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2"><BarChart3 className="w-5 h-5 text-brand-600" /> Real vs Fake — {stats.window_days} days</h3>
+        <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2"><BarChart3 className="w-5 h-5 text-brand-600" /> {t('admin.stats.realVsFake', { count: stats.window_days })}</h3>
         <div className="h-64">
           {trend.length > 0 ? (
             <ResponsiveContainer width="100%" height="100%">
@@ -791,25 +798,25 @@ function StatisticsPanel() {
                 <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} allowDecimals={false} />
                 <Tooltip />
                 <Legend iconType="circle" />
-                <Line type="monotone" dataKey="real" name="Real" stroke="#10b981" strokeWidth={2.5} dot={false} />
-                <Line type="monotone" dataKey="fake" name="Fake" stroke="#ef4444" strokeWidth={2.5} dot={false} />
+                <Line type="monotone" dataKey="real" name={t('common.verdict.real')} stroke="#10b981" strokeWidth={2.5} dot={false} />
+                <Line type="monotone" dataKey="fake" name={t('common.verdict.fake')} stroke="#ef4444" strokeWidth={2.5} dot={false} />
               </LineChart>
             </ResponsiveContainer>
-          ) : <p className="text-sm text-slate-500 py-10 text-center">No trend data yet.</p>}
+          ) : <p className="text-sm text-slate-500 py-10 text-center">{t('admin.stats.noTrend')}</p>}
         </div>
       </div>
 
       <div className="glass rounded-2xl p-6">
-        <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2"><Building2 className="w-5 h-5 text-brand-600" /> Top organizations by activity</h3>
+        <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2"><Building2 className="w-5 h-5 text-brand-600" /> {t('admin.stats.topOrgs')}</h3>
         {(stats.top_organizations || []).length > 0 ? (
           <div className="overflow-x-auto">
             <table className="min-w-full">
               <thead>
                 <tr className="border-b border-slate-200">
-                  <th className="px-3 py-2 text-left text-[11px] font-bold text-slate-500 uppercase">Organization</th>
-                  <th className="px-3 py-2 text-right text-[11px] font-bold text-slate-500 uppercase">Analyses</th>
-                  <th className="px-3 py-2 text-right text-[11px] font-bold text-slate-500 uppercase">Fake</th>
-                  <th className="px-3 py-2 text-right text-[11px] font-bold text-slate-500 uppercase">Avg cred.</th>
+                  <th className="px-3 py-2 text-left text-[11px] font-bold text-slate-500 uppercase">{t('admin.stats.colOrganization')}</th>
+                  <th className="px-3 py-2 text-right text-[11px] font-bold text-slate-500 uppercase">{t('admin.stats.colAnalyses')}</th>
+                  <th className="px-3 py-2 text-right text-[11px] font-bold text-slate-500 uppercase">{t('admin.stats.colFake')}</th>
+                  <th className="px-3 py-2 text-right text-[11px] font-bold text-slate-500 uppercase">{t('admin.stats.colAvgCred')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -824,7 +831,7 @@ function StatisticsPanel() {
               </tbody>
             </table>
           </div>
-        ) : <p className="text-sm text-slate-500 py-6 text-center">No organization activity yet.</p>}
+        ) : <p className="text-sm text-slate-500 py-6 text-center">{t('admin.stats.noOrgActivity')}</p>}
       </div>
     </div>
   );
@@ -836,6 +843,7 @@ function PieChartIcon() {
 
 // ─── Organizations (government oversight) ──────────────────────────
 function OrganizationsPanel() {
+  const { t } = useTranslation();
   const [orgs, setOrgs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [detail, setDetail] = useState(null);
@@ -862,12 +870,12 @@ function OrganizationsPanel() {
     return (
       <div className="space-y-6">
         <button onClick={() => setDetail(null)} className="inline-flex items-center gap-1.5 text-sm font-bold text-brand-600 hover:text-brand-700">
-          <ChevronLeft className="w-4 h-4" /> All organizations
+          <ChevronLeft className="w-4 h-4" /> {t('admin.orgs.allOrgs')}
         </button>
         <div className="flex items-start justify-between gap-3">
           <div>
             <h2 className="text-2xl font-extrabold text-slate-900 flex items-center gap-2"><Building2 className="w-6 h-6 text-brand-600" /> {detail.organization}</h2>
-            <p className="text-sm text-slate-500 mt-0.5">{detail.member_count} members · their users, details & searches.</p>
+            <p className="text-sm text-slate-500 mt-0.5">{t('admin.orgs.detailSubtitle', { count: detail.member_count })}</p>
           </div>
           {detail.members?.length > 0 && (
             <button
@@ -878,7 +886,7 @@ function OrganizationsPanel() {
               })))}
               className="flex items-center gap-2 px-4 py-2 bg-slate-100 rounded-xl text-sm font-bold hover:bg-slate-200 whitespace-nowrap"
             >
-              <Download className="w-4 h-4" /> Export CSV
+              <Download className="w-4 h-4" /> {t('admin.orgs.exportCsv')}
             </button>
           )}
         </div>
@@ -891,13 +899,13 @@ function OrganizationsPanel() {
               <table className="min-w-full divide-y divide-slate-200">
                 <thead className="bg-slate-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-[11px] font-bold text-slate-500 uppercase">Member</th>
-                    <th className="px-6 py-3 text-left text-[11px] font-bold text-slate-500 uppercase">Role</th>
-                    <th className="px-6 py-3 text-right text-[11px] font-bold text-slate-500 uppercase">Analyses</th>
-                    <th className="px-6 py-3 text-right text-[11px] font-bold text-slate-500 uppercase">Fake</th>
-                    <th className="px-6 py-3 text-right text-[11px] font-bold text-slate-500 uppercase">Avg cred.</th>
-                    <th className="px-6 py-3 text-right text-[11px] font-bold text-slate-500 uppercase">Alerts</th>
-                    <th className="px-6 py-3 text-right text-[11px] font-bold text-slate-500 uppercase">Details</th>
+                    <th className="px-6 py-3 text-left text-[11px] font-bold text-slate-500 uppercase">{t('admin.orgs.colMember')}</th>
+                    <th className="px-6 py-3 text-left text-[11px] font-bold text-slate-500 uppercase">{t('admin.orgs.colRole')}</th>
+                    <th className="px-6 py-3 text-right text-[11px] font-bold text-slate-500 uppercase">{t('admin.orgs.colAnalyses')}</th>
+                    <th className="px-6 py-3 text-right text-[11px] font-bold text-slate-500 uppercase">{t('admin.orgs.colFake')}</th>
+                    <th className="px-6 py-3 text-right text-[11px] font-bold text-slate-500 uppercase">{t('admin.orgs.colAvgCred')}</th>
+                    <th className="px-6 py-3 text-right text-[11px] font-bold text-slate-500 uppercase">{t('admin.orgs.colAlerts')}</th>
+                    <th className="px-6 py-3 text-right text-[11px] font-bold text-slate-500 uppercase">{t('admin.orgs.colDetails')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 bg-white">
@@ -907,13 +915,13 @@ function OrganizationsPanel() {
                         <p className="text-sm font-bold text-slate-900 truncate">{m.full_name}</p>
                         <p className="text-xs text-slate-500 truncate">{m.email}</p>
                       </td>
-                      <td className="px-6 py-4"><span className={`inline-flex px-2 py-0.5 rounded text-xs font-bold border capitalize ${ROLE_BADGES[m.role] || ''}`}>{roleLabel(m.role)}</span></td>
+                      <td className="px-6 py-4"><span className={`inline-flex px-2 py-0.5 rounded text-xs font-bold border capitalize ${ROLE_BADGES[m.role] || ''}`}>{t(roleLabelKey(m.role), { defaultValue: roleLabel(m.role) })}</span></td>
                       <td className="px-6 py-4 text-sm text-right tabular-nums">{m.total_analyses}</td>
                       <td className="px-6 py-4 text-sm text-right text-red-600 font-bold tabular-nums">{m.fake_count}</td>
                       <td className="px-6 py-4 text-sm text-right tabular-nums">{Math.round(m.average_credibility)}%</td>
                       <td className="px-6 py-4 text-sm text-right tabular-nums">{m.open_alerts}</td>
                       <td className="px-6 py-4 text-right">
-                        <button onClick={() => setActivity(m.id)} className="text-xs font-bold text-brand-600 hover:text-brand-700 px-2 py-1 rounded hover:bg-brand-50">View</button>
+                        <button onClick={() => setActivity(m.id)} className="text-xs font-bold text-brand-600 hover:text-brand-700 px-2 py-1 rounded hover:bg-brand-50">{t('common.view')}</button>
                       </td>
                     </tr>
                   ))}
@@ -931,8 +939,8 @@ function OrganizationsPanel() {
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-extrabold text-slate-900">Organizations</h2>
-          <p className="text-sm text-slate-500 mt-0.5">Media houses & newsroom organizations — drill in to see their users, details and searches.</p>
+          <h2 className="text-2xl font-extrabold text-slate-900">{t('admin.orgs.title')}</h2>
+          <p className="text-sm text-slate-500 mt-0.5">{t('admin.orgs.subtitle')}</p>
         </div>
         {orgs.length > 0 && (
           <button
@@ -944,7 +952,7 @@ function OrganizationsPanel() {
             })))}
             className="flex items-center gap-2 px-4 py-2 bg-slate-100 rounded-xl text-sm font-bold hover:bg-slate-200 whitespace-nowrap"
           >
-            <Download className="w-4 h-4" /> Export CSV
+            <Download className="w-4 h-4" /> {t('admin.orgs.exportCsv')}
           </button>
         )}
       </div>
@@ -952,7 +960,7 @@ function OrganizationsPanel() {
       {orgs.length === 0 ? (
         <div className="glass rounded-2xl p-12 text-center">
           <Building2 className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-          <p className="text-slate-500">No organizations yet.</p>
+          <p className="text-slate-500">{t('admin.orgs.empty')}</p>
         </div>
       ) : (
         <div className="glass rounded-2xl shadow-sm overflow-hidden">
@@ -960,12 +968,12 @@ function OrganizationsPanel() {
             <table className="min-w-full divide-y divide-slate-200">
               <thead className="bg-slate-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-[11px] font-bold text-slate-500 uppercase">Organization</th>
-                  <th className="px-6 py-3 text-right text-[11px] font-bold text-slate-500 uppercase">Members</th>
-                  <th className="px-6 py-3 text-right text-[11px] font-bold text-slate-500 uppercase">Mgrs / Journ.</th>
-                  <th className="px-6 py-3 text-right text-[11px] font-bold text-slate-500 uppercase">Analyses</th>
-                  <th className="px-6 py-3 text-right text-[11px] font-bold text-slate-500 uppercase">Avg cred.</th>
-                  <th className="px-6 py-3 text-right text-[11px] font-bold text-slate-500 uppercase">Alerts</th>
+                  <th className="px-6 py-3 text-left text-[11px] font-bold text-slate-500 uppercase">{t('admin.orgs.colOrganization')}</th>
+                  <th className="px-6 py-3 text-right text-[11px] font-bold text-slate-500 uppercase">{t('admin.orgs.colMembers')}</th>
+                  <th className="px-6 py-3 text-right text-[11px] font-bold text-slate-500 uppercase">{t('admin.orgs.colMgrsJourn')}</th>
+                  <th className="px-6 py-3 text-right text-[11px] font-bold text-slate-500 uppercase">{t('admin.orgs.colAnalyses')}</th>
+                  <th className="px-6 py-3 text-right text-[11px] font-bold text-slate-500 uppercase">{t('admin.orgs.colAvgCred')}</th>
+                  <th className="px-6 py-3 text-right text-[11px] font-bold text-slate-500 uppercase">{t('admin.orgs.colAlerts')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 bg-white">
@@ -992,6 +1000,7 @@ function OrganizationsPanel() {
 const JOB_DONE = ['completed', 'failed'];
 
 function MLModelsPanel() {
+  const { t } = useTranslation();
   const [modelInfo, setModelInfo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [datasets, setDatasets] = useState([]);
@@ -1041,15 +1050,15 @@ function MLModelsPanel() {
   };
 
   const handleRetrain = async () => {
-    if (!confirm('Start model retraining? This runs in the background and may take several minutes.')) return;
+    if (!confirm(t('admin.ml.confirmRetrain'))) return;
     setStarting(true);
     try {
       const res = await adminAPI.retrainModels(selectedDataset || undefined);
       const jobId = res.data.data.job_id;
-      setJob({ id: jobId, status: 'running', progress: 1, stage: 'Starting' });
+      setJob({ id: jobId, status: 'running', progress: 1, stage: t('admin.ml.stageStarting') });
       startPolling(jobId);
     } catch (err) {
-      alert(err.response?.data?.error || 'Failed to start retraining.');
+      alert(err.response?.data?.error || t('admin.ml.retrainFailed'));
     } finally { setStarting(false); }
   };
 
@@ -1062,7 +1071,7 @@ function MLModelsPanel() {
       const res = await adminAPI.mlPredict(testText);
       setTestResult(res.data.data);
     } catch (err) {
-      alert(err.response?.data?.error || 'Prediction failed.');
+      alert(err.response?.data?.error || t('admin.ml.predictionFailed'));
     }
     finally { setTesting(false); }
   };
@@ -1077,19 +1086,19 @@ function MLModelsPanel() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center flex-wrap gap-3">
-        <h2 className="text-2xl font-extrabold text-slate-900 flex items-center gap-2"><Brain className="w-6 h-6 text-brand-600" /> ML Models</h2>
+        <h2 className="text-2xl font-extrabold text-slate-900 flex items-center gap-2"><Brain className="w-6 h-6 text-brand-600" /> {t('admin.ml.title')}</h2>
         <div className="flex gap-2 flex-wrap items-center">
           <select value={selectedDataset} onChange={(e) => setSelectedDataset(e.target.value)}
             className="px-3 py-2 rounded-xl border border-slate-300 text-sm font-medium bg-white outline-none focus:ring-2 focus:ring-brand-500">
-            <option value="">Built-in dataset</option>
-            {datasets.map(d => <option key={d.id} value={d.id}>{d.name} ({d.record_count})</option>)}
+            <option value="">{t('admin.ml.builtinDataset')}</option>
+            {datasets.map(d => <option key={d.id} value={d.id}>{t('admin.ml.datasetOption', { name: d.name, count: d.record_count })}</option>)}
           </select>
           <button onClick={fetchModels} className="flex items-center gap-2 px-4 py-2 bg-slate-100 rounded-xl text-sm font-bold hover:bg-slate-200">
-            <RefreshCw className="w-4 h-4" /> Refresh
+            <RefreshCw className="w-4 h-4" /> {t('common.refresh')}
           </button>
           <button onClick={handleRetrain} disabled={starting || jobRunning}
             className="flex items-center gap-2 px-4 py-2 bg-brand-600 text-white rounded-xl text-sm font-bold hover:bg-brand-700 disabled:opacity-50 shadow-md">
-            <Zap className="w-4 h-4" /> {jobRunning ? 'Training…' : starting ? 'Starting…' : 'Retrain Models'}
+            <Zap className="w-4 h-4" /> {jobRunning ? t('admin.ml.training') : starting ? t('admin.ml.starting') : t('admin.ml.retrain')}
           </button>
         </div>
       </div>
@@ -1106,7 +1115,7 @@ function MLModelsPanel() {
               {job.status === 'completed' ? <CheckCircle2 className="w-4 h-4 text-emerald-600" /> :
                job.status === 'failed' ? <AlertTriangle className="w-4 h-4 text-red-600" /> :
                <RefreshCw className="w-4 h-4 text-blue-600 animate-spin" />}
-              <span className="capitalize">{job.status}</span>
+              <span className="capitalize">{t(`common.verdict.${job.status}`, { defaultValue: job.status })}</span>
               {job.stage && <span className="text-slate-500 font-medium">· {job.stage}</span>}
             </p>
             <span className="text-sm font-bold tabular-nums">{job.progress || 0}%</span>
@@ -1125,7 +1134,7 @@ function MLModelsPanel() {
       <div className={`rounded-2xl p-4 border ${modelInfo?.all_ready ? 'bg-emerald-50 border-emerald-200' : 'bg-amber-50 border-amber-200'}`}>
         <p className={`text-sm font-bold flex items-center gap-2 ${modelInfo?.all_ready ? 'text-emerald-700' : 'text-amber-700'}`}>
           <ShieldCheck className="w-4 h-4" />
-          {modelInfo?.all_ready ? 'All models are trained and ready for inference.' : 'Some models are missing. Retrain before running analyses.'}
+          {modelInfo?.all_ready ? t('admin.ml.allReady') : t('admin.ml.someMissing')}
         </p>
       </div>
 
@@ -1145,7 +1154,7 @@ function MLModelsPanel() {
                   <div className="p-2 bg-brand-50 rounded-lg text-brand-600">{m.icon}</div>
                   <div>
                     <p className="font-bold text-slate-900">{m.name}</p>
-                    <p className="text-xs text-slate-500">Weight: {((m.weight || 0) * 100).toFixed(0)}%</p>
+                    <p className="text-xs text-slate-500">{t('admin.ml.weight', { value: ((m.weight || 0) * 100).toFixed(0) })}</p>
                   </div>
                 </div>
                 <span className={`w-3 h-3 rounded-full ${available ? 'bg-emerald-500' : 'bg-red-400'}`} />
@@ -1153,10 +1162,10 @@ function MLModelsPanel() {
               {met.accuracy !== undefined ? (
                 <div className="space-y-2">
                   {[
-                    { label: 'Accuracy', value: met.accuracy },
-                    { label: 'Precision', value: met.precision },
-                    { label: 'Recall', value: met.recall },
-                    { label: 'F1 Score', value: met.f1_score },
+                    { label: t('admin.ml.accuracy'), value: met.accuracy },
+                    { label: t('admin.ml.precision'), value: met.precision },
+                    { label: t('admin.ml.recall'), value: met.recall },
+                    { label: t('admin.ml.f1Score'), value: met.f1_score },
                   ].map(s => (
                     <div key={s.label} className="flex justify-between items-center">
                       <span className="text-xs text-slate-500">{s.label}</span>
@@ -1169,11 +1178,11 @@ function MLModelsPanel() {
                     </div>
                   ))}
                   {met.training_time && (
-                    <p className="text-xs text-slate-400 mt-2">Trained in {met.training_time}s</p>
+                    <p className="text-xs text-slate-400 mt-2">{t('admin.ml.trainedIn', { seconds: met.training_time })}</p>
                   )}
                 </div>
               ) : (
-                <p className="text-xs text-slate-400">No metrics available</p>
+                <p className="text-xs text-slate-400">{t('admin.ml.noMetrics')}</p>
               )}
             </div>
           );
@@ -1182,13 +1191,13 @@ function MLModelsPanel() {
 
       {/* Quick Test */}
       <div className="glass rounded-2xl p-6 border border-slate-200">
-        <h3 className="text-lg font-bold text-slate-900 mb-4">Quick Model Test</h3>
+        <h3 className="text-lg font-bold text-slate-900 mb-4">{t('admin.ml.quickTest')}</h3>
         <form onSubmit={handleTest} className="space-y-4">
-          <textarea className="w-full h-24 border border-slate-300 rounded-xl p-3 text-sm resize-none" placeholder="Enter text to test against the ML models..."
+          <textarea className="w-full h-24 border border-slate-300 rounded-xl p-3 text-sm resize-none" placeholder={t('admin.ml.testPlaceholder')}
             value={testText} onChange={e => setTestText(e.target.value)} />
           <button type="submit" disabled={testing || !testText.trim()}
             className="px-6 py-2.5 bg-brand-600 text-white rounded-xl text-sm font-bold hover:bg-brand-700 disabled:opacity-50">
-            {testing ? 'Analyzing...' : 'Test Prediction'}
+            {testing ? t('admin.ml.analyzing') : t('admin.ml.testPrediction')}
           </button>
         </form>
         {testResult && (
@@ -1198,8 +1207,8 @@ function MLModelsPanel() {
                 testResult.classification === 'FAKE' ? 'bg-red-100 text-red-700' :
                 testResult.classification === 'REAL' ? 'bg-emerald-100 text-emerald-700' :
                 'bg-amber-100 text-amber-700'
-              }`}>{testResult.classification}</span>
-              <span className="text-sm font-bold text-slate-700">Credibility: {testResult.credibility_score}%</span>
+              }`}>{t(`common.verdict.${(testResult.classification || '').toLowerCase()}`, { defaultValue: testResult.classification })}</span>
+              <span className="text-sm font-bold text-slate-700">{t('admin.ml.credibility', { value: testResult.credibility_score })}</span>
             </div>
             <div className="grid grid-cols-3 gap-2 text-xs">
               <div className="bg-white p-2 rounded-lg border"><span className="text-slate-500">NB:</span> <span className="font-bold">{(testResult.naive_bayes_score * 100).toFixed(1)}%</span></div>
@@ -1218,6 +1227,7 @@ function MLModelsPanel() {
 
 // ─── Alert Rules ───────────────────────────────────────────────────
 function AlertRulesPanel() {
+  const { t } = useTranslation();
   const [rules, setRules] = useState([]);
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState({ name: '', credibility_threshold: 30, is_active: true });
@@ -1244,14 +1254,14 @@ function AlertRulesPanel() {
       return true;
     } catch (err) {
       const data = err.response?.data?.error;
-      setError(typeof data === 'object' ? JSON.stringify(data) : (data || 'Failed to save rule.'));
+      setError(typeof data === 'object' ? JSON.stringify(data) : (data || t('admin.alertRules.saveFailed')));
       return false;
     } finally { setSaving(false); }
   };
 
   const submit = async (e) => {
     e.preventDefault();
-    if (!form.name.trim()) { setError('Rule name is required.'); return; }
+    if (!form.name.trim()) { setError(t('admin.alertRules.nameRequired')); return; }
     const ok = await save({
       name: form.name.trim(),
       credibility_threshold: Number(form.credibility_threshold),
@@ -1275,41 +1285,41 @@ function AlertRulesPanel() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-extrabold text-slate-900 flex items-center gap-2"><SlidersHorizontal className="w-6 h-6 text-brand-600" /> Alert Rules</h2>
-        <p className="text-sm text-slate-500 mt-0.5">Global thresholds that decide when an analysis raises an alert.</p>
+        <h2 className="text-2xl font-extrabold text-slate-900 flex items-center gap-2"><SlidersHorizontal className="w-6 h-6 text-brand-600" /> {t('admin.alertRules.title')}</h2>
+        <p className="text-sm text-slate-500 mt-0.5">{t('admin.alertRules.subtitle')}</p>
       </div>
 
       <div className="rounded-xl bg-blue-50 border border-blue-200 px-4 py-3 text-xs text-blue-800">
-        An alert is raised when an analysis's <strong>credibility score</strong> falls at or below a rule's threshold. Lower threshold = fewer, higher-severity alerts.
+        <Trans i18nKey="admin.alertRules.infoBody" components={[<strong key="0" />]} />
       </div>
 
       {/* Add / update form */}
       <form onSubmit={submit} className="glass rounded-2xl p-5 grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
         <div className="sm:col-span-5">
-          <label className="text-xs font-bold text-slate-600 mb-1 block">Rule name</label>
+          <label className="text-xs font-bold text-slate-600 mb-1 block">{t('admin.alertRules.ruleName')}</label>
           <input value={form.name} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
-            placeholder="e.g. High-risk content"
+            placeholder={t('admin.alertRules.ruleNamePlaceholder')}
             className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none" />
         </div>
         <div className="sm:col-span-3">
-          <label className="text-xs font-bold text-slate-600 mb-1 block">Credibility threshold (%)</label>
+          <label className="text-xs font-bold text-slate-600 mb-1 block">{t('admin.alertRules.threshold')}</label>
           <input type="number" min={0} max={100} value={form.credibility_threshold}
             onChange={(e) => setForm((p) => ({ ...p, credibility_threshold: e.target.value }))}
             className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none" />
         </div>
         <div className="sm:col-span-2">
-          <label className="text-xs font-bold text-slate-600 mb-1 block">Active</label>
+          <label className="text-xs font-bold text-slate-600 mb-1 block">{t('admin.alertRules.active')}</label>
           <label className="inline-flex items-center gap-2 h-[38px]">
             <input type="checkbox" checked={form.is_active}
               onChange={(e) => setForm((p) => ({ ...p, is_active: e.target.checked }))}
               className="w-4 h-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500" />
-            <span className="text-sm text-slate-600">{form.is_active ? 'On' : 'Off'}</span>
+            <span className="text-sm text-slate-600">{form.is_active ? t('admin.alertRules.on') : t('admin.alertRules.off')}</span>
           </label>
         </div>
         <div className="sm:col-span-2">
           <button type="submit" disabled={saving}
             className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg font-bold text-sm shadow-sm disabled:opacity-50">
-            {saving ? '…' : <><Save className="w-4 h-4" /> Save</>}
+            {saving ? '…' : <><Save className="w-4 h-4" /> {t('common.save')}</>}
           </button>
         </div>
         {error && <p className="sm:col-span-12 text-xs text-red-600 font-medium">{error}</p>}
@@ -1322,10 +1332,10 @@ function AlertRulesPanel() {
           <table className="min-w-full divide-y divide-slate-200">
             <thead className="bg-slate-50">
               <tr>
-                <th className="px-6 py-3 text-left text-[11px] font-bold text-slate-500 uppercase">Rule</th>
-                <th className="px-6 py-3 text-right text-[11px] font-bold text-slate-500 uppercase">Threshold</th>
-                <th className="px-6 py-3 text-left text-[11px] font-bold text-slate-500 uppercase">Status</th>
-                <th className="px-6 py-3 text-right text-[11px] font-bold text-slate-500 uppercase">Actions</th>
+                <th className="px-6 py-3 text-left text-[11px] font-bold text-slate-500 uppercase">{t('admin.alertRules.colRule')}</th>
+                <th className="px-6 py-3 text-right text-[11px] font-bold text-slate-500 uppercase">{t('admin.alertRules.colThreshold')}</th>
+                <th className="px-6 py-3 text-left text-[11px] font-bold text-slate-500 uppercase">{t('admin.alertRules.colStatus')}</th>
+                <th className="px-6 py-3 text-right text-[11px] font-bold text-slate-500 uppercase">{t('admin.alertRules.colActions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 bg-white">
@@ -1336,12 +1346,12 @@ function AlertRulesPanel() {
                   <td className="px-6 py-4">
                     <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-bold border ${r.is_active ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-600 border-slate-200'}`}>
                       <span className={`w-1.5 h-1.5 rounded-full ${r.is_active ? 'bg-emerald-500' : 'bg-slate-400'}`} />
-                      {r.is_active ? 'Active' : 'Inactive'}
+                      {r.is_active ? t('admin.alertRules.activeStatus') : t('admin.alertRules.inactiveStatus')}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-right whitespace-nowrap">
-                    <button onClick={() => editRule(r)} className="text-xs font-bold text-brand-600 hover:text-brand-700 px-2 py-1 rounded hover:bg-brand-50">Edit</button>
-                    <button onClick={() => toggleActive(r)} className="text-xs font-bold text-slate-600 hover:text-slate-800 px-2 py-1 rounded hover:bg-slate-100">{r.is_active ? 'Disable' : 'Enable'}</button>
+                    <button onClick={() => editRule(r)} className="text-xs font-bold text-brand-600 hover:text-brand-700 px-2 py-1 rounded hover:bg-brand-50">{t('common.edit')}</button>
+                    <button onClick={() => toggleActive(r)} className="text-xs font-bold text-slate-600 hover:text-slate-800 px-2 py-1 rounded hover:bg-slate-100">{r.is_active ? t('admin.alertRules.disable') : t('admin.alertRules.enable')}</button>
                   </td>
                 </tr>
               ))}
@@ -1351,7 +1361,7 @@ function AlertRulesPanel() {
       ) : (
         <div className="glass rounded-2xl p-12 text-center">
           <SlidersHorizontal className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-          <p className="text-slate-500">No alert rules yet. Add one above.</p>
+          <p className="text-slate-500">{t('admin.alertRules.empty')}</p>
         </div>
       )}
     </div>
@@ -1360,6 +1370,7 @@ function AlertRulesPanel() {
 
 // ─── Main Admin Dashboard ──────────────────────────────────────────
 const AdminDashboard = () => {
+  const { t } = useTranslation();
   const location = useLocation();
   const currentPath = location.pathname.split('/admin/')[1] || 'health';
 
@@ -1367,7 +1378,7 @@ const AdminDashboard = () => {
     <div className="flex flex-col gap-6">
       <div className="flex items-center gap-2">
         <AlertTriangle className="w-5 h-5 text-red-500" />
-        <span className="text-xs font-bold text-red-600 bg-red-50 px-2 py-1 rounded-full">ADMIN</span>
+        <span className="text-xs font-bold text-red-600 bg-red-50 px-2 py-1 rounded-full">{t('admin.badge')}</span>
       </div>
 
       {currentPath === 'health' && <HealthPanel />}

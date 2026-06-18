@@ -1,14 +1,16 @@
 import { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
+import { useTranslation, Trans } from 'react-i18next';
 import { FileText, Link as LinkIcon, UploadCloud, Search, CheckCircle, AlertTriangle, ShieldAlert, ChevronRight, Download, Share2, Flag, FileCheck } from 'lucide-react';
 import { analysisAPI } from '../services/api';
 
-const stages = [
-  "Input Validation", "Content Fetching", "Preprocessing",
-  "Feature Extraction", "Model Inference", "Score Generation", "Persistence & Notify"
+const stageKeys = [
+  "inputValidation", "contentFetching", "preprocessing",
+  "featureExtraction", "modelInference", "scoreGeneration", "persistenceNotify"
 ];
 
 const AnalyzePage = () => {
+  const { t } = useTranslation();
   const location = useLocation();
   const [activeTab, setActiveTab] = useState('text');
   const [inputVal, setInputVal] = useState(location.state?.text || '');
@@ -34,7 +36,7 @@ const AnalyzePage = () => {
         const data = res.data.data;
         const stage = data.current_stage || 0;
         setCurrentStage(stage > 0 ? stage - 1 : 0);
-        setProgress(Math.min((stage / stages.length) * 100, 100));
+        setProgress(Math.min((stage / stageKeys.length) * 100, 100));
 
         if (data.status === 'completed') {
           clearInterval(pollRef.current);
@@ -43,12 +45,12 @@ const AnalyzePage = () => {
           setIsAnalyzing(false);
         } else if (data.status === 'failed') {
           clearInterval(pollRef.current);
-          setError(data.error_message || 'Analysis failed.');
+          setError(data.error_message || t('analyze.errors.analysisFailed'));
           setIsAnalyzing(false);
         }
       } catch {
         clearInterval(pollRef.current);
-        setError('Failed to poll analysis status.');
+        setError(t('analyze.errors.pollFailed'));
         setIsAnalyzing(false);
       }
     }, 1000);
@@ -89,14 +91,14 @@ const AnalyzePage = () => {
         const fullRes = await analysisAPI.getResult(analysisData.id);
         setResult(fullRes.data.data);
         setProgress(100);
-        setCurrentStage(stages.length - 1);
+        setCurrentStage(stageKeys.length - 1);
         setIsAnalyzing(false);
       } else {
         pollStatus(analysisData.id);
       }
     } catch (err) {
       const msg = err.response?.data?.error;
-      setError(typeof msg === 'string' ? msg : JSON.stringify(msg) || 'Submission failed.');
+      setError(typeof msg === 'string' ? msg : JSON.stringify(msg) || t('analyze.errors.submissionFailed'));
       setIsAnalyzing(false);
     }
   };
@@ -131,33 +133,40 @@ const AnalyzePage = () => {
   };
 
   const getRiskBand = (score) => {
-    if (score <= 40) return { label: 'HIGH RISK', color: 'text-red-600' };
-    if (score <= 60) return { label: 'UNCERTAIN', color: 'text-amber-600' };
-    return { label: 'CREDIBLE', color: 'text-emerald-600' };
+    if (score <= 40) return { label: t('analyze.result.band.highRisk'), color: 'text-red-600' };
+    if (score <= 60) return { label: t('analyze.result.band.uncertain'), color: 'text-amber-600' };
+    return { label: t('analyze.result.band.credible'), color: 'text-emerald-600' };
   };
 
   // Confidence now reflects the model's certainty in its predicted class, so
   // word it relative to the verdict instead of a bare percentage.
   const confidenceLabel = (cls) => {
-    if (cls === 'FAKE') return 'likely fake';
-    if (cls === 'REAL') return 'likely credible';
-    return 'leaning either way';
+    if (cls === 'FAKE') return t('analyze.result.confidenceLabel.fake');
+    if (cls === 'REAL') return t('analyze.result.confidenceLabel.real');
+    return t('analyze.result.confidenceLabel.uncertain');
+  };
+
+  // Map the backend classification to a localized verdict label.
+  const verdictLabel = (cls) => {
+    if (cls === 'FAKE') return t('common.verdict.fake');
+    if (cls === 'REAL') return t('common.verdict.real');
+    return t('common.verdict.uncertain');
   };
 
   return (
     <div className="max-w-5xl mx-auto flex flex-col gap-8">
       <div>
-        <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">AI Content Analysis</h1>
-        <p className="text-slate-500 font-medium mt-1">Submit an article or URL to verify its credibility against our ML ensemble.</p>
+        <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">{t('analyze.title')}</h1>
+        <p className="text-slate-500 font-medium mt-1">{t('analyze.subtitle')}</p>
       </div>
 
       {/* Input Section */}
       <div className="glass rounded-3xl p-8 shadow-sm">
         <div className="flex space-x-1 p-1 bg-slate-100 rounded-xl mb-6 max-w-md">
           {[
-            { id: 'text', label: 'Paste Text', icon: <FileText className="w-4 h-4 mr-2" /> },
-            { id: 'url', label: 'Enter URL', icon: <LinkIcon className="w-4 h-4 mr-2" /> },
-            { id: 'file', label: 'Upload File', icon: <UploadCloud className="w-4 h-4 mr-2" /> }
+            { id: 'text', label: t('analyze.tabs.text'), icon: <FileText className="w-4 h-4 mr-2" /> },
+            { id: 'url', label: t('analyze.tabs.url'), icon: <LinkIcon className="w-4 h-4 mr-2" /> },
+            { id: 'file', label: t('analyze.tabs.file'), icon: <UploadCloud className="w-4 h-4 mr-2" /> }
           ].map((tab) => (
             <button key={tab.id}
               onClick={() => { setActiveTab(tab.id); setInputVal(''); setSelectedFile(null); }}
@@ -177,11 +186,11 @@ const AnalyzePage = () => {
 
           {activeTab === 'text' && (
             <textarea className="w-full h-48 border border-slate-300 rounded-xl p-4 text-slate-900 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 resize-none shadow-sm"
-              placeholder="Paste the full article text here (min 50 characters)..." value={inputVal} onChange={(e) => setInputVal(e.target.value)} required />
+              placeholder={t('analyze.textPlaceholder')} value={inputVal} onChange={(e) => setInputVal(e.target.value)} required />
           )}
           {activeTab === 'url' && (
             <input type="url" className="w-full border border-slate-300 rounded-xl p-4 text-slate-900 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 shadow-sm"
-              placeholder="https://example.com/news-article" value={inputVal} onChange={(e) => setInputVal(e.target.value)} required />
+              placeholder={t('analyze.urlPlaceholder')} value={inputVal} onChange={(e) => setInputVal(e.target.value)} required />
           )}
           {activeTab === 'file' && (
             <div className="border-2 border-dashed border-slate-300 rounded-xl p-12 text-center hover:bg-slate-50 hover:border-brand-400 transition-colors cursor-pointer group flex flex-col items-center justify-center"
@@ -191,19 +200,19 @@ const AnalyzePage = () => {
               <div className="p-4 bg-brand-50 rounded-full group-hover:scale-110 transition-transform mb-4">
                 <UploadCloud className="w-8 h-8 text-brand-500" />
               </div>
-              <p className="text-slate-700 font-bold">{selectedFile ? selectedFile.name : 'Click to upload or drag and drop'}</p>
-              <p className="text-slate-500 text-sm mt-1">.txt or .pdf up to 10MB</p>
+              <p className="text-slate-700 font-bold">{selectedFile ? selectedFile.name : t('analyze.fileDropPrompt')}</p>
+              <p className="text-slate-500 text-sm mt-1">{t('analyze.fileHint')}</p>
             </div>
           )}
 
           <details className="group cursor-pointer">
             <summary className="text-sm font-bold text-slate-600 flex items-center hover:text-brand-600 transition-colors w-max list-none">
-              <ChevronRight className="w-4 h-4 mr-1 transition-transform group-open:rotate-90" /> Add Optional Metadata
+              <ChevronRight className="w-4 h-4 mr-1 transition-transform group-open:rotate-90" /> {t('analyze.metadata.toggle')}
             </summary>
             <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 pl-5">
-              <input type="text" placeholder="Source Name" value={sourceName} onChange={(e) => setSourceName(e.target.value)}
+              <input type="text" placeholder={t('analyze.metadata.sourceName')} value={sourceName} onChange={(e) => setSourceName(e.target.value)}
                 className="border border-slate-300 rounded-lg p-3 text-sm focus:ring-brand-500 focus:border-brand-500" />
-              <input type="text" placeholder="Author" value={author} onChange={(e) => setAuthor(e.target.value)}
+              <input type="text" placeholder={t('analyze.metadata.author')} value={author} onChange={(e) => setAuthor(e.target.value)}
                 className="border border-slate-300 rounded-lg p-3 text-sm focus:ring-brand-500 focus:border-brand-500" />
               <input type="date" value={pubDate} onChange={(e) => setPubDate(e.target.value)}
                 className="border border-slate-300 rounded-lg p-3 text-sm focus:ring-brand-500 focus:border-brand-500 text-slate-500" />
@@ -215,9 +224,9 @@ const AnalyzePage = () => {
               isAnalyzing || (!inputVal && activeTab !== 'file') ? 'bg-slate-300 text-slate-500 cursor-not-allowed' : 'bg-brand-600 text-white hover:bg-brand-700 shadow-md hover:shadow-lg'
             }`}>
             {isAnalyzing ? (
-              <span className="flex items-center gap-2"><div className="animate-spin rounded-full h-4 w-4 border-2 border-white/20 border-t-white" /> Processing Pipeline...</span>
+              <span className="flex items-center gap-2"><div className="animate-spin rounded-full h-4 w-4 border-2 border-white/20 border-t-white" /> {t('analyze.processing')}</span>
             ) : (
-              <span className="flex items-center gap-2"><Search className="w-5 h-5" /> Analyze Content</span>
+              <span className="flex items-center gap-2"><Search className="w-5 h-5" /> {t('analyze.analyzeButton')}</span>
             )}
           </button>
         </form>
@@ -227,14 +236,14 @@ const AnalyzePage = () => {
       {isAnalyzing && (
         <div className="glass rounded-3xl p-8 shadow-sm border-t-4 border-t-brand-500">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="font-bold text-slate-900">ML Pipeline Execution</h3>
+            <h3 className="font-bold text-slate-900">{t('analyze.pipeline.heading')}</h3>
             <span className="text-sm font-bold text-brand-600">{Math.round(progress)}%</span>
           </div>
           <div className="w-full bg-slate-200 rounded-full h-2.5 mb-6 overflow-hidden">
             <div className="bg-brand-500 h-2.5 rounded-full transition-all duration-300 ease-out" style={{ width: `${progress}%` }}></div>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2">
-            {stages.map((stage, idx) => (
+            {stageKeys.map((stageKey, idx) => (
               <div key={idx} className={`flex flex-col items-center text-center gap-2 p-2 rounded-lg transition-colors ${idx === currentStage ? 'bg-brand-50' : ''}`}>
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold border-2 transition-colors ${
                   idx < currentStage ? 'bg-emerald-500 border-emerald-500 text-white' :
@@ -243,8 +252,8 @@ const AnalyzePage = () => {
                 }`}>
                   {idx < currentStage ? <CheckCircle className="w-5 h-5" /> : (idx + 1)}
                 </div>
-                <span className={`text-xs font-medium ${idx <= currentStage ? 'text-slate-800' : 'text-slate-400'}`}>{stage}</span>
-                {idx === currentStage && <span className="text-[10px] text-brand-500 animate-pulse font-bold mt-[-4px]">Running</span>}
+                <span className={`text-xs font-medium ${idx <= currentStage ? 'text-slate-800' : 'text-slate-400'}`}>{t(`analyze.pipeline.stages.${stageKey}`)}</span>
+                {idx === currentStage && <span className="text-[10px] text-brand-500 animate-pulse font-bold mt-[-4px]">{t('analyze.pipeline.running')}</span>}
               </div>
             ))}
           </div>
@@ -265,18 +274,18 @@ const AnalyzePage = () => {
                result.classification === 'REAL' ? <CheckCircle className="w-8 h-8 text-emerald-600" /> :
                <AlertTriangle className="w-8 h-8 text-amber-600" />}
               <div>
-                <h2 className="text-xl font-extrabold tracking-tight">Classification: {result.classification}</h2>
-                <p className="text-sm font-medium opacity-80 mt-0.5">{result.confidence ? Math.round(result.confidence) : 0}% {confidenceLabel(result.classification)} <span className="opacity-60">(model certainty)</span></p>
+                <h2 className="text-xl font-extrabold tracking-tight">{t('analyze.result.classification', { verdict: verdictLabel(result.classification) })}</h2>
+                <p className="text-sm font-medium opacity-80 mt-0.5">{t('analyze.result.confidence', { percent: result.confidence ? Math.round(result.confidence) : 0, label: confidenceLabel(result.classification) })} <span className="opacity-60">{t('analyze.result.modelCertainty')}</span></p>
               </div>
             </div>
             <div className="flex gap-2">
-              <button onClick={handleExportPDF} className="p-2 rounded-lg bg-white/50 hover:bg-white text-slate-700 font-bold transition-colors border border-slate-200 shadow-sm" title="Export PDF">
+              <button onClick={handleExportPDF} className="p-2 rounded-lg bg-white/50 hover:bg-white text-slate-700 font-bold transition-colors border border-slate-200 shadow-sm" title={t('analyze.result.exportPDF')}>
                 <Download className="w-5 h-5" />
               </button>
-              <button className="p-2 rounded-lg bg-white/50 hover:bg-white text-slate-700 font-bold transition-colors border border-slate-200 shadow-sm" title="Share">
+              <button className="p-2 rounded-lg bg-white/50 hover:bg-white text-slate-700 font-bold transition-colors border border-slate-200 shadow-sm" title={t('analyze.result.share')}>
                 <Share2 className="w-5 h-5" />
               </button>
-              <button onClick={handleFlag} className={`p-2 rounded-lg bg-white/50 hover:bg-white font-bold transition-colors border border-slate-200 shadow-sm ${result.is_flagged_for_review ? 'text-red-600' : 'text-slate-500'}`} title="Flag manually">
+              <button onClick={handleFlag} className={`p-2 rounded-lg bg-white/50 hover:bg-white font-bold transition-colors border border-slate-200 shadow-sm ${result.is_flagged_for_review ? 'text-red-600' : 'text-slate-500'}`} title={t('analyze.result.flag')}>
                 <Flag className="w-5 h-5" />
               </button>
             </div>
@@ -285,7 +294,7 @@ const AnalyzePage = () => {
           <div className="p-8 grid grid-cols-1 lg:grid-cols-3 gap-8 bg-white">
             {/* Score Gauge */}
             <div className="flex flex-col items-center justify-center p-6 border border-slate-100 rounded-2xl bg-slate-50/50">
-              <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-6">Credibility Score</h3>
+              <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-6">{t('analyze.result.credibilityScore')}</h3>
               <div className="relative w-48 h-48 flex items-center justify-center">
                 <svg viewBox="0 0 36 36" className="w-full h-full transform -rotate-90">
                   <path className="text-slate-200" strokeWidth="3" stroke="currentColor" fill="none"
@@ -296,11 +305,15 @@ const AnalyzePage = () => {
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
                   <span className="text-5xl font-extrabold text-slate-900">{Math.round(result.credibility_score)}</span>
-                  <span className="text-sm font-bold text-slate-500 mt-1">/ 100</span>
+                  <span className="text-sm font-bold text-slate-500 mt-1">{t('analyze.result.scoreMax')}</span>
                 </div>
               </div>
               <p className="mt-6 text-sm font-medium text-slate-600 text-center">
-                Score falls into the <strong className={getRiskBand(result.credibility_score).color}>{getRiskBand(result.credibility_score).label}</strong> band.
+                <Trans
+                  i18nKey="analyze.result.bandSummary"
+                  values={{ band: getRiskBand(result.credibility_score).label }}
+                  components={{ 1: <strong className={getRiskBand(result.credibility_score).color} /> }}
+                />
               </p>
             </div>
 
@@ -308,22 +321,22 @@ const AnalyzePage = () => {
             <div className="col-span-1 lg:col-span-2 flex flex-col gap-6">
               <div className="grid grid-cols-2 gap-4">
                 <div className="border border-slate-200 rounded-xl p-4">
-                  <p className="text-xs font-bold text-slate-500 uppercase">Sentiment Score</p>
-                  <p className="font-bold text-slate-900 mt-1">{result.sentiment_score != null ? result.sentiment_score.toFixed(2) : 'N/A'}</p>
+                  <p className="text-xs font-bold text-slate-500 uppercase">{t('analyze.result.sentimentScore')}</p>
+                  <p className="font-bold text-slate-900 mt-1">{result.sentiment_score != null ? result.sentiment_score.toFixed(2) : t('analyze.result.notAvailable')}</p>
                 </div>
                 <div className="border border-slate-200 rounded-xl p-4">
-                  <p className="text-xs font-bold text-slate-500 uppercase">Emotional Tone</p>
-                  <p className="font-bold text-slate-900 mt-1">{result.emotional_tone || 'N/A'}</p>
+                  <p className="text-xs font-bold text-slate-500 uppercase">{t('analyze.result.emotionalTone')}</p>
+                  <p className="font-bold text-slate-900 mt-1">{result.emotional_tone || t('analyze.result.notAvailable')}</p>
                 </div>
                 <div className="border border-slate-200 rounded-xl p-4">
-                  <p className="text-xs font-bold text-slate-500 uppercase mb-2">Sensationalism Index</p>
+                  <p className="text-xs font-bold text-slate-500 uppercase mb-2">{t('analyze.result.sensationalismIndex')}</p>
                   <div className="w-full bg-slate-200 rounded-full h-2 mb-1">
                     <div className="bg-amber-500 h-2 rounded-full" style={{ width: `${(result.sensationalism_score || 0) * 100}%` }}></div>
                   </div>
                   <p className="text-right text-xs font-bold text-amber-600">{result.sensationalism_score != null ? Math.round(result.sensationalism_score * 100) : 0}%</p>
                 </div>
                 <div className="border border-slate-200 rounded-xl p-4">
-                  <p className="text-xs font-bold text-slate-500 uppercase mb-2">Headline Consistency</p>
+                  <p className="text-xs font-bold text-slate-500 uppercase mb-2">{t('analyze.result.headlineConsistency')}</p>
                   <div className="w-full bg-slate-200 rounded-full h-2 mb-1">
                     <div className="bg-blue-500 h-2 rounded-full" style={{ width: `${(result.headline_body_consistency || 0) * 100}%` }}></div>
                   </div>
@@ -334,7 +347,7 @@ const AnalyzePage = () => {
               {/* Explainability */}
               <div className="bg-slate-50 rounded-xl p-5 border border-slate-200 flex-1">
                 <h3 className="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
-                  <FileCheck className="w-4 h-4 text-brand-500" /> Why was this flagged?
+                  <FileCheck className="w-4 h-4 text-brand-500" /> {t('analyze.result.whyFlagged')}
                 </h3>
                 <ul className="space-y-3">
                   {(result.flagging_reasons || []).map((reason, idx) => (

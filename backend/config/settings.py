@@ -60,6 +60,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    # Localize JSON API messages (English / Kinyarwanda) by Accept-Language.
+    'config.i18n_api.ApiMessageTranslationMiddleware',
 ]
 
 ROOT_URLCONF = 'config.urls'

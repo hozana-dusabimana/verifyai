@@ -1,0 +1,31 @@
+{
+  "history": {
+    "title": "Analysis History",
+    "subtitle": "Browse and filter all your past analysis results.",
+    "subtitleOrg": "Browse and filter analyses across your organization.",
+    "scope": {
+      "own": "My analyses",
+      "org": "Organization"
+    },
+    "searchPlaceholder": "Search by title…",
+    "allJournalists": "All journalists",
+    "allResults": "All Results",
+    "col": {
+      "article": "Article",
+      "submittedBy": "Submitted by",
+      "source": "Source",
+      "result": "Result",
+      "date": "Date",
+      "actions": "Actions"
+    },
+    "untitled": "Untitled",
+    "inputType": "{{type}} input",
+    "exportCsv": "Export CSV",
+    "totalResults_one": "{{count}} total result",
+    "totalResults_other": "{{count}} total results",
+    "pageOf": "Page {{page}} of {{total}}",
+    "prevPage": "Previous page",
+    "nextPage": "Next page",
+    "empty": "No analyses found. Start by analyzing some content."
+  }
+}

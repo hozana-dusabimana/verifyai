@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation, Trans } from 'react-i18next';
 import {
   Mail, Lock, User, Building, ArrowRight, ArrowLeft, Eye, EyeOff,
   Check, Newspaper, Users, ShieldCheck, Lock as LockIcon, Info,
@@ -9,26 +10,32 @@ import { useAuth } from '../contexts/AuthContext';
 const ROLES = [
   {
     value: 'citizen',
-    label: 'Citizen',
     icon: Users,
     accent: 'brand',
-    tagline: 'Personal use — verify before you share.',
-    bullets: ['Quick "Is it real?" checks', 'Personal trust score', 'Daily verification tips'],
+    taglineKey: 'register.roles.citizen.tagline',
+    bulletKeys: [
+      'register.roles.citizen.bullets.checks',
+      'register.roles.citizen.bullets.trust',
+      'register.roles.citizen.bullets.tips',
+    ],
   },
   {
     value: 'journalist',
-    label: 'Journalist',
     icon: Newspaper,
     accent: 'blue',
-    tagline: 'Newsroom workflow — vet sources and track narratives.',
-    bullets: ['Source reliability matrix', 'Disinfo narrative tracker', 'PDF citation export'],
+    taglineKey: 'register.roles.journalist.tagline',
+    bulletKeys: [
+      'register.roles.journalist.bullets.matrix',
+      'register.roles.journalist.bullets.tracker',
+      'register.roles.journalist.bullets.export',
+    ],
   },
 ];
 
 const STEPS = [
-  { num: 1, label: 'Identity' },
-  { num: 2, label: 'Role' },
-  { num: 3, label: 'Security' },
+  { num: 1, labelKey: 'register.steps.identity' },
+  { num: 2, labelKey: 'register.steps.role' },
+  { num: 3, labelKey: 'register.steps.security' },
 ];
 
 const calculateStrength = (pass) => {
@@ -40,7 +47,9 @@ const calculateStrength = (pass) => {
   return score;
 };
 
-const Stepper = ({ current }) => (
+const Stepper = ({ current }) => {
+  const { t } = useTranslation();
+  return (
   <div className="flex items-center justify-center gap-2 mb-8">
     {STEPS.map((step, idx) => {
       const isDone = current > step.num;
@@ -64,7 +73,7 @@ const Stepper = ({ current }) => (
                 isActive ? 'text-brand-700' : isDone ? 'text-slate-700' : 'text-slate-400'
               }`}
             >
-              {step.label}
+              {t(step.labelKey)}
             </span>
           </div>
           {idx < STEPS.length - 1 && (
@@ -78,7 +87,8 @@ const Stepper = ({ current }) => (
       );
     })}
   </div>
-);
+  );
+};
 
 const ROLE_ACCENTS = {
   brand: {
@@ -92,6 +102,7 @@ const ROLE_ACCENTS = {
 };
 
 const RegisterPage = () => {
+  const { t } = useTranslation();
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     first_name: '',
@@ -151,7 +162,7 @@ const RegisterPage = () => {
     try {
       await register(formData);
       navigate('/login', {
-        state: { message: 'Registration successful! Please check your email to verify your account.' },
+        state: { message: t('register.successMessage') },
       });
     } catch (err) {
       const data = err.response?.data?.error;
@@ -161,7 +172,7 @@ const RegisterPage = () => {
         );
         setError(messages.join(' | '));
       } else {
-        setError(data || 'Registration failed.');
+        setError(data || t('register.failed'));
       }
     } finally {
       setLoading(false);
@@ -180,8 +191,8 @@ const RegisterPage = () => {
 
         <div className="relative z-10">
           <div className="text-center mb-2">
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Create your account</h2>
-            <p className="mt-1.5 text-sm text-slate-500 font-medium">Three quick steps to start verifying.</p>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">{t('register.title')}</h2>
+            <p className="mt-1.5 text-sm text-slate-500 font-medium">{t('register.subtitle')}</p>
           </div>
 
           <Stepper current={step} />
@@ -205,7 +216,7 @@ const RegisterPage = () => {
                       name="first_name"
                       type="text"
                       required
-                      placeholder="First name"
+                      placeholder={t('register.fields.firstName')}
                       autoComplete="given-name"
                       className={inputCls}
                       value={formData.first_name}
@@ -220,7 +231,7 @@ const RegisterPage = () => {
                       name="last_name"
                       type="text"
                       required
-                      placeholder="Last name"
+                      placeholder={t('register.fields.lastName')}
                       autoComplete="family-name"
                       className={inputCls}
                       value={formData.last_name}
@@ -237,7 +248,7 @@ const RegisterPage = () => {
                     name="email"
                     type="email"
                     required
-                    placeholder="Email address"
+                    placeholder={t('register.fields.email')}
                     autoComplete="email"
                     className={inputCls}
                     value={formData.email}
@@ -252,7 +263,7 @@ const RegisterPage = () => {
                     disabled={!canAdvanceFromStep1}
                     className="inline-flex items-center gap-2 px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl font-bold shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Continue <ArrowRight className="h-4 w-4" />
+                    {t('register.continue')} <ArrowRight className="h-4 w-4" />
                   </button>
                 </div>
               </div>
@@ -262,8 +273,8 @@ const RegisterPage = () => {
             {step === 2 && (
               <div className="space-y-5">
                 <div>
-                  <h3 className="text-base font-bold text-slate-900">How will you use VerifyAI?</h3>
-                  <p className="text-sm text-slate-500 mt-0.5">Pick the experience that fits you best — you can request a role change later.</p>
+                  <h3 className="text-base font-bold text-slate-900">{t('register.step2.heading')}</h3>
+                  <p className="text-sm text-slate-500 mt-0.5">{t('register.step2.subtitle')}</p>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -290,12 +301,12 @@ const RegisterPage = () => {
                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 ${accent.icon}`}>
                           <Icon className="w-5 h-5" />
                         </div>
-                        <p className="text-sm font-bold text-slate-900">{r.label}</p>
-                        <p className="text-xs text-slate-600 mt-0.5 leading-snug">{r.tagline}</p>
+                        <p className="text-sm font-bold text-slate-900">{t(`common.roles.${r.value}`)}</p>
+                        <p className="text-xs text-slate-600 mt-0.5 leading-snug">{t(r.taglineKey)}</p>
                         <ul className="mt-3 space-y-1">
-                          {r.bullets.map((b) => (
-                            <li key={b} className="text-[11px] text-slate-500 flex items-center gap-1.5">
-                              <Check className="w-3 h-3 text-brand-500 flex-shrink-0" /> {b}
+                          {r.bulletKeys.map((bk) => (
+                            <li key={bk} className="text-[11px] text-slate-500 flex items-center gap-1.5">
+                              <Check className="w-3 h-3 text-brand-500 flex-shrink-0" /> {t(bk)}
                             </li>
                           ))}
                         </ul>
@@ -307,8 +318,10 @@ const RegisterPage = () => {
                 <div className="flex items-start gap-2 p-3 bg-slate-50 border border-slate-200 rounded-xl">
                   <Info className="w-4 h-4 text-slate-500 flex-shrink-0 mt-0.5" />
                   <p className="text-xs text-slate-600 leading-relaxed">
-                    <span className="font-bold text-slate-700">Media House and Admin accounts</span> are provisioned by a platform administrator.
-                    If your organization needs one, please contact your admin after creating a Citizen account.
+                    <Trans
+                      i18nKey="register.step2.notice"
+                      components={{ bold: <span className="font-bold text-slate-700" /> }}
+                    />
                   </p>
                 </div>
 
@@ -318,7 +331,7 @@ const RegisterPage = () => {
                     onClick={goBack}
                     className="inline-flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-300 text-slate-700 rounded-xl font-semibold hover:bg-slate-50 transition-colors"
                   >
-                    <ArrowLeft className="h-4 w-4" /> Back
+                    <ArrowLeft className="h-4 w-4" /> {t('common.back')}
                   </button>
                   <button
                     type="button"
@@ -326,7 +339,7 @@ const RegisterPage = () => {
                     disabled={!canAdvanceFromStep2}
                     className="inline-flex items-center gap-2 px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl font-bold shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Continue <ArrowRight className="h-4 w-4" />
+                    {t('register.continue')} <ArrowRight className="h-4 w-4" />
                   </button>
                 </div>
               </div>
@@ -337,10 +350,12 @@ const RegisterPage = () => {
               <div className="space-y-5">
                 <div>
                   <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                    <ShieldCheck className="w-4 h-4 text-brand-600" /> Secure your account
+                    <ShieldCheck className="w-4 h-4 text-brand-600" /> {t('register.step3.heading')}
                   </h3>
                   <p className="text-sm text-slate-500 mt-0.5">
-                    Choose a strong password{formData.role === 'journalist' ? ' and add your newsroom' : ''}.
+                    {formData.role === 'journalist'
+                      ? t('register.step3.subtitleJournalist')
+                      : t('register.step3.subtitlePlain')}
                   </p>
                 </div>
 
@@ -353,7 +368,7 @@ const RegisterPage = () => {
                       name="organization"
                       type="text"
                       required
-                      placeholder="Newsroom or publication"
+                      placeholder={t('register.fields.organization')}
                       autoComplete="organization"
                       className={inputCls}
                       value={formData.organization}
@@ -370,7 +385,7 @@ const RegisterPage = () => {
                     name="password"
                     type={showPassword ? 'text' : 'password'}
                     required
-                    placeholder="Password (8+ characters)"
+                    placeholder={t('register.fields.password')}
                     autoComplete="new-password"
                     minLength={8}
                     className={`${inputCls} pr-10`}
@@ -379,6 +394,7 @@ const RegisterPage = () => {
                   />
                   <button
                     type="button"
+                    aria-label={showPassword ? t('register.hidePassword') : t('register.showPassword')}
                     className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600"
                     onClick={() => setShowPassword(!showPassword)}
                     tabIndex={-1}
@@ -404,10 +420,10 @@ const RegisterPage = () => {
                       ))}
                     </div>
                     <p className="text-[11px] font-medium text-slate-500 mt-1.5">
-                      {strength <= 1 ? 'Weak — add length, capitals, numbers, or symbols.'
-                        : strength === 2 ? 'Fair — keep going.'
-                          : strength === 3 ? 'Strong.'
-                            : 'Excellent.'}
+                      {strength <= 1 ? t('register.strength.weak')
+                        : strength === 2 ? t('register.strength.fair')
+                          : strength === 3 ? t('register.strength.strong')
+                            : t('register.strength.excellent')}
                     </p>
                   </div>
                 )}
@@ -420,14 +436,14 @@ const RegisterPage = () => {
                     name="password_confirm"
                     type="password"
                     required
-                    placeholder="Confirm password"
+                    placeholder={t('register.fields.passwordConfirm')}
                     autoComplete="new-password"
                     className={inputCls}
                     value={formData.password_confirm}
                     onChange={handleChange}
                   />
                   {formData.password_confirm && !passwordsMatch && (
-                    <p className="text-red-500 text-xs mt-1 ml-1 font-medium">Passwords do not match</p>
+                    <p className="text-red-500 text-xs mt-1 ml-1 font-medium">{t('register.passwordsMismatch')}</p>
                   )}
                 </div>
 
@@ -437,7 +453,7 @@ const RegisterPage = () => {
                     onClick={goBack}
                     className="inline-flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-300 text-slate-700 rounded-xl font-semibold hover:bg-slate-50 transition-colors"
                   >
-                    <ArrowLeft className="h-4 w-4" /> Back
+                    <ArrowLeft className="h-4 w-4" /> {t('common.back')}
                   </button>
                   <button
                     type="submit"
@@ -447,10 +463,10 @@ const RegisterPage = () => {
                     {loading ? (
                       <>
                         <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/30 border-t-white" />
-                        Creating account…
+                        {t('register.creatingAccount')}
                       </>
                     ) : (
-                      <>Create account <ArrowRight className="h-4 w-4" /></>
+                      <>{t('register.createAccount')} <ArrowRight className="h-4 w-4" /></>
                     )}
                   </button>
                 </div>
@@ -459,9 +475,9 @@ const RegisterPage = () => {
           </form>
 
           <p className="mt-8 text-center text-sm text-slate-500 font-medium">
-            Already have an account?{' '}
+            {t('register.alreadyHaveAccount')}{' '}
             <Link to="/login" className="font-bold text-brand-600 hover:text-brand-500 transition-colors">
-              Sign in instead
+              {t('register.signInInstead')}
             </Link>
           </p>
         </div>

@@ -1,0 +1,63 @@
+{
+  "register": {
+    "title": "Create your account",
+    "subtitle": "Three quick steps to start verifying.",
+    "steps": {
+      "identity": "Identity",
+      "role": "Role",
+      "security": "Security"
+    },
+    "fields": {
+      "firstName": "First name",
+      "lastName": "Last name",
+      "email": "Email address",
+      "organization": "Newsroom or publication",
+      "password": "Password (8+ characters)",
+      "passwordConfirm": "Confirm password"
+    },
+    "continue": "Continue",
+    "step2": {
+      "heading": "How will you use VerifyAI?",
+      "subtitle": "Pick the experience that fits you best — you can request a role change later.",
+      "notice": "<bold>Media House and Admin accounts</bold> are provisioned by a platform administrator. If your organization needs one, please contact your admin after creating a Citizen account."
+    },
+    "roles": {
+      "citizen": {
+        "tagline": "Personal use — verify before you share.",
+        "bullets": {
+          "checks": "Quick \"Is it real?\" checks",
+          "trust": "Personal trust score",
+          "tips": "Daily verification tips"
+        }
+      },
+      "journalist": {
+        "tagline": "Newsroom workflow — vet sources and track narratives.",
+        "bullets": {
+          "matrix": "Source reliability matrix",
+          "tracker": "Disinfo narrative tracker",
+          "export": "PDF citation export"
+        }
+      }
+    },
+    "step3": {
+      "heading": "Secure your account",
+      "subtitlePlain": "Choose a strong password.",
+      "subtitleJournalist": "Choose a strong password and add your newsroom."
+    },
+    "strength": {
+      "weak": "Weak — add length, capitals, numbers, or symbols.",
+      "fair": "Fair — keep going.",
+      "strong": "Strong.",
+      "excellent": "Excellent."
+    },
+    "passwordsMismatch": "Passwords do not match",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "createAccount": "Create account",
+    "creatingAccount": "Creating account…",
+    "successMessage": "Registration successful! Please check your email to verify your account.",
+    "failed": "Registration failed.",
+    "alreadyHaveAccount": "Already have an account?",
+    "signInInstead": "Sign in instead"
+  }
+}

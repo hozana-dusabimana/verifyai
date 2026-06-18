@@ -1,0 +1,67 @@
+{
+  "analyze": {
+    "title": "AI Content Analysis",
+    "subtitle": "Submit an article or URL to verify its credibility against our ML ensemble.",
+    "tabs": {
+      "text": "Paste Text",
+      "url": "Enter URL",
+      "file": "Upload File"
+    },
+    "textPlaceholder": "Paste the full article text here (min 50 characters)...",
+    "urlPlaceholder": "https://example.com/news-article",
+    "fileDropPrompt": "Click to upload or drag and drop",
+    "fileHint": ".txt or .pdf up to 10MB",
+    "metadata": {
+      "toggle": "Add Optional Metadata",
+      "sourceName": "Source Name",
+      "author": "Author"
+    },
+    "processing": "Processing Pipeline...",
+    "analyzeButton": "Analyze Content",
+    "errors": {
+      "analysisFailed": "Analysis failed.",
+      "pollFailed": "Failed to poll analysis status.",
+      "submissionFailed": "Submission failed."
+    },
+    "pipeline": {
+      "heading": "ML Pipeline Execution",
+      "running": "Running",
+      "stages": {
+        "inputValidation": "Input Validation",
+        "contentFetching": "Content Fetching",
+        "preprocessing": "Preprocessing",
+        "featureExtraction": "Feature Extraction",
+        "modelInference": "Model Inference",
+        "scoreGeneration": "Score Generation",
+        "persistenceNotify": "Persistence & Notify"
+      }
+    },
+    "result": {
+      "classification": "Classification: {{verdict}}",
+      "confidence": "{{percent}}% {{label}}",
+      "modelCertainty": "(model certainty)",
+      "confidenceLabel": {
+        "fake": "likely fake",
+        "real": "likely credible",
+        "uncertain": "leaning either way"
+      },
+      "exportPDF": "Export PDF",
+      "share": "Share",
+      "flag": "Flag manually",
+      "credibilityScore": "Credibility Score",
+      "scoreMax": "/ 100",
+      "bandSummary": "Score falls into the <1>{{band}}</1> band.",
+      "band": {
+        "highRisk": "HIGH RISK",
+        "uncertain": "UNCERTAIN",
+        "credible": "CREDIBLE"
+      },
+      "sentimentScore": "Sentiment Score",
+      "emotionalTone": "Emotional Tone",
+      "sensationalismIndex": "Sensationalism Index",
+      "headlineConsistency": "Headline Consistency",
+      "notAvailable": "N/A",
+      "whyFlagged": "Why was this flagged?"
+    }
+  }
+}

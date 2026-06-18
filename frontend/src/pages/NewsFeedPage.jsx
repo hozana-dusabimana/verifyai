@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation, Trans } from 'react-i18next';
 import {
   Newspaper, Send, CheckCircle, ShieldAlert, AlertTriangle, Loader2,
   Trash2, RefreshCw, PenLine,
@@ -8,18 +9,19 @@ import { newsfeedAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 
 const STATUS_META = {
-  approved: { label: 'Approved', cls: 'bg-emerald-100 text-emerald-800 border-emerald-200', icon: <CheckCircle className="w-3.5 h-3.5 mr-1" /> },
-  rejected: { label: 'Not approved', cls: 'bg-red-100 text-red-800 border-red-200', icon: <ShieldAlert className="w-3.5 h-3.5 mr-1" /> },
-  review: { label: 'In editorial review', cls: 'bg-amber-100 text-amber-800 border-amber-200', icon: <AlertTriangle className="w-3.5 h-3.5 mr-1" /> },
-  pending: { label: 'Verifying…', cls: 'bg-blue-100 text-blue-800 border-blue-200', icon: <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> },
-  failed: { label: 'Failed', cls: 'bg-slate-100 text-slate-700 border-slate-200', icon: <AlertTriangle className="w-3.5 h-3.5 mr-1" /> },
+  approved: { labelKey: 'newsfeed.status.approved', cls: 'bg-emerald-100 text-emerald-800 border-emerald-200', icon: <CheckCircle className="w-3.5 h-3.5 mr-1" /> },
+  rejected: { labelKey: 'newsfeed.status.rejected', cls: 'bg-red-100 text-red-800 border-red-200', icon: <ShieldAlert className="w-3.5 h-3.5 mr-1" /> },
+  review: { labelKey: 'newsfeed.status.review', cls: 'bg-amber-100 text-amber-800 border-amber-200', icon: <AlertTriangle className="w-3.5 h-3.5 mr-1" /> },
+  pending: { labelKey: 'newsfeed.status.pending', cls: 'bg-blue-100 text-blue-800 border-blue-200', icon: <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> },
+  failed: { labelKey: 'newsfeed.status.failed', cls: 'bg-slate-100 text-slate-700 border-slate-200', icon: <AlertTriangle className="w-3.5 h-3.5 mr-1" /> },
 };
 
 function PostStatusBadge({ status }) {
+  const { t } = useTranslation();
   const m = STATUS_META[status] || STATUS_META.failed;
   return (
     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border ${m.cls}`}>
-      {m.icon} {m.label}
+      {m.icon} {t(m.labelKey)}
     </span>
   );
 }
@@ -34,6 +36,7 @@ const formatDate = (d) => {
 };
 
 const NewsFeedPage = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
 
   const [feed, setFeed] = useState([]);
@@ -57,11 +60,11 @@ const NewsFeedPage = () => {
       const res = await newsfeedAPI.getFeed();
       setFeed(res.data.data || []);
     } catch {
-      setFeedError('Could not load the news feed.');
+      setFeedError(t('newsfeed.feedLoadError'));
     } finally {
       setFeedLoading(false);
     }
-  }, []);
+  }, [t]);
 
   const loadMyPosts = useCallback(async () => {
     if (!user) return;
@@ -82,7 +85,7 @@ const NewsFeedPage = () => {
     setLastResult(null);
 
     if (content.trim().length < 50) {
-      setFormError('Content must be at least 50 characters for the AI to verify it.');
+      setFormError(t('newsfeed.contentTooShort'));
       return;
     }
     setSubmitting(true);
@@ -106,7 +109,7 @@ const NewsFeedPage = () => {
       loadMyPosts();
     } catch (err) {
       const msg = err.response?.data?.error;
-      setFormError(typeof msg === 'string' ? msg : (msg ? JSON.stringify(msg) : 'Submission failed.'));
+      setFormError(typeof msg === 'string' ? msg : (msg ? JSON.stringify(msg) : t('newsfeed.submissionFailed')));
     } finally {
       setSubmitting(false);
     }
@@ -125,17 +128,19 @@ const NewsFeedPage = () => {
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
-            <Newspaper className="w-8 h-8 text-brand-600" /> Community News
+            <Newspaper className="w-8 h-8 text-brand-600" /> {t('newsfeed.pageTitle')}
           </h1>
           <p className="text-slate-500 font-medium mt-1">
-            Posts are verified by our AI ensemble. Only news classified as <span className="font-bold text-emerald-600">REAL</span> is published to the newsletter below.
+            <Trans i18nKey="newsfeed.pageSubtitle">
+              Posts are verified by our AI ensemble. Only news classified as <span className="font-bold text-emerald-600">REAL</span> is published to the newsletter below.
+            </Trans>
           </p>
         </div>
         <button
           onClick={loadFeed}
           className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 bg-white text-slate-600 font-bold text-sm hover:bg-slate-50 transition-colors"
         >
-          <RefreshCw className="w-4 h-4" /> Refresh
+          <RefreshCw className="w-4 h-4" /> {t('common.refresh')}
         </button>
       </div>
 
@@ -143,7 +148,7 @@ const NewsFeedPage = () => {
       {user ? (
         <div className="glass rounded-3xl p-6 sm:p-8 shadow-sm border-t-4 border-t-brand-500">
           <h2 className="font-bold text-slate-900 flex items-center gap-2 mb-4">
-            <PenLine className="w-5 h-5 text-brand-500" /> Post a news story
+            <PenLine className="w-5 h-5 text-brand-500" /> {t('newsfeed.composerTitle')}
           </h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             {formError && (
@@ -153,21 +158,21 @@ const NewsFeedPage = () => {
               type="text"
               required
               maxLength={500}
-              placeholder="Headline / title"
+              placeholder={t('newsfeed.titlePlaceholder')}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               className="w-full border border-slate-300 rounded-xl p-3 text-slate-900 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 shadow-sm font-semibold"
             />
             <textarea
               required
-              placeholder="Paste the full news content here (min 50 characters). The AI will verify it before publishing."
+              placeholder={t('newsfeed.contentPlaceholder')}
               value={content}
               onChange={(e) => setContent(e.target.value)}
               className="w-full h-40 border border-slate-300 rounded-xl p-4 text-slate-900 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 resize-none shadow-sm"
             />
             <input
               type="url"
-              placeholder="Source link (https://…) — optional; unsourced stories are flagged for moderator verification"
+              placeholder={t('newsfeed.sourceUrlPlaceholder')}
               value={sourceUrl}
               onChange={(e) => setSourceUrl(e.target.value)}
               className="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-brand-500 focus:border-brand-500"
@@ -175,7 +180,7 @@ const NewsFeedPage = () => {
             <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
               <input
                 type="text"
-                placeholder="Source name (optional)"
+                placeholder={t('newsfeed.sourceNamePlaceholder')}
                 value={sourceName}
                 onChange={(e) => setSourceName(e.target.value)}
                 className="flex-1 border border-slate-300 rounded-xl p-3 text-sm focus:ring-brand-500 focus:border-brand-500"
@@ -187,7 +192,7 @@ const NewsFeedPage = () => {
                   submitting ? 'bg-slate-300 text-slate-500 cursor-not-allowed' : 'bg-brand-600 text-white hover:bg-brand-700 shadow-md hover:shadow-lg'
                 }`}
               >
-                {submitting ? <><Loader2 className="w-5 h-5 animate-spin" /> Verifying…</> : <><Send className="w-5 h-5" /> Verify & Post</>}
+                {submitting ? <><Loader2 className="w-5 h-5 animate-spin" /> {t('newsfeed.verifying')}</> : <><Send className="w-5 h-5" /> {t('newsfeed.verifyAndPost')}</>}
               </button>
             </div>
           </form>
@@ -206,19 +211,19 @@ const NewsFeedPage = () => {
               </div>
               <div className="text-sm">
                 <p className="font-bold text-slate-900">
-                  {lastResult.status === 'approved' && 'Approved — published to the newsletter.'}
-                  {lastResult.status === 'review' && 'Held for editorial review — a moderator will check this report before it publishes.'}
-                  {lastResult.status === 'rejected' && `Not approved — AI verdict: ${lastResult.classification || 'not credible'}.`}
-                  {lastResult.status === 'failed' && 'Verification failed.'}
+                  {lastResult.status === 'approved' && t('newsfeed.result.approved')}
+                  {lastResult.status === 'review' && t('newsfeed.result.review')}
+                  {lastResult.status === 'rejected' && t('newsfeed.result.rejected', { verdict: lastResult.classification || t('newsfeed.result.rejectedDefaultVerdict') })}
+                  {lastResult.status === 'failed' && t('newsfeed.result.failed')}
                 </p>
                 {lastResult.credibility_score != null && (
-                  <p className="text-slate-600 mt-0.5 font-medium">Credibility score: {Math.round(lastResult.credibility_score)}%</p>
+                  <p className="text-slate-600 mt-0.5 font-medium">{t('newsfeed.result.credibilityScore', { score: Math.round(lastResult.credibility_score) })}</p>
                 )}
                 {lastResult.status === 'approved' && !lastResult.source_url && (
-                  <p className="text-slate-500 mt-1">Published as an unsourced eyewitness report — moderators have been notified to verify it.</p>
+                  <p className="text-slate-500 mt-1">{t('newsfeed.result.unsourcedPublished')}</p>
                 )}
                 {lastResult.status === 'rejected' && (
-                  <p className="text-slate-500 mt-1">Only news classified as REAL is published. You can still see this under “My submissions” below.</p>
+                  <p className="text-slate-500 mt-1">{t('newsfeed.result.rejectedHint')}</p>
                 )}
                 {lastResult.error_message && <p className="text-slate-500 mt-1">{lastResult.error_message}</p>}
               </div>
@@ -227,15 +232,15 @@ const NewsFeedPage = () => {
         </div>
       ) : (
         <div className="glass rounded-3xl p-6 shadow-sm flex items-center justify-between gap-4 flex-wrap">
-          <p className="text-slate-600 font-medium">Want to contribute? Sign in to submit news for AI verification.</p>
-          <Link to="/login" className="px-5 py-2.5 rounded-xl bg-brand-600 text-white font-bold hover:bg-brand-700 transition-colors">Sign in</Link>
+          <p className="text-slate-600 font-medium">{t('newsfeed.signedOutPrompt')}</p>
+          <Link to="/login" className="px-5 py-2.5 rounded-xl bg-brand-600 text-white font-bold hover:bg-brand-700 transition-colors">{t('common.signIn')}</Link>
         </div>
       )}
 
       {/* My submissions (authenticated only) */}
       {user && myPosts.length > 0 && (
         <div className="glass rounded-3xl p-6 sm:p-8 shadow-sm">
-          <h2 className="font-bold text-slate-900 mb-4">My submissions</h2>
+          <h2 className="font-bold text-slate-900 mb-4">{t('newsfeed.mySubmissions')}</h2>
           <div className="divide-y divide-slate-100">
             {myPosts.map((p) => (
               <div key={p.id} className="py-3 flex items-center justify-between gap-3">
@@ -243,12 +248,12 @@ const NewsFeedPage = () => {
                   <p className="font-semibold text-slate-900 truncate">{p.title}</p>
                   <p className="text-xs text-slate-500 mt-0.5">
                     {formatDate(p.created_at)}
-                    {p.credibility_score != null && ` · ${Math.round(p.credibility_score)}% credible`}
+                    {p.credibility_score != null && ` · ${t('newsfeed.credibleSuffix', { score: Math.round(p.credibility_score) })}`}
                   </p>
                 </div>
                 <div className="flex items-center gap-3 flex-shrink-0">
                   <PostStatusBadge status={p.status} />
-                  <button onClick={() => handleDelete(p.id)} className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors" title="Delete">
+                  <button onClick={() => handleDelete(p.id)} className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors" title={t('common.delete')} aria-label={t('common.delete')}>
                     <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
@@ -260,7 +265,7 @@ const NewsFeedPage = () => {
 
       {/* Public newsletter feed */}
       <div>
-        <h2 className="text-xl font-extrabold text-slate-900 tracking-tight mb-4">📰 Verified Newsletter</h2>
+        <h2 className="text-xl font-extrabold text-slate-900 tracking-tight mb-4">{t('newsfeed.newsletterTitle')}</h2>
 
         {feedLoading ? (
           <div className="flex items-center justify-center py-16 text-slate-400">
@@ -271,7 +276,7 @@ const NewsFeedPage = () => {
         ) : feed.length === 0 ? (
           <div className="glass rounded-3xl p-12 text-center text-slate-500">
             <Newspaper className="w-10 h-10 mx-auto text-slate-300 mb-3" />
-            <p className="font-medium">No verified news yet. Be the first to post a credible story.</p>
+            <p className="font-medium">{t('newsfeed.emptyFeed')}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -282,10 +287,10 @@ const NewsFeedPage = () => {
                 <div className="flex items-center justify-between text-xs text-slate-400 font-medium pt-2 border-t border-slate-100">
                   {post.source_url ? (
                     <a href={post.source_url} target="_blank" rel="noopener noreferrer" className="underline hover:text-slate-600">
-                      {post.source_name || (() => { try { return new URL(post.source_url).hostname.replace(/^www\./, ''); } catch { return 'Source'; } })()}
+                      {post.source_name || (() => { try { return new URL(post.source_url).hostname.replace(/^www\./, ''); } catch { return t('newsfeed.sourceFallback'); } })()}
                     </a>
                   ) : (
-                    <span>{post.source_name || post.submitted_by || 'Community'}</span>
+                    <span>{post.source_name || post.submitted_by || t('newsfeed.communityFallback')}</span>
                   )}
                   <span>{formatDate(post.published_at)}</span>
                 </div>

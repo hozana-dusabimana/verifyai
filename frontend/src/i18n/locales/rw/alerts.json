@@ -1,0 +1,43 @@
+{
+  "alerts": {
+    "pageTitle": "Ikigo cy'Imenyesha",
+    "pageSubtitle": "Imenyesha n'amatangazo y'ibikubiyemo bifite ibyago byinshi.",
+    "preferences": "Ibyahiswemo",
+    "notificationPreferences": "Ibyahiswemo by'Amatangazo",
+    "emailOnHighRisk": "Imeyili igihe havumbuwe ibyago byinshi",
+    "emailOnAnalysisComplete": "Imeyili igihe isesengura ryarangiye",
+    "alertThreshold": "Urwego rw'Imenyesha",
+    "emailFrequency": "Ubwiyongere bw'Imeyili",
+    "frequency": {
+      "immediate": "Ako kanya",
+      "daily": "Incamake ya Buri Munsi",
+      "weekly": "Incamake ya Buri Cyumweru"
+    },
+    "savePreferences": "Bika Ibyahiswemo",
+    "preferencesSaved": "Ibyahiswemo by'amatangazo byabitswe.",
+    "filter": {
+      "all": "Byose",
+      "open": "Bifunguye",
+      "escalated": "Byazamuwe",
+      "resolved": "Byakemuwe",
+      "dismissed": "Byirengagijwe"
+    },
+    "status": {
+      "open": "Bifunguye",
+      "escalated": "Byazamuwe",
+      "resolved": "Byakemuwe",
+      "dismissed": "Byirengagijwe"
+    },
+    "untitledAlert": "Imenyesha ridafite umutwe",
+    "score": "Amanota:",
+    "severity": "Uburemere: {{severity}}",
+    "unpublishStory": "Kuraho inkuru",
+    "storyUnpublished": "Inkuru yakuweho",
+    "resolve": "Gukemura",
+    "escalate": "Kuzamura",
+    "dismiss": "Kwirengagiza",
+    "unpublishConfirm": "Kuraho iyi nkuru ku rubuga rusange? Ibi ni iya nyuma.",
+    "emptyTitle": "Nta menyesha ryabonetse.",
+    "emptyHint": "Imenyesha rikorwa mu buryo bwikora igihe ibikubiyemo bifite amanota ari munsi y'urwego rw'ibyago."
+  }
+}

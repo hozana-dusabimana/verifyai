@@ -1,0 +1,55 @@
+{
+  "orgMembers": {
+    "eyebrow": "Organization",
+    "title": "Member management",
+    "subtitle": "Add and manage the journalists in your organization.",
+    "orgFallback": "(no organization)",
+    "addMember": "Add member",
+    "adding": "Adding…",
+    "noOrg": {
+      "title": "No organization assigned to your account",
+      "body": "Ask a platform administrator to set your <mono>organization</mono> field. Once set, all users sharing that organization will appear here."
+    },
+    "errors": {
+      "loadMembers": "Failed to load members.",
+      "createMember": "Failed to create member.",
+      "passwordTooShort": "Password must be at least 8 characters."
+    },
+    "stats": {
+      "total": "Total",
+      "active": "Active",
+      "journalists": "Journalists",
+      "managers": "Managers"
+    },
+    "searchPlaceholder": "Search by name or email…",
+    "empty": {
+      "title": "No members yet",
+      "tryDifferent": "Try a different search term.",
+      "addFirst": "Add the first member to {{orgName}}."
+    },
+    "table": {
+      "member": "Member",
+      "role": "Role",
+      "status": "Status",
+      "joined": "Joined",
+      "actions": "Actions"
+    },
+    "you": "You",
+    "makeJournalist": "Make journalist",
+    "statusActive": "Active",
+    "statusInactive": "Inactive",
+    "deactivate": "Deactivate",
+    "confirmDeactivate": "Deactivate {{name}}? They will lose access immediately.",
+    "modal": {
+      "title": "Add member",
+      "subtitle": "New account will be added to <bold>{{orgName}}</bold>.",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "email": "Email",
+      "role": "Role",
+      "roleNote": "Organizations are made up of journalists. Citizens are independent accounts; Media House and Admin roles are provisioned by a platform administrator.",
+      "password": "Initial password (8+ chars)",
+      "passwordNote": "Share this with the user. They can change it after first login."
+    }
+  }
+}

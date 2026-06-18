@@ -1,0 +1,40 @@
+{
+  "newsfeed": {
+    "pageTitle": "Amakuru y'Abaturage",
+    "pageSubtitle": "Inkuru zigenzurwa n'urunigi rw'ubwenge bw'ubukorano (AI). Amakuru gusa ashyizwe mu cyiciro cya <0>UKURI</0> ni yo atangazwa ku rupapuro rw'amakuru rukurikira.",
+    "composerTitle": "Tanga inkuru",
+    "titlePlaceholder": "Umutwe w'inkuru",
+    "contentPlaceholder": "Andika hano umubiri w'inkuru wuzuye (nibura inyuguti 50). AI izayigenzura mbere yo kuyitangaza.",
+    "sourceUrlPlaceholder": "Aderesi y'inkomoko (https://…) — si itegeko; inkuru zidafite inkomoko zishyirwa ku rutonde rwo kugenzurwa n'abagenzuzi",
+    "sourceNamePlaceholder": "Izina ry'inkomoko (si itegeko)",
+    "verifyAndPost": "Genzura & Ohereza",
+    "verifying": "Birimo kugenzurwa…",
+    "contentTooShort": "Umubiri w'inkuru ugomba kuba ufite nibura inyuguti 50 kugira ngo AI iwugenzure.",
+    "submissionFailed": "Kohereza byanze.",
+    "feedLoadError": "Ntibyashobotse gufungura urutonde rw'amakuru.",
+    "result": {
+      "approved": "Byemejwe — byatangajwe ku rupapuro rw'amakuru.",
+      "review": "Bitegereje igenzura ry'abanditsi — umugenzuzi azasuzuma iyi nkuru mbere yo kuyitangaza.",
+      "rejected": "Ntibyemewe — icyemezo cya AI: {{verdict}}.",
+      "rejectedDefaultVerdict": "ntabwo yizewe",
+      "failed": "Igenzura ryanze.",
+      "credibilityScore": "Amanota yo kwizerwa: {{score}}%",
+      "unsourcedPublished": "Byatangajwe nk'inkuru y'uwabibonye idafite inkomoko — abagenzuzi bamenyeshejwe kugira ngo bayigenzure.",
+      "rejectedHint": "Amakuru gusa ashyizwe mu cyiciro cya UKURI ni yo atangazwa. Ariko ushobora kuyibona muri “Ibyo natanze” hano hepfo."
+    },
+    "signedOutPrompt": "Ushaka gutanga umusanzu? Injira kugira ngo utange amakuru agenzurwe na AI.",
+    "mySubmissions": "Ibyo natanze",
+    "credibleSuffix": "%{{score}} byizewe",
+    "newsletterTitle": "📰 Urupapuro rw'Amakuru Yagenzuwe",
+    "emptyFeed": "Nta nkuru iragenzurwa irahari. Ba uwa mbere utanga inkuru yizewe.",
+    "sourceFallback": "Inkomoko",
+    "communityFallback": "Abaturage",
+    "status": {
+      "approved": "Byemejwe",
+      "rejected": "Ntibyemewe",
+      "review": "Birimo igenzura ry'abanditsi",
+      "pending": "Birimo kugenzurwa…",
+      "failed": "Byanze"
+    }
+  }
+}

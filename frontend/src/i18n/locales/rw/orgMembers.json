@@ -1,0 +1,55 @@
+{
+  "orgMembers": {
+    "eyebrow": "Ikigo",
+    "title": "Gucunga abanyamuryango",
+    "subtitle": "Ongeraho kandi ucunge abanyamakuru bo mu kigo cyawe.",
+    "orgFallback": "(nta kigo)",
+    "addMember": "Ongeraho umunyamuryango",
+    "adding": "Kongeraho…",
+    "noOrg": {
+      "title": "Nta kigo gihujwe na konti yawe",
+      "body": "Saba umuyobozi w'urubuga gushyiraho umwanya wawe wa <mono>organization</mono>. Iyo bimaze gushyirwaho, abakoresha bose bahuriye kuri icyo kigo bazagaragara hano."
+    },
+    "errors": {
+      "loadMembers": "Kuzana abanyamuryango byanze.",
+      "createMember": "Gukora umunyamuryango byanze.",
+      "passwordTooShort": "Ijambobanga rigomba kuba nibura inyuguti 8."
+    },
+    "stats": {
+      "total": "Igiteranyo",
+      "active": "Barakora",
+      "journalists": "Abanyamakuru",
+      "managers": "Abayobozi"
+    },
+    "searchPlaceholder": "Shakisha ukoresheje izina cyangwa imeyili…",
+    "empty": {
+      "title": "Nta banyamuryango baracyariho",
+      "tryDifferent": "Gerageza ijambo ryo gushakisha ritandukanye.",
+      "addFirst": "Ongeraho umunyamuryango wa mbere kuri {{orgName}}."
+    },
+    "table": {
+      "member": "Umunyamuryango",
+      "role": "Uruhare",
+      "status": "Imimerere",
+      "joined": "Yinjiye",
+      "actions": "Ibikorwa"
+    },
+    "you": "Wowe",
+    "makeJournalist": "Mugire umunyamakuru",
+    "statusActive": "Arakora",
+    "statusInactive": "Ntakora",
+    "deactivate": "Guhagarika",
+    "confirmDeactivate": "Guhagarika {{name}}? Bazahita batakaza uburenganzira ako kanya.",
+    "modal": {
+      "title": "Ongeraho umunyamuryango",
+      "subtitle": "Konti nshya izongerwa kuri <bold>{{orgName}}</bold>.",
+      "firstName": "Izina ry'ibanze",
+      "lastName": "Izina ry'umuryango",
+      "email": "Imeyili",
+      "role": "Uruhare",
+      "roleNote": "Ibigo bigizwe n'abanyamakuru. Abaturage ni konti zigenga; uruhare rwa Media House n'urwa Admin rushyirwaho n'umuyobozi w'urubuga.",
+      "password": "Ijambobanga ribanza (inyuguti 8+)",
+      "passwordNote": "Bisangize n'umukoresha. Bashobora kubihindura nyuma yo kwinjira bwa mbere."
+    }
+  }
+}

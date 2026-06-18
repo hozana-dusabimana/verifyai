@@ -7,11 +7,17 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
-// Attach JWT access token to every request
+// Attach JWT access token + the active UI language to every request
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('access_token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
+  }
+  // Tell the backend which language to localize messages in. Mirrors the
+  // i18next detector key written by the language switcher.
+  const lang = localStorage.getItem('verifyai_lang');
+  if (lang) {
+    config.headers['Accept-Language'] = lang;
   }
   return config;
 });

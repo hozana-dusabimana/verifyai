@@ -1,0 +1,46 @@
+{
+  "journoDash": {
+    "fallbackName": "umunyamakuru",
+    "independent": "Wigenga",
+    "title": "Incamake y'icyumba cy'amakuru",
+    "subtitle": "Ubwenge ku nkomoko n'igenzura ry'inkuru kuri {{name}}.",
+    "vetNewArticle": "Genzura inkuru nshya",
+    "stats": {
+      "articlesVetted": "Inkuru zagenzuwe",
+      "avgCredibility": "Impuzandengo y'ikizere",
+      "sourcesFlagged": "Inkomoko zatanzweho impuruza",
+      "sourcesFlaggedHint": "Impuzandengo y'ikizere iri munsi ya 50%",
+      "openAlerts": "Impuruza zikiri gufunguye"
+    },
+    "org": {
+      "heading": "Ikigo cyawe — {{org}}",
+      "subtitle": "Uko icyumba cyawe cy'amakuru gikora hagati y'abagize cyose.",
+      "journalistCount_one": "umunyamakuru {{count}}",
+      "journalistCount_other": "abanyamakuru {{count}}",
+      "members": "Abanyamuryango",
+      "orgAnalyses": "Isesengura ry'ikigo",
+      "mostActive": "Bagenzi bawe bakora cyane",
+      "vettedCount_one": "{{count}} yagenzuwe",
+      "vettedCount_other": "{{count}} zagenzuwe"
+    },
+    "trends": {
+      "title": "Iby'ukuri n'ibinyoma — iminsi 30 ishize",
+      "subtitle": "Ishyirwa mu byiciro rya buri munsi ku nkuru zose wagenzuye.",
+      "empty": "Nta makuru y'imigendekere arahari — genzura inkuru kugira ngo ubone isesengura."
+    },
+    "sources": {
+      "title": "Imbonerahamwe y'ikizere cy'inkomoko",
+      "subtitle": "Ibitangazamakuru bishyizwe ku rutonde hashingiwe ku mpuzandengo y'ikizere mu isesengura ryawe.",
+      "colSource": "Inkomoko",
+      "colArticles": "Inkuru",
+      "colCredibility": "Ikizere",
+      "emptyTitle": "Nta makuru y'inkomoko arahari",
+      "emptyBody": "Genzura inkuru zifite inkomoko izwi kugira ngo uzuze iyi mbonerahamwe."
+    },
+    "narratives": {
+      "title": "Inkuru z'ibinyoma",
+      "subtitle": "Amagambo y'ingenzi ava ku nkuru zashyizwe mu byiciro by'ibinyoma.",
+      "empty": "Nta nkuru z'ibinyoma zaramenyekana."
+    }
+  }
+}

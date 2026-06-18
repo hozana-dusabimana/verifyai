@@ -1,0 +1,86 @@
+{
+  "settings": {
+    "title": "Igenamiterere",
+    "tabs": {
+      "profile": "Umwirondoro",
+      "security": "Umutekano",
+      "notifications": "Imenyesha",
+      "apiKeys": "Imfunguzo za API"
+    },
+    "profile": {
+      "firstName": "Izina ry'idini",
+      "lastName": "Izina ry'umuryango",
+      "organization": "Ikigo",
+      "email": "Imeyili",
+      "role": "Uruhare",
+      "saveChanges": "Bika impinduka",
+      "updated": "Umwirondoro wavuguruwe.",
+      "updateFailed": "Kuvugurura byanze."
+    },
+    "security": {
+      "changePassword": "Hindura ijambobanga",
+      "currentPassword": "Ijambobanga rigezweho",
+      "newPassword": "Ijambobanga rishya",
+      "confirmNewPassword": "Emeza ijambobanga rishya",
+      "updatePassword": "Vugurura ijambobanga",
+      "passwordsDoNotMatch": "Amagambo banga ntahuye.",
+      "passwordChanged": "Ijambobanga ryahinduwe.",
+      "passwordChangeFailed": "Guhindura ijambobanga byanze."
+    },
+    "notifications": {
+      "emailOnHighRisk": "Imeyili igihe hagaragaye ibyago bikomeye",
+      "emailOnHighRiskDesc": "Menyeshwa igihe ibikubiyemo bigaragajwe nk'ibifite ibyago bikomeye",
+      "emailOnAnalysisComplete": "Imeyili igihe isesengura ryarangiye",
+      "emailOnAnalysisCompleteDesc": "Menyeshwa igihe isesengura ryarangiye",
+      "alertThreshold": "Urwego rw'amanota yo kuburira",
+      "emailFrequency": "Ubwinshi bw'imeyili",
+      "frequencyImmediate": "Ako kanya",
+      "frequencyDaily": "Incamake ya buri munsi",
+      "frequencyWeekly": "Incamake ya buri cyumweru",
+      "savePreferences": "Bika ibyifuzo",
+      "preferencesSaved": "Ibyifuzo by'imenyesha byabitswe.",
+      "preferencesFailed": "Kubika ibyifuzo byanze."
+    },
+    "apiKeys": {
+      "yourKeys": "Imfunguzo zawe za API",
+      "yourKeysDesc": "Koresha imfunguzo mu kwemeza ibyifuzo bya porogaramu. Uzifate nk'amagambo banga — ntukazandike mu nyandiko z'inkomoko.",
+      "keyNamePlaceholder": "Izina ry'urufunguzo (urugero 'Production')",
+      "generate": "Kora urufunguzo",
+      "newKeyNotice": "Urufunguzo rwa API rushya — rukoporore ubu, ntiruzongera kugaragazwa:",
+      "createdOn": "Rwakozwe {{date}}",
+      "lastUsed": "Rwakoreshejwe bwa nyuma {{date}}",
+      "revoke": "Kuraho",
+      "emptyTitle": "Nta mfunguzo za API zihari",
+      "emptyDesc": "Kora rumwe haruguru kugira ngo ubashe kwinjira ukoresheje porogaramu.",
+      "created": "Urufunguzo rwa API rwakozwe. Rukoporore ubu — ntiruzongera kugaragazwa.",
+      "createFailed": "Gukora urufunguzo byanze.",
+      "revoked": "Urufunguzo rwa API rwakuweho.",
+      "revokeFailed": "Gukuraho urufunguzo byanze.",
+      "exampleRequests": "Ingero z'ibyifuzo",
+      "exampleAuthPrefix": "Emeza ukoresheje",
+      "exampleBaseUrl": "Aderesi shingiro:",
+      "examplePrefilled": "Ingero zo hasi zujujwe n'urufunguzo umaze gukora.",
+      "copy": "Koporora",
+      "copied": "Byakoporowe",
+      "responseEnvelope": "Ishusho y'igisubizo",
+      "examples": {
+        "submitText": {
+          "title": "Ohereza inyandiko isesengurwe",
+          "description": "Ohereza inyandiko y'inkuru maze ubone indangamuntu y'isesengura. Uburyo bukora ku buryo bwigenga — saba urwego rw'imimerere kugeza byarangiye."
+        },
+        "submitUrl": {
+          "title": "Ohereza URL",
+          "description": "Tanga URL maze sisitemu izasoma kandi isesengure ibikubiyemo by'inkuru ku buryo bwikora."
+        },
+        "getResult": {
+          "title": "Bona igisubizo cy'isesengura",
+          "description": "Bona igisubizo cyuzuye iyo imimerere ari \"completed\". Igarura amanota y'ukwizerwa, icyiciro (REAL / FAKE / UNCERTAIN), amagambo y'ingenzi, n'impamvu zo kumenyesha."
+        },
+        "history": {
+          "title": "Reba amateka y'isesengura ryawe",
+          "description": "Urutonde rw'amapaji rw'isesengura yawe ya vuba. Rwemera ?page=N&page_size=N."
+        }
+      }
+    }
+  }
+}

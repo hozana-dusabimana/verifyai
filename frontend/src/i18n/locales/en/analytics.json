@@ -1,0 +1,55 @@
+{
+  "analytics": {
+    "title": "Analytics & Reports",
+    "subtitle": "Insights from your content analysis activity.",
+    "exportPdf": "Export PDF",
+    "exportCsv": "Export CSV",
+    "report": {
+      "title": "VerifyAI Analytics Report",
+      "heading": "VerifyAI — Analytics Report",
+      "generated": "Generated {{datetime}}",
+      "generatedLabel": "Generated",
+      "noData": "No data.",
+      "printSave": "Print / Save as PDF",
+      "popupBlocked": "Please allow pop-ups to export the PDF report."
+    },
+    "trends": {
+      "title": "Detection Trends (30 Days)",
+      "csvSection": "Detection trend (30 days)",
+      "empty": "No trend data available yet."
+    },
+    "topics": {
+      "title": "Topic Distribution",
+      "csvSection": "Topic distribution",
+      "empty": "No topic data yet."
+    },
+    "sources": {
+      "title": "Source Credibility",
+      "csvSection": "Source credibility",
+      "articles_one": "{{count}} article",
+      "articles_other": "{{count}} articles",
+      "empty": "No source data yet."
+    },
+    "keywords": {
+      "title": "Top Keywords",
+      "inFake": "In Fake Articles",
+      "inReal": "In Real Articles",
+      "csvFakeSection": "Top keywords in fake articles",
+      "csvRealSection": "Top keywords in real articles",
+      "pdfFakeSection": "Top keywords — fake articles",
+      "pdfRealSection": "Top keywords — real articles",
+      "empty": "No data yet"
+    },
+    "columns": {
+      "date": "Date",
+      "real": "Real",
+      "fake": "Fake",
+      "source": "Source",
+      "articles": "Articles",
+      "avgCredibility": "Avg credibility %",
+      "topic": "Topic",
+      "count": "Count",
+      "keyword": "Keyword"
+    }
+  }
+}

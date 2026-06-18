@@ -1,10 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Search, Filter, Download, CheckCircle, ShieldAlert, HelpCircle, ChevronLeft, ChevronRight, Users, Building2 } from 'lucide-react';
 import { analysisAPI, orgAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
-import { roleLabel } from '../utils/roles';
+import { roleLabelKey, roleLabel } from '../utils/roles';
 
 const HistoryPage = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const isOrgViewer = (user?.role === 'government' || user?.role === 'admin') && !!user?.organization;
 
@@ -78,9 +80,13 @@ const HistoryPage = () => {
       FAKE: <ShieldAlert className="w-3.5 h-3.5 mr-1" />,
       UNCERTAIN: <HelpCircle className="w-3.5 h-3.5 mr-1" />,
     };
+    const verdictKeys = { REAL: 'real', FAKE: 'fake', UNCERTAIN: 'uncertain' };
+    const label = status
+      ? t(`common.verdict.${verdictKeys[status] || status.toLowerCase()}`)
+      : t('common.verdict.pending');
     return (
       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border ${styles[status] || 'bg-slate-100 text-slate-600 border-slate-200'}`}>
-        {icons[status]} {status || 'PENDING'} {score != null && `(${Math.round(score)}%)`}
+        {icons[status]} {label} {score != null && `(${Math.round(score)}%)`}
       </span>
     );
   };
@@ -90,11 +96,9 @@ const HistoryPage = () => {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Analysis History</h1>
+        <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">{t('history.title')}</h1>
         <p className="text-slate-500 font-medium mt-1">
-          {orgView
-            ? 'Browse and filter analyses across your organization.'
-            : 'Browse and filter all your past analysis results.'}
+          {orgView ? t('history.subtitleOrg') : t('history.subtitle')}
         </p>
       </div>
 
@@ -105,13 +109,13 @@ const HistoryPage = () => {
             onClick={() => { setScope('own'); setMember(''); setPage(1); }}
             className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-sm font-bold transition-colors ${scope === 'own' ? 'bg-brand-600 text-white shadow' : 'text-slate-600 hover:bg-slate-100'}`}
           >
-            <Users className="w-4 h-4" /> My analyses
+            <Users className="w-4 h-4" /> {t('history.scope.own')}
           </button>
           <button
             onClick={() => { setScope('org'); setPage(1); }}
             className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-sm font-bold transition-colors ${scope === 'org' ? 'bg-brand-600 text-white shadow' : 'text-slate-600 hover:bg-slate-100'}`}
           >
-            <Building2 className="w-4 h-4" /> Organization
+            <Building2 className="w-4 h-4" /> {t('history.scope.org')}
           </button>
         </div>
       )}
@@ -120,7 +124,7 @@ const HistoryPage = () => {
       <div className="glass rounded-2xl p-5 shadow-sm flex flex-col sm:flex-row gap-4 items-start sm:items-center">
         <form onSubmit={handleSearch} className="relative flex-1 w-full">
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-          <input type="text" placeholder="Search by title..."
+          <input type="text" placeholder={t('history.searchPlaceholder')}
             className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-brand-500 focus:border-brand-500"
             value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
         </form>
@@ -129,9 +133,9 @@ const HistoryPage = () => {
             <Users className="w-4 h-4 text-slate-400" />
             <select className="rounded-xl border border-slate-300 py-2.5 px-3 text-sm focus:ring-brand-500 focus:border-brand-500 max-w-[200px]"
               value={member} onChange={(e) => { setMember(e.target.value); setPage(1); }}>
-              <option value="">All journalists</option>
+              <option value="">{t('history.allJournalists')}</option>
               {members.map((m) => (
-                <option key={m.id} value={m.id}>{(m.full_name?.trim() || m.email)}{m.role !== 'journalist' ? ` (${roleLabel(m.role)})` : ''}</option>
+                <option key={m.id} value={m.id}>{(m.full_name?.trim() || m.email)}{m.role !== 'journalist' ? ` (${t(roleLabelKey(m.role), { defaultValue: roleLabel(m.role) })})` : ''}</option>
               ))}
             </select>
           </div>
@@ -140,10 +144,10 @@ const HistoryPage = () => {
           <Filter className="w-4 h-4 text-slate-400" />
           <select className="rounded-xl border border-slate-300 py-2.5 px-3 text-sm focus:ring-brand-500 focus:border-brand-500"
             value={filterClass} onChange={(e) => { setFilterClass(e.target.value); setPage(1); }}>
-            <option value="">All Results</option>
-            <option value="REAL">Real</option>
-            <option value="FAKE">Fake</option>
-            <option value="UNCERTAIN">Uncertain</option>
+            <option value="">{t('history.allResults')}</option>
+            <option value="REAL">{t('common.verdict.real')}</option>
+            <option value="FAKE">{t('common.verdict.fake')}</option>
+            <option value="UNCERTAIN">{t('common.verdict.uncertain')}</option>
           </select>
         </div>
       </div>
@@ -160,20 +164,20 @@ const HistoryPage = () => {
               <table className="min-w-full divide-y divide-slate-200">
                 <thead className="bg-slate-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Article</th>
-                    {orgView && <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase hidden sm:table-cell">Submitted by</th>}
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase hidden sm:table-cell">Source</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Result</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase hidden md:table-cell">Date</th>
-                    <th className="px-6 py-3 text-right text-xs font-semibold text-slate-500 uppercase">Actions</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('history.col.article')}</th>
+                    {orgView && <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase hidden sm:table-cell">{t('history.col.submittedBy')}</th>}
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase hidden sm:table-cell">{t('history.col.source')}</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{t('history.col.result')}</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase hidden md:table-cell">{t('history.col.date')}</th>
+                    <th className="px-6 py-3 text-right text-xs font-semibold text-slate-500 uppercase">{t('history.col.actions')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 bg-white">
                   {analyses.map((item) => (
                     <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
                       <td className="px-6 py-4">
-                        <p className="text-sm font-bold text-slate-900 truncate max-w-xs">{item.title || 'Untitled'}</p>
-                        <p className="text-xs text-slate-500 capitalize mt-0.5">{item.input_type} input</p>
+                        <p className="text-sm font-bold text-slate-900 truncate max-w-xs">{item.title || t('history.untitled')}</p>
+                        <p className="text-xs text-slate-500 capitalize mt-0.5">{t('history.inputType', { type: item.input_type })}</p>
                       </td>
                       {orgView && (
                         <td className="px-6 py-4 hidden sm:table-cell text-sm text-slate-600">
@@ -189,7 +193,7 @@ const HistoryPage = () => {
                       <td className="px-6 py-4"><StatusBadge status={item.classification} score={item.credibility_score} /></td>
                       <td className="px-6 py-4 hidden md:table-cell text-sm text-slate-500">{new Date(item.created_at).toLocaleDateString()}</td>
                       <td className="px-6 py-4 text-right">
-                        <button onClick={() => handleExportCSV(item.id)} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600" title="Export CSV">
+                        <button onClick={() => handleExportCSV(item.id)} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600" title={t('history.exportCsv')}>
                           <Download className="w-4 h-4" />
                         </button>
                       </td>
@@ -201,14 +205,14 @@ const HistoryPage = () => {
 
             {totalPages > 1 && (
               <div className="flex items-center justify-between px-6 py-4 border-t border-slate-100">
-                <p className="text-sm text-slate-500">{meta.count} total results</p>
+                <p className="text-sm text-slate-500">{t('history.totalResults', { count: meta.count })}</p>
                 <div className="flex items-center gap-2">
-                  <button disabled={!meta.previous} onClick={() => setPage(p => p - 1)}
+                  <button disabled={!meta.previous} onClick={() => setPage(p => p - 1)} aria-label={t('history.prevPage')}
                     className="p-2 rounded-lg hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed">
                     <ChevronLeft className="w-4 h-4" />
                   </button>
-                  <span className="text-sm font-medium text-slate-700">Page {page} of {totalPages}</span>
-                  <button disabled={!meta.next} onClick={() => setPage(p => p + 1)}
+                  <span className="text-sm font-medium text-slate-700">{t('history.pageOf', { page, total: totalPages })}</span>
+                  <button disabled={!meta.next} onClick={() => setPage(p => p + 1)} aria-label={t('history.nextPage')}
                     className="p-2 rounded-lg hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed">
                     <ChevronRight className="w-4 h-4" />
                   </button>
@@ -217,7 +221,7 @@ const HistoryPage = () => {
             )}
           </>
         ) : (
-          <p className="text-center text-slate-400 py-16 text-sm">No analyses found. Start by analyzing some content.</p>
+          <p className="text-center text-slate-400 py-16 text-sm">{t('history.empty')}</p>
         )}
       </div>
     </div>

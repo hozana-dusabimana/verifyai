@@ -1,0 +1,23 @@
+{
+  "widgets": {
+    "quickAnalyze": {
+      "title": "Quick Analysis",
+      "subtitle": "Drop a URL or snippet to verify instantly.",
+      "placeholder": "Paste article content or URL here…",
+      "submit": "Analyze Content"
+    },
+    "recentTable": {
+      "title": "Recent Analyses",
+      "colArticle": "Article",
+      "colSource": "Source",
+      "colResult": "Result",
+      "colCite": "Cite",
+      "untitled": "Untitled",
+      "exportPdf": "Export PDF citation",
+      "empty": "No analyses yet. Submit your first article to get started."
+    },
+    "trustGauge": {
+      "label": "Trust"
+    }
+  }
+}

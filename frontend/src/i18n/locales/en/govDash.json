@@ -1,0 +1,77 @@
+{
+  "govDash": {
+    "orgFallback": "Your organization",
+    "title": "Management console",
+    "subtitle": "Manage and evaluate the journalists in your organization.",
+    "manageMembers": "Manage members",
+    "refreshing": "Refreshing…",
+    "stats": {
+      "journalists": "Journalists",
+      "journalistsHint": "Members with the journalist role",
+      "orgAnalyses": "Org analyses (30d)",
+      "orgAvgCredibility": "Org avg credibility",
+      "openEscalated": "Open + escalated"
+    },
+    "roster": {
+      "title": "Team roster & evaluation",
+      "subtitle": "Performance of every member in your organization.",
+      "manage": "Manage →",
+      "member": "Member",
+      "role": "Role",
+      "vetted": "Vetted",
+      "recent": "30d",
+      "fake": "Fake",
+      "avgCredibility": "Avg credibility",
+      "alerts": "Alerts",
+      "active": "Active",
+      "emptyTitle": "No members yet",
+      "emptyBody": "Add journalists to your organization to start evaluating them."
+    },
+    "alerts": {
+      "title": "Alerts — your analysts' analyses",
+      "subtitle": "Open and escalated alerts raised on analyses submitted by your members.",
+      "pending": "{{count}} pending",
+      "article": "Article",
+      "submittedBy": "Submitted by",
+      "severity": "Severity",
+      "resolve": "Resolve",
+      "escalate": "Escalate",
+      "alreadyEscalated": "Already escalated",
+      "escalateTitle": "Escalate this alert",
+      "clearTitle": "Queue is clear",
+      "clearBody": "No pending alerts on your members' analyses right now."
+    },
+    "severity": {
+      "high": "high",
+      "medium": "medium",
+      "low": "low"
+    },
+    "heatmap": {
+      "title": "Fake content heatmap",
+      "subtitle": "Daily FAKE classifications across the organization, last 30 days.",
+      "total": "Total",
+      "density": "Density",
+      "tooltip_one": "{{label}}: {{count}} fake article",
+      "tooltip_other": "{{label}}: {{count}} fake articles"
+    },
+    "topSources": {
+      "title": "Top spreading sources",
+      "subtitle": "Outlets ranked by FAKE-classified article volume in the last 30 days.",
+      "source": "Source",
+      "fakeArticles": "Fake articles",
+      "avgCredibility": "Avg credibility",
+      "empty": "No flagged sources yet"
+    },
+    "topics": {
+      "title": "Topic mix",
+      "subtitle": "Themes across analyses, last 30 days.",
+      "empty": "No topic data yet."
+    },
+    "relativeTime": {
+      "never": "never",
+      "today": "today",
+      "yesterday": "yesterday",
+      "daysAgo": "{{count}}d ago"
+    }
+  }
+}

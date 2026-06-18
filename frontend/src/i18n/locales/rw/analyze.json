@@ -1,0 +1,67 @@
+{
+  "analyze": {
+    "title": "Isesengura ry'Ibikubiyemo rikoresha AI",
+    "subtitle": "Ohereza inkuru cyangwa URL kugira ngo ugenzure ukuri kwayo ukoresheje uruhererekane rwacu rw'imashini ziga.",
+    "tabs": {
+      "text": "Komeka Inyandiko",
+      "url": "Shyiramo URL",
+      "file": "Ohereza Dosiye"
+    },
+    "textPlaceholder": "Andika cyangwa komeka inyandiko yose y'inkuru hano (nibura inyuguti 50)...",
+    "urlPlaceholder": "https://example.com/news-article",
+    "fileDropPrompt": "Kanda wohereze cyangwa ukurure ushyire hano",
+    "fileHint": ".txt cyangwa .pdf bigeze kuri 10MB",
+    "metadata": {
+      "toggle": "Ongeraho Amakuru y'Inyongera (si itegeko)",
+      "sourceName": "Izina ry'Inkomoko",
+      "author": "Umwanditsi"
+    },
+    "processing": "Gutunganya Uruhererekane...",
+    "analyzeButton": "Sesengura Ibikubiyemo",
+    "errors": {
+      "analysisFailed": "Isesengura ryananiranye.",
+      "pollFailed": "Kureba imiterere y'isesengura byananiranye.",
+      "submissionFailed": "Kohereza byananiranye."
+    },
+    "pipeline": {
+      "heading": "Gukora Uruhererekane rw'Imashini Ziga",
+      "running": "Birakora",
+      "stages": {
+        "inputValidation": "Kugenzura Ibyatanzwe",
+        "contentFetching": "Gushaka Ibikubiyemo",
+        "preprocessing": "Gutegura Mbere",
+        "featureExtraction": "Gukura Ibiranga",
+        "modelInference": "Isesengura ry'Icyitegererezo",
+        "scoreGeneration": "Gukora Amanota",
+        "persistenceNotify": "Kubika no Kumenyesha"
+      }
+    },
+    "result": {
+      "classification": "Icyiciro: {{verdict}}",
+      "confidence": "{{percent}}% {{label}}",
+      "modelCertainty": "(ikizere cy'icyitegererezo)",
+      "confidenceLabel": {
+        "fake": "bishoboka ko ari ibinyoma",
+        "real": "bishoboka ko ari ukuri",
+        "uncertain": "biri hagati na hagati"
+      },
+      "exportPDF": "Kohereza PDF",
+      "share": "Sangiza",
+      "flag": "Shyiraho ikimenyetso wenyine",
+      "credibilityScore": "Amanota y'Ukuri",
+      "scoreMax": "/ 100",
+      "bandSummary": "Amanota agwa mu cyiciro cya <1>{{band}}</1>.",
+      "band": {
+        "highRisk": "INGORANE NYINSHI",
+        "uncertain": "BIDASOBANUTSE",
+        "credible": "BYIZEWE"
+      },
+      "sentimentScore": "Amanota y'Imyumvire",
+      "emotionalTone": "Imyumvire y'Amarangamutima",
+      "sensationalismIndex": "Urugero rw'Ikirenze Urugero",
+      "headlineConsistency": "Guhuza Umutwe n'Inkuru",
+      "notAvailable": "Nta na kimwe",
+      "whyFlagged": "Kuki ibi byashyizweho ikimenyetso?"
+    }
+  }
+}

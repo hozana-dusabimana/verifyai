@@ -1,0 +1,60 @@
+{
+  "citizenDash": {
+    "workspace": "Ikibaho cy'umuturage",
+    "greeting": "Muraho {{name}} — genzura mbere yo gusangiza abandi.",
+    "subtitle": "Komeka umuyoboro, ubone igisubizo mu masegonda makeya.",
+    "fallbackName": "mukoresha",
+    "tipOfTheDay": "Inama y'uyu munsi",
+    "quickAnalyze": {
+      "title": "Ese ni ukuri?",
+      "subtitle": "Komeka umuyoboro cyangwa igice cy'inkuru. Tuzayinyuza muri modeli eshatu mu masegonda makeya."
+    },
+    "trust": {
+      "label": "Amanota yawe y'ikizere",
+      "copyNone": "Kora isesengura ryawe rya mbere kugira ngo ubone amanota yawe bwite y'ikizere.",
+      "copyHigh": "Ibyinshi mu byo ugenzura biba ari iby'ukuri. Komeza kugenzura mbere yo gusangiza abandi.",
+      "copyMixed": "Ibimenyetso bivanze — komeza kwitonda mbere yo gusangiza abandi ibyo usoma.",
+      "copyLow": "Ufata ibintu byinshi bishidikanywaho. Ubwo bwitonzi burinda buri wese ukukikije.",
+      "basedOn_one": "Bishingiye ku igenzura {{count}}",
+      "basedOn_other": "Bishingiye ku magenzura {{count}}"
+    },
+    "recent": {
+      "heading": "Amagenzura yawe aheruka",
+      "subtitle": "Impamvu zigaragazwa ni ikimenyetso cya mbere cy'ingenzi modeli yagaragaje kuri buri kintu.",
+      "untitled": "Inkuru itagira umutwe",
+      "noReason": "Nta zindi mpamvu ziboneka.",
+      "emptyTitle": "Nta kintu kiragenzurwa",
+      "emptyBody": "Komeka umuyoboro mu kazu kari hejuru kugira ngo ukore igenzura ryawe rya mbere."
+    },
+    "tips": {
+      "emotionalHeadlines": {
+        "title": "Itonde imitwe y'inkuru ikangura amarangamutima",
+        "body": "Imitwe y'inkuru ikabya cyangwa itera ubwoba ni ikimenyetso gisanzwe cy'ibintu bidafite ikizere. Hagarara mbere yo gusangiza abandi."
+      },
+      "checkSource": {
+        "title": "Genzura inkomoko",
+        "body": "Amazina ya domaine atazwi, URL zigana izindi, n'amazina y'abanditsi abura ni ibimenyetso bibi. Shakisha izina ry'urubuga ku giti cyaryo."
+      },
+      "crossReference": {
+        "title": "Gereranya inkuru n'ahandi",
+        "body": "Amakuru y'ukuri akunze gutangazwa n'urubuga rumwe gusa gake. Niba nta yindi nkomoko ifite ikizere iyivuga, uyifate ushidikanya."
+      },
+      "readPastHeadline": {
+        "title": "Soma urenze umutwe w'inkuru",
+        "body": "Inkuru nyinshi ziyobya zifite imitwe itahuje n'ibikubiyemo nyabyo. Soma inkuru yose mbere yo kugira icyo utekereza."
+      },
+      "reverseImage": {
+        "title": "Shakisha amafoto mu buryo buhindukira",
+        "body": "Amafoto akunze gukoreshwa nta gihe kibereye. Ishakisha ryihuse rishobora kwerekana itariki n'inkomoko by'umwimerere."
+      },
+      "checkDate": {
+        "title": "Genzura itariki",
+        "body": "Inkuru za kera zikunze kongera kugaruka nk'aho ari nshya. Buri gihe genzura itariki yo gutangaza mbere yo kubyitabira."
+      },
+      "perfectQuotes": {
+        "title": "Witondere amagambo meza cyane",
+        "body": "Inkuru zihimbano zikunze kuba zikubiyemo amagambo y'abantu bazwi yatunganyijwe cyane adashobora kugenzurwa ahandi."
+      }
+    }
+  }
+}

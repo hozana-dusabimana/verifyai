@@ -1,0 +1,26 @@
+{
+  "dashboardLayout": {
+    "defaultUser": "User",
+    "profileDetails": "Profile Details",
+    "nav": {
+      "dashboard": "Dashboard",
+      "analyzeContent": "Analyze Content",
+      "communityNews": "Community News",
+      "history": "History",
+      "analytics": "Analytics",
+      "alerts": "Alerts",
+      "settings": "Settings",
+      "orgMembers": "Org Members",
+      "adminConsole": "Admin Console",
+      "exitAdmin": "Exit Admin",
+      "systemHealth": "System Health",
+      "statistics": "Statistics",
+      "userManagement": "User Management",
+      "organizations": "Organizations",
+      "datasetManager": "Dataset Manager",
+      "alertRules": "Alert Rules",
+      "auditLogs": "Audit Logs",
+      "mlModels": "ML Models"
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "nav": {
+    "links": {
+      "dashboard": "Dashboard",
+      "analyze": "Analyze",
+      "news": "News",
+      "history": "History",
+      "analytics": "Analytics",
+      "howItWorks": "How It Works",
+      "pricing": "Pricing",
+      "about": "About Us",
+      "contact": "Contact Us"
+    },
+    "adminPanel": "Admin Panel",
+    "profileSettings": "Profile & Settings"
+  }
+}

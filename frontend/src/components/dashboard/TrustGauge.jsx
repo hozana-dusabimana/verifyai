@@ -1,4 +1,7 @@
+import { useTranslation } from 'react-i18next';
+
 const TrustGauge = ({ score, size = 140 }) => {
+  const { t } = useTranslation();
   const radius = (size - 16) / 2;
   const circumference = 2 * Math.PI * radius;
   const safeScore = Math.max(0, Math.min(100, score ?? 0));
@@ -35,7 +38,7 @@ const TrustGauge = ({ score, size = 140 }) => {
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <span className="text-3xl font-extrabold text-slate-900">{safeScore}%</span>
-        <span className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold mt-0.5">Trust</span>
+        <span className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold mt-0.5">{t('widgets.trustGauge.label')}</span>
       </div>
     </div>
   );

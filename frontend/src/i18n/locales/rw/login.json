@@ -1,0 +1,48 @@
+{
+  "login": {
+    "eyebrow": "Kwinjira",
+    "welcomeBack": "Murakaza neza",
+    "subtitle": "Injira kugira ngo ukomeze kugenzura ibikubiyemo ukoresheje VerifyAI.",
+    "emailLabel": "Imeyili",
+    "emailPlaceholder": "wowe@ikigo.com",
+    "passwordLabel": "Ijambobanga",
+    "passwordPlaceholder": "Andika ijambobanga ryawe",
+    "forgotPassword": "Wibagiwe ijambobanga?",
+    "showPassword": "Erekana ijambobanga",
+    "hidePassword": "Hisha ijambobanga",
+    "keepSignedIn": "Nkomeze kuba ninjiye",
+    "signingIn": "Birimo kwinjira…",
+    "signIn": "Kwinjira",
+    "noAccount": "Uri mushya kuri VerifyAI?",
+    "createAccount": "Fungura konti",
+    "errors": {
+      "network": "Ntibishoboka kugera kuri seriveri. Reba interineti yawe wongere ugerageze.",
+      "lockout": "Konti yahagaritswe by'agateganyo nyuma yo kugerageza inshuro nyinshi bidakunze. Ongera ugerageze nyuma y'iminota 30 cyangwa uhindure ijambobanga ryawe.",
+      "invalid": "Imeyili cyangwa ijambobanga bitari byo."
+    },
+    "demo": {
+      "toggle": "Konti z'igeragezwa zo gusuzuma",
+      "hint": "Kanda kuri konti iyo ari yo yose kugira ngo wuzuze ifishi. Ziremwa mu buryo bwikora na komandi yo gutera imbuto."
+    },
+    "brand": {
+      "headlineLine1": "Genzura ibyo usoma.",
+      "headlineLine2": "Wizere ibyo usangiza abandi.",
+      "subtext": "Igenzura ry'ukuri rishingiye ku buhanga bwa AI ryubakiwe abaturage, ibitangazamakuru na guverinoma."
+    },
+    "features": {
+      "ensemble": {
+        "title": "Ihuriro ry'imitwe itatu",
+        "body": "Naive Bayes, LSTM na DistilBERT bisuzumwa hamwe kugira ngo ibyemezo bibe bikomeye."
+      },
+      "explainable": {
+        "title": "Ibisubizo bisobanutse",
+        "body": "Buri gusobanura kuza n'amagambo y'ingenzi, ibimenyetso, n'impamvu biri inyuma yacyo."
+      },
+      "standards": {
+        "title": "Bihuye n'amahame",
+        "body": "Byateguwe hakurikijwe amahame y'ifatizo ya IFCN, C2PA, JTI na DSA."
+      }
+    },
+    "alignedWith": "Bihuye na"
+  }
+}

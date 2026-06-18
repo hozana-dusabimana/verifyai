@@ -1,0 +1,26 @@
+{
+  "dashboardLayout": {
+    "defaultUser": "Umukoresha",
+    "profileDetails": "Amakuru ya konti",
+    "nav": {
+      "dashboard": "Ikibaho",
+      "analyzeContent": "Sesengura ibikubiyemo",
+      "communityNews": "Amakuru y'abaturage",
+      "history": "Amateka",
+      "analytics": "Isesengura ry'imibare",
+      "alerts": "Imenyesha",
+      "settings": "Igenamiterere",
+      "orgMembers": "Abagize umuryango",
+      "adminConsole": "Urubuga rw'umuyobozi",
+      "exitAdmin": "Sohoka mu buyobozi",
+      "systemHealth": "Ubuzima bwa sisitemu",
+      "statistics": "Imibare",
+      "userManagement": "Gucunga abakoresha",
+      "organizations": "Imiryango",
+      "datasetManager": "Gucunga amakuru remezo",
+      "alertRules": "Amabwiriza y'imenyesha",
+      "auditLogs": "Inyandiko z'igenzura",
+      "mlModels": "Ibyitegererezo bya ML"
+    }
+  }
+}

@@ -1,0 +1,86 @@
+{
+  "settings": {
+    "title": "Settings",
+    "tabs": {
+      "profile": "Profile",
+      "security": "Security",
+      "notifications": "Notifications",
+      "apiKeys": "API Keys"
+    },
+    "profile": {
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "organization": "Organization",
+      "email": "Email",
+      "role": "Role",
+      "saveChanges": "Save Changes",
+      "updated": "Profile updated.",
+      "updateFailed": "Update failed."
+    },
+    "security": {
+      "changePassword": "Change Password",
+      "currentPassword": "Current Password",
+      "newPassword": "New Password",
+      "confirmNewPassword": "Confirm New Password",
+      "updatePassword": "Update Password",
+      "passwordsDoNotMatch": "Passwords do not match.",
+      "passwordChanged": "Password changed.",
+      "passwordChangeFailed": "Password change failed."
+    },
+    "notifications": {
+      "emailOnHighRisk": "Email on high-risk detection",
+      "emailOnHighRiskDesc": "Get notified when content is flagged as high risk",
+      "emailOnAnalysisComplete": "Email on analysis complete",
+      "emailOnAnalysisCompleteDesc": "Get notified when an analysis finishes",
+      "alertThreshold": "Alert Threshold Score",
+      "emailFrequency": "Email Frequency",
+      "frequencyImmediate": "Immediate",
+      "frequencyDaily": "Daily Digest",
+      "frequencyWeekly": "Weekly Digest",
+      "savePreferences": "Save Preferences",
+      "preferencesSaved": "Notification preferences saved.",
+      "preferencesFailed": "Failed to save preferences."
+    },
+    "apiKeys": {
+      "yourKeys": "Your API keys",
+      "yourKeysDesc": "Use keys to authenticate programmatic requests. Treat them like passwords — never commit them to source control.",
+      "keyNamePlaceholder": "Key name (e.g. 'Production')",
+      "generate": "Generate",
+      "newKeyNotice": "New API key — copy it now, it won't be shown again:",
+      "createdOn": "Created {{date}}",
+      "lastUsed": "Last used {{date}}",
+      "revoke": "Revoke",
+      "emptyTitle": "No API keys yet",
+      "emptyDesc": "Generate one above to enable programmatic access.",
+      "created": "API key created. Copy it now — it won't be shown again.",
+      "createFailed": "Failed to create key.",
+      "revoked": "API key revoked.",
+      "revokeFailed": "Failed to revoke key.",
+      "exampleRequests": "Example requests",
+      "exampleAuthPrefix": "Authenticate with",
+      "exampleBaseUrl": "Base URL:",
+      "examplePrefilled": "Snippets below are pre-filled with the key you just generated.",
+      "copy": "Copy",
+      "copied": "Copied",
+      "responseEnvelope": "Response envelope",
+      "examples": {
+        "submitText": {
+          "title": "Submit text for analysis",
+          "description": "Send article text and receive an analysis ID. The pipeline runs asynchronously — poll the status endpoint until completed."
+        },
+        "submitUrl": {
+          "title": "Submit a URL",
+          "description": "Pass a URL and the backend will fetch and parse the article content automatically."
+        },
+        "getResult": {
+          "title": "Get analysis result",
+          "description": "Fetch the full result once status is \"completed\". Returns credibility score, classification (REAL / FAKE / UNCERTAIN), top keywords, and flagging reasons."
+        },
+        "history": {
+          "title": "List your analysis history",
+          "description": "Paginated list of your recent analyses. Supports ?page=N&page_size=N."
+        }
+      }
+    }
+  }
+}

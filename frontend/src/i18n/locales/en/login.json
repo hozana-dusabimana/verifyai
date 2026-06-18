@@ -1,0 +1,48 @@
+{
+  "login": {
+    "eyebrow": "Sign in",
+    "welcomeBack": "Welcome back",
+    "subtitle": "Sign in to continue verifying content with VerifyAI.",
+    "emailLabel": "Email",
+    "emailPlaceholder": "you@organization.com",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "Enter your password",
+    "forgotPassword": "Forgot password?",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "keepSignedIn": "Keep me signed in",
+    "signingIn": "Signing in…",
+    "signIn": "Sign in",
+    "noAccount": "New to VerifyAI?",
+    "createAccount": "Create an account",
+    "errors": {
+      "network": "Cannot reach the server. Check your connection and try again.",
+      "lockout": "Account temporarily locked after multiple failed attempts. Try again in 30 minutes or reset your password.",
+      "invalid": "Invalid email or password."
+    },
+    "demo": {
+      "toggle": "Demo accounts for evaluation",
+      "hint": "Click any account to fill the form. Created automatically by the seed command."
+    },
+    "brand": {
+      "headlineLine1": "Verify what you read.",
+      "headlineLine2": "Trust what you share.",
+      "subtext": "AI-powered fact verification built for citizens, newsrooms, and governments."
+    },
+    "features": {
+      "ensemble": {
+        "title": "Three-model ensemble",
+        "body": "Naive Bayes, LSTM and DistilBERT scored together for robust verdicts."
+      },
+      "explainable": {
+        "title": "Explainable results",
+        "body": "Every classification ships with the keywords, signals, and reasons behind it."
+      },
+      "standards": {
+        "title": "Standards-aligned",
+        "body": "Designed against IFCN, C2PA, JTI and DSA reference frameworks."
+      }
+    },
+    "alignedWith": "Aligned with"
+  }
+}

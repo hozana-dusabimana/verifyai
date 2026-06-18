@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { Download, TrendingUp, ShieldAlert, Tag, Globe, FileText } from 'lucide-react';
 import { analyticsAPI } from '../services/api';
@@ -11,6 +12,7 @@ const csvEscape = (v) => {
 };
 
 const AnalyticsPage = () => {
+  const { t } = useTranslation();
   const [trendData, setTrendData] = useState([]);
   const [sources, setSources] = useState([]);
   const [keywords, setKeywords] = useState({ fake_keywords: [], real_keywords: [] });
@@ -44,27 +46,27 @@ const AnalyticsPage = () => {
 
   const exportCSV = () => {
     const rows = [
-      ['VerifyAI Analytics Report'],
-      ['Generated', new Date().toLocaleString()],
+      [t('analytics.report.title')],
+      [t('analytics.report.generatedLabel'), new Date().toLocaleString()],
       [],
-      ['Detection trend (30 days)'],
-      ['Date', 'Real', 'Fake'],
-      ...trendData.map((t) => [t.name, t.real, t.fake]),
+      [t('analytics.trends.csvSection')],
+      [t('analytics.columns.date'), t('common.verdict.real'), t('common.verdict.fake')],
+      ...trendData.map((d) => [d.name, d.real, d.fake]),
       [],
-      ['Source credibility'],
-      ['Source', 'Articles', 'Avg credibility %'],
+      [t('analytics.sources.csvSection')],
+      [t('analytics.columns.source'), t('analytics.columns.articles'), t('analytics.columns.avgCredibility')],
       ...sources.map((s) => [s.source_name, s.article_count, Math.round(s.average_credibility)]),
       [],
-      ['Topic distribution'],
-      ['Topic', 'Count'],
-      ...topics.map((t) => [t.topic, t.count]),
+      [t('analytics.topics.csvSection')],
+      [t('analytics.columns.topic'), t('analytics.columns.count')],
+      ...topics.map((tp) => [tp.topic, tp.count]),
       [],
-      ['Top keywords in fake articles'],
-      ['Keyword', 'Count'],
+      [t('analytics.keywords.csvFakeSection')],
+      [t('analytics.columns.keyword'), t('analytics.columns.count')],
       ...(keywords.fake_keywords || []).map((k) => [k.keyword, k.count]),
       [],
-      ['Top keywords in real articles'],
-      ['Keyword', 'Count'],
+      [t('analytics.keywords.csvRealSection')],
+      [t('analytics.columns.keyword'), t('analytics.columns.count')],
       ...(keywords.real_keywords || []).map((k) => [k.keyword, k.count]),
     ];
     const csv = rows.map((r) => r.map(csvEscape).join(',')).join('\n');
@@ -80,11 +82,11 @@ const AnalyticsPage = () => {
   const exportPDF = () => {
     const tbl = (cols, data) =>
       data.length === 0
-        ? '<p style="color:#64748b">No data.</p>'
+        ? `<p style="color:#64748b">${t('analytics.report.noData')}</p>`
         : `<table><thead><tr>${cols.map((c) => `<th>${c}</th>`).join('')}</tr></thead><tbody>${
             data.map((row) => `<tr>${row.map((c) => `<td>${c}</td>`).join('')}</tr>`).join('')
           }</tbody></table>`;
-    const html = `<!doctype html><html><head><meta charset="utf-8"><title>VerifyAI Analytics Report</title>
+    const html = `<!doctype html><html><head><meta charset="utf-8"><title>${t('analytics.report.title')}</title>
       <style>
         body{font-family:system-ui,Arial,sans-serif;color:#0f172a;margin:32px;}
         h1{font-size:22px;margin:0 0 4px;} .sub{color:#64748b;margin:0 0 24px;font-size:13px;}
@@ -93,23 +95,23 @@ const AnalyticsPage = () => {
         th,td{border:1px solid #e2e8f0;padding:6px 8px;text-align:left;} th{background:#f8fafc;}
         @media print{button{display:none;}}
       </style></head><body>
-      <h1>VerifyAI — Analytics Report</h1>
-      <p class="sub">Generated ${new Date().toLocaleString()}</p>
-      <h2>Detection trend (30 days)</h2>
-      ${tbl(['Date', 'Real', 'Fake'], trendData.map((t) => [t.name, t.real, t.fake]))}
-      <h2>Source credibility</h2>
-      ${tbl(['Source', 'Articles', 'Avg credibility %'], sources.map((s) => [s.source_name, s.article_count, Math.round(s.average_credibility)]))}
-      <h2>Topic distribution</h2>
-      ${tbl(['Topic', 'Count'], topics.map((t) => [t.topic, t.count]))}
-      <h2>Top keywords — fake articles</h2>
-      ${tbl(['Keyword', 'Count'], (keywords.fake_keywords || []).map((k) => [k.keyword, k.count]))}
-      <h2>Top keywords — real articles</h2>
-      ${tbl(['Keyword', 'Count'], (keywords.real_keywords || []).map((k) => [k.keyword, k.count]))}
-      <button onclick="window.print()" style="margin-top:24px;padding:8px 16px;font-weight:bold;cursor:pointer">Print / Save as PDF</button>
+      <h1>${t('analytics.report.heading')}</h1>
+      <p class="sub">${t('analytics.report.generated', { datetime: new Date().toLocaleString() })}</p>
+      <h2>${t('analytics.trends.csvSection')}</h2>
+      ${tbl([t('analytics.columns.date'), t('common.verdict.real'), t('common.verdict.fake')], trendData.map((d) => [d.name, d.real, d.fake]))}
+      <h2>${t('analytics.sources.csvSection')}</h2>
+      ${tbl([t('analytics.columns.source'), t('analytics.columns.articles'), t('analytics.columns.avgCredibility')], sources.map((s) => [s.source_name, s.article_count, Math.round(s.average_credibility)]))}
+      <h2>${t('analytics.topics.csvSection')}</h2>
+      ${tbl([t('analytics.columns.topic'), t('analytics.columns.count')], topics.map((tp) => [tp.topic, tp.count]))}
+      <h2>${t('analytics.keywords.pdfFakeSection')}</h2>
+      ${tbl([t('analytics.columns.keyword'), t('analytics.columns.count')], (keywords.fake_keywords || []).map((k) => [k.keyword, k.count]))}
+      <h2>${t('analytics.keywords.pdfRealSection')}</h2>
+      ${tbl([t('analytics.columns.keyword'), t('analytics.columns.count')], (keywords.real_keywords || []).map((k) => [k.keyword, k.count]))}
+      <button onclick="window.print()" style="margin-top:24px;padding:8px 16px;font-weight:bold;cursor:pointer">${t('analytics.report.printSave')}</button>
       <script>window.onload=function(){setTimeout(function(){window.print();},300);};</script>
       </body></html>`;
     const w = window.open('', '_blank');
-    if (!w) { alert('Please allow pop-ups to export the PDF report.'); return; }
+    if (!w) { alert(t('analytics.report.popupBlocked')); return; }
     w.document.write(html);
     w.document.close();
   };
@@ -126,15 +128,15 @@ const AnalyticsPage = () => {
     <div className="flex flex-col gap-6">
       <div className="flex justify-between items-end">
         <div>
-          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Analytics & Reports</h1>
-          <p className="text-slate-500 font-medium mt-1">Insights from your content analysis activity.</p>
+          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">{t('analytics.title')}</h1>
+          <p className="text-slate-500 font-medium mt-1">{t('analytics.subtitle')}</p>
         </div>
         <div className="flex gap-2">
           <button onClick={exportPDF} className="hidden sm:flex px-4 py-2 bg-brand-600 text-white rounded-xl font-medium shadow-md hover:bg-brand-700 items-center gap-2">
-            <FileText className="w-4 h-4" /> Export PDF
+            <FileText className="w-4 h-4" /> {t('analytics.exportPdf')}
           </button>
           <button onClick={exportCSV} className="hidden sm:flex px-4 py-2 bg-slate-100 text-slate-700 rounded-xl font-medium hover:bg-slate-200 items-center gap-2">
-            <Download className="w-4 h-4" /> Export CSV
+            <Download className="w-4 h-4" /> {t('analytics.exportCsv')}
           </button>
         </div>
       </div>
@@ -142,7 +144,7 @@ const AnalyticsPage = () => {
       {/* Detection Trend */}
       <div className="glass rounded-2xl p-6 shadow-sm">
         <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-          <TrendingUp className="w-5 h-5 text-brand-600" /> Detection Trends (30 Days)
+          <TrendingUp className="w-5 h-5 text-brand-600" /> {t('analytics.trends.title')}
         </h2>
         <div className="h-72 w-full">
           {trendData.length > 0 ? (
@@ -152,12 +154,12 @@ const AnalyticsPage = () => {
                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
                 <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
                 <RechartsTooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
-                <Bar dataKey="real" fill="#10b981" radius={[4, 4, 0, 0]} name="Real" />
-                <Bar dataKey="fake" fill="#ef4444" radius={[4, 4, 0, 0]} name="Fake" />
+                <Bar dataKey="real" fill="#10b981" radius={[4, 4, 0, 0]} name={t('common.verdict.real')} />
+                <Bar dataKey="fake" fill="#ef4444" radius={[4, 4, 0, 0]} name={t('common.verdict.fake')} />
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <div className="h-full flex items-center justify-center text-slate-400 text-sm">No trend data available yet.</div>
+            <div className="h-full flex items-center justify-center text-slate-400 text-sm">{t('analytics.trends.empty')}</div>
           )}
         </div>
       </div>
@@ -166,7 +168,7 @@ const AnalyticsPage = () => {
         {/* Topic Distribution */}
         <div className="glass rounded-2xl p-6 shadow-sm">
           <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-            <Tag className="w-5 h-5 text-brand-600" /> Topic Distribution
+            <Tag className="w-5 h-5 text-brand-600" /> {t('analytics.topics.title')}
           </h2>
           {topics.length > 0 ? (
             <div className="h-64">
@@ -180,14 +182,14 @@ const AnalyticsPage = () => {
               </ResponsiveContainer>
             </div>
           ) : (
-            <div className="h-64 flex items-center justify-center text-slate-400 text-sm">No topic data yet.</div>
+            <div className="h-64 flex items-center justify-center text-slate-400 text-sm">{t('analytics.topics.empty')}</div>
           )}
         </div>
 
         {/* Source Credibility Leaderboard */}
         <div className="glass rounded-2xl p-6 shadow-sm">
           <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-            <Globe className="w-5 h-5 text-brand-600" /> Source Credibility
+            <Globe className="w-5 h-5 text-brand-600" /> {t('analytics.sources.title')}
           </h2>
           {sources.length > 0 ? (
             <div className="space-y-3 max-h-64 overflow-y-auto">
@@ -195,7 +197,7 @@ const AnalyticsPage = () => {
                 <div key={i} className="flex items-center justify-between p-3 rounded-xl border border-slate-100 hover:bg-slate-50">
                   <div className="flex-1 min-w-0 pr-3">
                     <p className="text-sm font-bold text-slate-800 truncate">{s.source_name}</p>
-                    <p className="text-xs text-slate-500">{s.article_count} articles</p>
+                    <p className="text-xs text-slate-500">{t('analytics.sources.articles', { count: s.article_count })}</p>
                   </div>
                   <div className={`px-2.5 py-1 rounded-full text-xs font-bold border ${
                     s.average_credibility > 60 ? 'bg-emerald-100 text-emerald-800 border-emerald-200' :
@@ -208,7 +210,7 @@ const AnalyticsPage = () => {
               ))}
             </div>
           ) : (
-            <div className="h-64 flex items-center justify-center text-slate-400 text-sm">No source data yet.</div>
+            <div className="h-64 flex items-center justify-center text-slate-400 text-sm">{t('analytics.sources.empty')}</div>
           )}
         </div>
       </div>
@@ -216,11 +218,11 @@ const AnalyticsPage = () => {
       {/* Keyword Cloud */}
       <div className="glass rounded-2xl p-6 shadow-sm">
         <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-          <ShieldAlert className="w-5 h-5 text-red-500" /> Top Keywords
+          <ShieldAlert className="w-5 h-5 text-red-500" /> {t('analytics.keywords.title')}
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <h3 className="text-sm font-bold text-red-600 uppercase mb-3">In Fake Articles</h3>
+            <h3 className="text-sm font-bold text-red-600 uppercase mb-3">{t('analytics.keywords.inFake')}</h3>
             <div className="flex flex-wrap gap-2">
               {(keywords.fake_keywords || []).slice(0, 15).map((k, i) => (
                 <span key={i} className="px-3 py-1.5 bg-red-50 text-red-700 rounded-full text-xs font-bold border border-red-100">
@@ -228,12 +230,12 @@ const AnalyticsPage = () => {
                 </span>
               ))}
               {(!keywords.fake_keywords || keywords.fake_keywords.length === 0) && (
-                <span className="text-sm text-slate-400">No data yet</span>
+                <span className="text-sm text-slate-400">{t('analytics.keywords.empty')}</span>
               )}
             </div>
           </div>
           <div>
-            <h3 className="text-sm font-bold text-emerald-600 uppercase mb-3">In Real Articles</h3>
+            <h3 className="text-sm font-bold text-emerald-600 uppercase mb-3">{t('analytics.keywords.inReal')}</h3>
             <div className="flex flex-wrap gap-2">
               {(keywords.real_keywords || []).slice(0, 15).map((k, i) => (
                 <span key={i} className="px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-full text-xs font-bold border border-emerald-100">
@@ -241,7 +243,7 @@ const AnalyticsPage = () => {
                 </span>
               ))}
               {(!keywords.real_keywords || keywords.real_keywords.length === 0) && (
-                <span className="text-sm text-slate-400">No data yet</span>
+                <span className="text-sm text-slate-400">{t('analytics.keywords.empty')}</span>
               )}
             </div>
           </div>

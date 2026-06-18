@@ -1,0 +1,40 @@
+{
+  "newsfeed": {
+    "pageTitle": "Community News",
+    "pageSubtitle": "Posts are verified by our AI ensemble. Only news classified as <0>REAL</0> is published to the newsletter below.",
+    "composerTitle": "Post a news story",
+    "titlePlaceholder": "Headline / title",
+    "contentPlaceholder": "Paste the full news content here (min 50 characters). The AI will verify it before publishing.",
+    "sourceUrlPlaceholder": "Source link (https://…) — optional; unsourced stories are flagged for moderator verification",
+    "sourceNamePlaceholder": "Source name (optional)",
+    "verifyAndPost": "Verify & Post",
+    "verifying": "Verifying…",
+    "contentTooShort": "Content must be at least 50 characters for the AI to verify it.",
+    "submissionFailed": "Submission failed.",
+    "feedLoadError": "Could not load the news feed.",
+    "result": {
+      "approved": "Approved — published to the newsletter.",
+      "review": "Held for editorial review — a moderator will check this report before it publishes.",
+      "rejected": "Not approved — AI verdict: {{verdict}}.",
+      "rejectedDefaultVerdict": "not credible",
+      "failed": "Verification failed.",
+      "credibilityScore": "Credibility score: {{score}}%",
+      "unsourcedPublished": "Published as an unsourced eyewitness report — moderators have been notified to verify it.",
+      "rejectedHint": "Only news classified as REAL is published. You can still see this under “My submissions” below."
+    },
+    "signedOutPrompt": "Want to contribute? Sign in to submit news for AI verification.",
+    "mySubmissions": "My submissions",
+    "credibleSuffix": "{{score}}% credible",
+    "newsletterTitle": "📰 Verified Newsletter",
+    "emptyFeed": "No verified news yet. Be the first to post a credible story.",
+    "sourceFallback": "Source",
+    "communityFallback": "Community",
+    "status": {
+      "approved": "Approved",
+      "rejected": "Not approved",
+      "review": "In editorial review",
+      "pending": "Verifying…",
+      "failed": "Failed"
+    }
+  }
+}

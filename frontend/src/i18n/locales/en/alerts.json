@@ -1,0 +1,43 @@
+{
+  "alerts": {
+    "pageTitle": "Alert Center",
+    "pageSubtitle": "High-risk content alerts and notifications.",
+    "preferences": "Preferences",
+    "notificationPreferences": "Notification Preferences",
+    "emailOnHighRisk": "Email on high-risk detection",
+    "emailOnAnalysisComplete": "Email on analysis complete",
+    "alertThreshold": "Alert Threshold",
+    "emailFrequency": "Email Frequency",
+    "frequency": {
+      "immediate": "Immediate",
+      "daily": "Daily Digest",
+      "weekly": "Weekly Digest"
+    },
+    "savePreferences": "Save Preferences",
+    "preferencesSaved": "Notification preferences saved.",
+    "filter": {
+      "all": "All",
+      "open": "Open",
+      "escalated": "Escalated",
+      "resolved": "Resolved",
+      "dismissed": "Dismissed"
+    },
+    "status": {
+      "open": "Open",
+      "escalated": "Escalated",
+      "resolved": "Resolved",
+      "dismissed": "Dismissed"
+    },
+    "untitledAlert": "Untitled Alert",
+    "score": "Score:",
+    "severity": "Severity: {{severity}}",
+    "unpublishStory": "Unpublish story",
+    "storyUnpublished": "Story unpublished",
+    "resolve": "Resolve",
+    "escalate": "Escalate",
+    "dismiss": "Dismiss",
+    "unpublishConfirm": "Remove this story from the public wire? This is final.",
+    "emptyTitle": "No alerts found.",
+    "emptyHint": "Alerts are auto-created when content scores below the risk threshold."
+  }
+}

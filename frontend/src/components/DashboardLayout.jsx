@@ -1,10 +1,13 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ShieldCheck, LayoutDashboard, Search, History, BarChart2, Bell, Settings, User, LogOut, Menu, X, Shield, Activity, Users, Database, FileText, Brain, Building2, PieChart, SlidersHorizontal, Newspaper } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
-import { roleLabel } from '../utils/roles';
+import { roleLabelKey, roleLabel } from '../utils/roles';
+import LanguageSwitcher from './LanguageSwitcher';
 
 const DashboardLayout = ({ children }) => {
+  const { t } = useTranslation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [lastPath, setLastPath] = useState('');
@@ -23,37 +26,38 @@ const DashboardLayout = ({ children }) => {
     navigate('/');
   };
 
-  const displayName = user ? (user.full_name || user.first_name || user.email) : 'User';
+  const displayName = user ? (user.full_name || user.first_name || user.email) : t('dashboardLayout.defaultUser');
   const isAdmin = user?.role === 'admin' || user?.is_superuser;
   const isGovernment = user?.role === 'government';
   const isCitizen = user?.role === 'citizen';
 
   // Citizens get a simplified workspace — no History/Analytics/Alerts.
   const baseLinks = [
-    { name: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard className="w-5 h-5 flex-shrink-0" /> },
-    { name: 'Analyze Content', path: '/analyze', icon: <Search className="w-5 h-5 flex-shrink-0" /> },
-    { name: 'Community News', path: '/news', icon: <Newspaper className="w-5 h-5 flex-shrink-0" /> },
+    { name: 'Dashboard', label: t('dashboardLayout.nav.dashboard'), path: '/dashboard', icon: <LayoutDashboard className="w-5 h-5 flex-shrink-0" /> },
+    { name: 'Analyze Content', label: t('dashboardLayout.nav.analyzeContent'), path: '/analyze', icon: <Search className="w-5 h-5 flex-shrink-0" /> },
+    { name: 'Community News', label: t('dashboardLayout.nav.communityNews'), path: '/news', icon: <Newspaper className="w-5 h-5 flex-shrink-0" /> },
     ...(!isCitizen ? [
-      { name: 'History', path: '/history', icon: <History className="w-5 h-5 flex-shrink-0" /> },
-      { name: 'Analytics', path: '/analytics', icon: <BarChart2 className="w-5 h-5 flex-shrink-0" /> },
-      { name: 'Alerts', path: '/alerts', icon: <Bell className="w-5 h-5 flex-shrink-0" /> },
+      { name: 'History', label: t('dashboardLayout.nav.history'), path: '/history', icon: <History className="w-5 h-5 flex-shrink-0" /> },
+      { name: 'Analytics', label: t('dashboardLayout.nav.analytics'), path: '/analytics', icon: <BarChart2 className="w-5 h-5 flex-shrink-0" /> },
+      { name: 'Alerts', label: t('dashboardLayout.nav.alerts'), path: '/alerts', icon: <Bell className="w-5 h-5 flex-shrink-0" /> },
     ] : []),
-    { name: 'Settings', path: '/settings', icon: <Settings className="w-5 h-5 flex-shrink-0" /> },
+    { name: 'Settings', label: t('dashboardLayout.nav.settings'), path: '/settings', icon: <Settings className="w-5 h-5 flex-shrink-0" /> },
   ];
 
   const adminLinks = [
-    { name: 'System Health', path: '/admin/health', icon: <Activity className="w-5 h-5 flex-shrink-0" /> },
-    { name: 'Statistics', path: '/admin/statistics', icon: <PieChart className="w-5 h-5 flex-shrink-0" /> },
-    { name: 'User Management', path: '/admin/users', icon: <Users className="w-5 h-5 flex-shrink-0" /> },
-    { name: 'Organizations', path: '/admin/organizations', icon: <Building2 className="w-5 h-5 flex-shrink-0" /> },
-    { name: 'Dataset Manager', path: '/admin/datasets', icon: <Database className="w-5 h-5 flex-shrink-0" /> },
-    { name: 'Alert Rules', path: '/admin/alert-rules', icon: <SlidersHorizontal className="w-5 h-5 flex-shrink-0" /> },
-    { name: 'Audit Logs', path: '/admin/audit', icon: <FileText className="w-5 h-5 flex-shrink-0" /> },
-    { name: 'ML Models', path: '/admin/models', icon: <Brain className="w-5 h-5 flex-shrink-0" /> },
+    { name: 'System Health', label: t('dashboardLayout.nav.systemHealth'), path: '/admin/health', icon: <Activity className="w-5 h-5 flex-shrink-0" /> },
+    { name: 'Statistics', label: t('dashboardLayout.nav.statistics'), path: '/admin/statistics', icon: <PieChart className="w-5 h-5 flex-shrink-0" /> },
+    { name: 'User Management', label: t('dashboardLayout.nav.userManagement'), path: '/admin/users', icon: <Users className="w-5 h-5 flex-shrink-0" /> },
+    { name: 'Organizations', label: t('dashboardLayout.nav.organizations'), path: '/admin/organizations', icon: <Building2 className="w-5 h-5 flex-shrink-0" /> },
+    { name: 'Dataset Manager', label: t('dashboardLayout.nav.datasetManager'), path: '/admin/datasets', icon: <Database className="w-5 h-5 flex-shrink-0" /> },
+    { name: 'Alert Rules', label: t('dashboardLayout.nav.alertRules'), path: '/admin/alert-rules', icon: <SlidersHorizontal className="w-5 h-5 flex-shrink-0" /> },
+    { name: 'Audit Logs', label: t('dashboardLayout.nav.auditLogs'), path: '/admin/audit', icon: <FileText className="w-5 h-5 flex-shrink-0" /> },
+    { name: 'ML Models', label: t('dashboardLayout.nav.mlModels'), path: '/admin/models', icon: <Brain className="w-5 h-5 flex-shrink-0" /> },
   ];
 
   const orgManagerLink = {
     name: 'Org Members',
+    label: t('dashboardLayout.nav.orgMembers'),
     path: '/org/members',
     icon: <Building2 className="w-5 h-5 flex-shrink-0 text-blue-600" />,
   };
@@ -62,7 +66,7 @@ const DashboardLayout = ({ children }) => {
 
   let navLinks;
   if (isAdminRoute) {
-    navLinks = [...adminLinks, { name: 'Exit Admin', path: '/dashboard', icon: <Shield className="w-5 h-5 flex-shrink-0 text-slate-400" /> }];
+    navLinks = [...adminLinks, { name: 'Exit Admin', label: t('dashboardLayout.nav.exitAdmin'), path: '/dashboard', icon: <Shield className="w-5 h-5 flex-shrink-0 text-slate-400" /> }];
   } else {
     navLinks = [...baseLinks];
     // Government users get an Org Members entry between Alerts and Settings
@@ -70,7 +74,7 @@ const DashboardLayout = ({ children }) => {
       navLinks.splice(navLinks.length - 1, 0, orgManagerLink);
     }
     if (isAdmin) {
-      navLinks.push({ name: 'Admin Console', path: '/admin/health', icon: <Shield className="w-5 h-5 flex-shrink-0 text-red-500" /> });
+      navLinks.push({ name: 'Admin Console', label: t('dashboardLayout.nav.adminConsole'), path: '/admin/health', icon: <Shield className="w-5 h-5 flex-shrink-0 text-red-500" /> });
     }
   }
 
@@ -107,11 +111,11 @@ const DashboardLayout = ({ children }) => {
                     ? 'bg-brand-50 text-brand-700 font-bold shadow-sm border border-brand-100'
                     : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 font-medium border border-transparent'
                 } ${!isSidebarOpen && 'lg:justify-center lg:px-0'}`}
-                title={!isSidebarOpen ? link.name : ''}
+                title={!isSidebarOpen ? link.label : ''}
               >
                 {link.icon}
                 <span className={`whitespace-nowrap transition-opacity duration-200 ${!isSidebarOpen && 'lg:hidden'}`}>
-                  {link.name}
+                  {link.label}
                 </span>
               </Link>
             );
@@ -122,10 +126,10 @@ const DashboardLayout = ({ children }) => {
           <button
             onClick={handleLogout}
             className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-red-600 hover:bg-red-50 hover:text-red-700 font-medium transition-colors ${!isSidebarOpen && 'lg:justify-center lg:px-0'}`}
-            title={!isSidebarOpen ? 'Sign out' : ''}
+            title={!isSidebarOpen ? t('common.signOut') : ''}
           >
             <LogOut className="w-5 h-5 flex-shrink-0" />
-            <span className={`whitespace-nowrap transition-opacity duration-200 ${!isSidebarOpen && 'lg:hidden'}`}>Sign out</span>
+            <span className={`whitespace-nowrap transition-opacity duration-200 ${!isSidebarOpen && 'lg:hidden'}`}>{t('common.signOut')}</span>
           </button>
         </div>
       </aside>
@@ -145,8 +149,9 @@ const DashboardLayout = ({ children }) => {
           </div>
 
           <div className="flex items-center gap-4">
+            <LanguageSwitcher />
             {!isCitizen && (
-              <Link to="/alerts" className="relative p-2 text-slate-400 hover:text-slate-500 transition-colors">
+              <Link to="/alerts" aria-label={t('dashboardLayout.nav.alerts')} className="relative p-2 text-slate-400 hover:text-slate-500 transition-colors">
                 <span className="absolute top-1 right-1 block w-2 h-2 rounded-full bg-red-500 ring-2 ring-white" />
                 <Bell className="w-6 h-6" />
               </Link>
@@ -162,13 +167,13 @@ const DashboardLayout = ({ children }) => {
                 <div className="py-2">
                   <div className="px-4 py-2 border-b border-slate-100 mb-1">
                     <p className="text-sm font-bold text-slate-900 truncate">{displayName}</p>
-                    <p className="text-xs font-medium text-slate-500 truncate capitalize">{roleLabel(user?.role) || 'User'}</p>
+                    <p className="text-xs font-medium text-slate-500 truncate capitalize">{user?.role ? t(roleLabelKey(user.role), { defaultValue: roleLabel(user.role) }) : t('dashboardLayout.defaultUser')}</p>
                   </div>
                   <Link to="/settings" className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2 font-medium">
-                    <User className="w-4 h-4" /> Profile Details
+                    <User className="w-4 h-4" /> {t('dashboardLayout.profileDetails')}
                   </Link>
                   <button onClick={handleLogout} className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 font-medium">
-                    <LogOut className="w-4 h-4" /> Sign out
+                    <LogOut className="w-4 h-4" /> {t('common.signOut')}
                   </button>
                 </div>
               </div>

@@ -1,0 +1,46 @@
+{
+  "journoDash": {
+    "fallbackName": "journalist",
+    "independent": "Independent",
+    "title": "Newsroom briefing",
+    "subtitle": "Source intelligence and narrative tracking for {{name}}.",
+    "vetNewArticle": "Vet new article",
+    "stats": {
+      "articlesVetted": "Articles vetted",
+      "avgCredibility": "Avg credibility",
+      "sourcesFlagged": "Sources flagged",
+      "sourcesFlaggedHint": "Avg credibility below 50%",
+      "openAlerts": "Open alerts"
+    },
+    "org": {
+      "heading": "Your organization — {{org}}",
+      "subtitle": "How your newsroom is performing across all its members.",
+      "journalistCount_one": "{{count}} journalist",
+      "journalistCount_other": "{{count}} journalists",
+      "members": "Members",
+      "orgAnalyses": "Org analyses",
+      "mostActive": "Most active colleagues",
+      "vettedCount_one": "{{count}} vetted",
+      "vettedCount_other": "{{count}} vetted"
+    },
+    "trends": {
+      "title": "Real vs Fake — last 30 days",
+      "subtitle": "Daily classifications across all articles you've vetted.",
+      "empty": "No trend data yet — vet some articles to see the breakdown."
+    },
+    "sources": {
+      "title": "Source reliability matrix",
+      "subtitle": "Outlets ranked by average credibility across your analyses.",
+      "colSource": "Source",
+      "colArticles": "Articles",
+      "colCredibility": "Credibility",
+      "emptyTitle": "No source data yet",
+      "emptyBody": "Vet articles with a known source to populate this matrix."
+    },
+    "narratives": {
+      "title": "Disinfo narratives",
+      "subtitle": "Top keywords from FAKE-classified articles.",
+      "empty": "No narratives detected yet."
+    }
+  }
+}

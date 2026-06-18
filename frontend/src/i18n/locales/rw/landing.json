@@ -1,0 +1,102 @@
+{
+  "landing": {
+    "hero": {
+      "title": "Ukuri. Kwagaragajwe.",
+      "subtitle": "VerifyAI ni sisitemu igezweho ikoresha ubwenge bw'ubukorano mu kumenya amakuru y'ibinyoma. Dufasha abanyamakuru, guverinoma, n'abaturage kumenya amakuru y'ibinyoma mbere y'uko akwirakwira.",
+      "searchPlaceholder": "Komeka URL y'inkuru cyangwa umutwe w'inkuru...",
+      "analyzeNow": "Sesengura Nonaha"
+    },
+    "stats": {
+      "articlesAnalyzed": "Inkuru Zasesenguwe",
+      "detectionAccuracy": "Ukuri kwo Kumenya",
+      "avgAnalysisTime": "Igihe Gisanzwe cyo Gusesengura"
+    },
+    "howItWorks": {
+      "eyebrow": "Uburyo",
+      "heading": "Igenzura mu ntambwe 3 zoroshye",
+      "steps": {
+        "submit": {
+          "title": "Ohereza Ibikubiyemo",
+          "desc": "Komeka inyandiko, URL, cyangwa wohereze inyandiko mu buryo butaziguye kuri uru rubuga."
+        },
+        "analyze": {
+          "title": "Isesengura rya AI",
+          "desc": "Sisitemu yacu y'ibyitegererezo byinshi ikoresha NLP na DistilBERT mu gusuzuma ibyiyumvo, imvugo, n'ukuri."
+        },
+        "review": {
+          "title": "Suzuma Ibisubizo",
+          "desc": "Bona amanota y'ikizere ashobora gukoreshwa hamwe n'ibisobanuro byumvikana ku bikubiyemo byose byagaragajwe."
+        }
+      }
+    },
+    "useCases": {
+      "heading": "Yubakiwe buri wese ushaka ukuri",
+      "journalists": {
+        "title": "Abanyamakuru",
+        "desc": "Ihutishe igenzura ry'ukuri mu gihe cy'amakuru ahuse ukoresheje isesengura ryikora."
+      },
+      "governments": {
+        "title": "Guverinoma",
+        "desc": "Kurikirana amakuru y'ibinyoma aterwa inkunga na leta kandi urinde ikizere cy'abaturage."
+      },
+      "citizens": {
+        "title": "Abaturage",
+        "desc": "Genzura inkuru ziva ku mbuga nkoranyambaga mbere yo kuzisangiza abandi."
+      }
+    },
+    "pricing": {
+      "eyebrow": "Ibiciro",
+      "heading": "Tangira kugenzura uyu munsi",
+      "mostPopular": "Ikunzwe Cyane",
+      "getStarted": "Tangira",
+      "features": {
+        "ensemble": "Sisitemu y'Ibyitegererezo Byinshi",
+        "explainability": "Ibisobanuro Birambuye"
+      },
+      "tiers": {
+        "citizen": {
+          "name": "Umuturage",
+          "price": "Ubuntu",
+          "desc": "Byiza ku ikoreshwa ry'umuntu ku giti cye.",
+          "limits": "Isesengura 20 / isaha"
+        },
+        "pro": {
+          "name": "Pro",
+          "price": "$49/ukwezi",
+          "desc": "Ku banyamakuru bigenga.",
+          "limits": "Isesengura 200 / isaha"
+        },
+        "enterprise": {
+          "name": "Enterprise",
+          "price": "Bikorwa ku gahunda",
+          "desc": "Ku bitangazamakuru na guverinoma.",
+          "limits": "Bitarondoreka + uburenganzira bwa API"
+        }
+      }
+    },
+    "about": {
+      "eyebrow": "Abo Turi Bo",
+      "heading": "Intego Yacu",
+      "body": "Muri VerifyAI, twizera isi aho ukuri kunesha. Itsinda ryacu ry'abashakashatsi b'indashyikirwa, abahanga mu bya porogaramu, n'abanyamakuru bakorera hamwe kugira ngo babe intambwe imwe imbere y'amakuru y'ubukorano n'ibikorwa byateguwe byo gukwirakwiza amakuru y'ibinyoma. Turi umuryango wigenga witangiye kubaka ibikoresho bya AI bigaragara kandi bidafite aho bibogamiye ku nyungu rusange."
+    },
+    "contact": {
+      "eyebrow": "Twandikire",
+      "heading": "Tuvugishe",
+      "nameLabel": "Izina",
+      "namePlaceholder": "Jane Doe",
+      "emailLabel": "Imeyili",
+      "emailPlaceholder": "jane@example.com",
+      "messageLabel": "Ubutumwa",
+      "messagePlaceholder": "Twabafasha dute?",
+      "sendMessage": "Ohereza Ubutumwa"
+    },
+    "footer": {
+      "about": "Abo Turi Bo",
+      "documentation": "Inyandiko",
+      "contact": "Twandikire",
+      "privacy": "Politiki y'Ibanga",
+      "terms": "Amabwiriza yo Gukoresha",
+      "rights": "© {{year}} Urubuga rwa VerifyAI. Uburenganzira bwose burafitwe."
+    }
+  }
+}

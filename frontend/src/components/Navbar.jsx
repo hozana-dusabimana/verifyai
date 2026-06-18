@@ -1,13 +1,16 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ShieldCheck, Bell, User, LogOut, Menu, X } from 'lucide-react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
+import LanguageSwitcher from './LanguageSwitcher';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const { t } = useTranslation();
 
   const handleLogout = async () => {
     await logout();
@@ -17,17 +20,17 @@ const Navbar = () => {
   const displayName = user ? (user.full_name || user.first_name || user.email) : '';
 
   const navLinks = user ? [
-    { name: 'Dashboard', path: '/dashboard' },
-    { name: 'Analyze', path: '/analyze' },
-    { name: 'News', path: '/news' },
-    { name: 'History', path: '/history' },
-    { name: 'Analytics', path: '/analytics' },
+    { name: t('nav.links.dashboard'), path: '/dashboard' },
+    { name: t('nav.links.analyze'), path: '/analyze' },
+    { name: t('nav.links.news'), path: '/news' },
+    { name: t('nav.links.history'), path: '/history' },
+    { name: t('nav.links.analytics'), path: '/analytics' },
   ] : [
-    { name: 'News', path: '/news' },
-    { name: 'How It Works', path: '/#how-it-works' },
-    { name: 'Pricing', path: '/#pricing' },
-    { name: 'About Us', path: '/#about' },
-    { name: 'Contact Us', path: '/#contact' },
+    { name: t('nav.links.news'), path: '/news' },
+    { name: t('nav.links.howItWorks'), path: '/#how-it-works' },
+    { name: t('nav.links.pricing'), path: '/#pricing' },
+    { name: t('nav.links.about'), path: '/#about' },
+    { name: t('nav.links.contact'), path: '/#contact' },
   ];
 
   return (
@@ -58,6 +61,7 @@ const Navbar = () => {
           </div>
 
           <div className="hidden lg:ml-6 lg:flex lg:items-center gap-4">
+            <LanguageSwitcher />
             {user ? (
               <>
                 <Link to="/alerts" className="relative p-2 text-slate-400 hover:text-slate-500 transition-colors">
@@ -74,15 +78,15 @@ const Navbar = () => {
                   <div className="absolute right-0 mt-2 w-48 origin-top-right rounded-md glass shadow-lg ring-1 ring-black ring-opacity-5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
                     <div className="py-1">
                       <Link to="/settings" className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2">
-                        <User className="w-4 h-4" /> Profile
+                        <User className="w-4 h-4" /> {t('common.profile')}
                       </Link>
                       {(user.role === 'admin' || user.is_superuser) && (
                         <Link to="/admin/health" className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2">
-                          Admin Panel
+                          {t('nav.adminPanel')}
                         </Link>
                       )}
                       <button onClick={handleLogout} className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
-                        <LogOut className="w-4 h-4" /> Sign out
+                        <LogOut className="w-4 h-4" /> {t('common.signOut')}
                       </button>
                     </div>
                   </div>
@@ -90,9 +94,9 @@ const Navbar = () => {
               </>
             ) : (
               <div className="flex gap-4">
-                <Link to="/login" className="text-slate-600 hover:text-brand-600 font-medium px-3 py-2 transition-colors">Log in</Link>
+                <Link to="/login" className="text-slate-600 hover:text-brand-600 font-medium px-3 py-2 transition-colors">{t('common.logIn')}</Link>
                 <Link to="/register" className="bg-brand-600 text-white hover:bg-brand-700 px-4 py-2 rounded-lg font-medium transition-colors shadow-md hover:shadow-lg">
-                  Sign up
+                  {t('common.signUp')}
                 </Link>
               </div>
             )}
@@ -127,16 +131,19 @@ const Navbar = () => {
               </Link>
             ))}
           </div>
+          <div className="px-4 pt-2">
+            <LanguageSwitcher variant="block" />
+          </div>
           <div className="border-t border-slate-200 pb-4 pt-4">
             {user ? (
               <div className="flex flex-col gap-2 px-4">
-                <Link to="/settings" onClick={() => setIsOpen(false)} className="text-base font-medium text-slate-600 hover:text-slate-800">Profile & Settings</Link>
-                <button onClick={() => { handleLogout(); setIsOpen(false); }} className="text-left text-base font-medium text-red-600 hover:text-red-800">Sign out</button>
+                <Link to="/settings" onClick={() => setIsOpen(false)} className="text-base font-medium text-slate-600 hover:text-slate-800">{t('nav.profileSettings')}</Link>
+                <button onClick={() => { handleLogout(); setIsOpen(false); }} className="text-left text-base font-medium text-red-600 hover:text-red-800">{t('common.signOut')}</button>
               </div>
             ) : (
               <div className="flex flex-col gap-2 px-4">
-                <Link to="/login" onClick={() => setIsOpen(false)} className="block text-center rounded-md bg-slate-100 px-4 py-2 text-base font-medium text-slate-700 hover:bg-slate-200">Log in</Link>
-                <Link to="/register" onClick={() => setIsOpen(false)} className="block text-center rounded-md bg-brand-600 px-4 py-2 text-base font-medium text-white hover:bg-brand-700">Sign up</Link>
+                <Link to="/login" onClick={() => setIsOpen(false)} className="block text-center rounded-md bg-slate-100 px-4 py-2 text-base font-medium text-slate-700 hover:bg-slate-200">{t('common.logIn')}</Link>
+                <Link to="/register" onClick={() => setIsOpen(false)} className="block text-center rounded-md bg-brand-600 px-4 py-2 text-base font-medium text-white hover:bg-brand-700">{t('common.signUp')}</Link>
               </div>
             )}
           </div>

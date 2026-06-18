@@ -1,0 +1,77 @@
+{
+  "govDash": {
+    "orgFallback": "Ikigo cyawe",
+    "title": "Ikibaho cyo gucunga",
+    "subtitle": "Cunga kandi usuzume abanyamakuru bo mu kigo cyawe.",
+    "manageMembers": "Cunga abagize itsinda",
+    "refreshing": "Birimo kuvugururwa…",
+    "stats": {
+      "journalists": "Abanyamakuru",
+      "journalistsHint": "Abagize itsinda bafite uruhare rw'umunyamakuru",
+      "orgAnalyses": "Isesengura ry'ikigo (iminsi 30)",
+      "orgAvgCredibility": "Impuzandengo y'ubukwirakwizwa bw'ikigo",
+      "openEscalated": "Bifunguye + byazamuwe"
+    },
+    "roster": {
+      "title": "Urutonde rw'ikipe n'isuzuma",
+      "subtitle": "Imikorere ya buri wagize itsinda mu kigo cyawe.",
+      "manage": "Cunga →",
+      "member": "Uwagize itsinda",
+      "role": "Uruhare",
+      "vetted": "Byagenzuwe",
+      "recent": "Iminsi 30",
+      "fake": "Ibinyoma",
+      "avgCredibility": "Impuzandengo y'ukwizerwa",
+      "alerts": "Imenyesha",
+      "active": "Igikorwa",
+      "emptyTitle": "Nta bagize itsinda baracyabaho",
+      "emptyBody": "Ongeraho abanyamakuru mu kigo cyawe kugira ngo utangire kubasuzuma."
+    },
+    "alerts": {
+      "title": "Imenyesha — isesengura ry'abasesenguzi bawe",
+      "subtitle": "Imenyesha rifunguye n'iryazamuwe ryatewe n'isesengura ryoherejwe n'abagize itsinda ryawe.",
+      "pending": "{{count}} bitegereje",
+      "article": "Inkuru",
+      "submittedBy": "Yoherejwe na",
+      "severity": "Ubukana",
+      "resolve": "Gukemura",
+      "escalate": "Kuzamura",
+      "alreadyEscalated": "Byamaze kuzamurwa",
+      "escalateTitle": "Zamura iri menyesha",
+      "clearTitle": "Urutonde rwarakuweho",
+      "clearBody": "Nta menyesha ritegereje ku isesengura ry'abagize itsinda ryawe kuri ubu."
+    },
+    "severity": {
+      "high": "ikomeye",
+      "medium": "iringaniye",
+      "low": "ike"
+    },
+    "heatmap": {
+      "title": "Ikarita y'ubushyuhe bw'amakuru y'ibinyoma",
+      "subtitle": "Amakuru ashyizwe mu byiciro by'IBINYOMA buri munsi mu kigo cyose, iminsi 30 ishize.",
+      "total": "Igiteranyo",
+      "density": "Ubwinshi",
+      "tooltip_one": "{{label}}: inkuru {{count}} y'ibinyoma",
+      "tooltip_other": "{{label}}: inkuru {{count}} z'ibinyoma"
+    },
+    "topSources": {
+      "title": "Inkomoko zikwirakwiza cyane",
+      "subtitle": "Ibigo bishyizwe ku rutonde hashingiwe ku mubare w'inkuru zashyizwe mu byiciro by'IBINYOMA mu minsi 30 ishize.",
+      "source": "Inkomoko",
+      "fakeArticles": "Inkuru z'ibinyoma",
+      "avgCredibility": "Impuzandengo y'ukwizerwa",
+      "empty": "Nta nkomoko zaramenyeshejwe"
+    },
+    "topics": {
+      "title": "Ivanga ry'ingingo",
+      "subtitle": "Insanganyamatsiko mu isesengura, iminsi 30 ishize.",
+      "empty": "Nta makuru y'ingingo arabaho."
+    },
+    "relativeTime": {
+      "never": "nta na rimwe",
+      "today": "uyu munsi",
+      "yesterday": "ejo hashize",
+      "daysAgo": "iminsi {{count}} ishize"
+    }
+  }
+}
