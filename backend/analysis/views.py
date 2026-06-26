@@ -233,7 +233,16 @@ class BulkAnalysisSubmitView(APIView):
             task = run_analysis_pipeline.delay(str(result.id))
             result.celery_task_id = task.id
             result.save(update_fields=['celery_task_id'])
-            results_data.append({'id': str(result.id), 'status': result.status})
+            # Re-load so the response reflects work completed synchronously
+            # (eager mode) instead of the stale PENDING snapshot — mirrors the
+            # single-submit view. With a real worker it stays PENDING for polling.
+            result = AnalysisResult.objects.select_related('article').get(id=result.id)
+            results_data.append({
+                'id': str(result.id),
+                'status': result.status,
+                'classification': result.classification,
+                'credibility_score': result.credibility_score,
+            })
 
         return _success(results_data, status_code=status.HTTP_201_CREATED)
 
