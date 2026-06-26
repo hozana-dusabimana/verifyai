@@ -186,3 +186,34 @@ get_model_info()   # availability, metrics, ensemble weights
 Admin endpoints (see [`backend/administration/views.py`](../backend/administration/views.py)):
 `GET /api/admin/ml-models/`, `POST /api/admin/ml-retrain/`,
 `GET /api/admin/ml-health/`, `POST /api/admin/ml-predict/`.
+
+## 7. ⚠️ Library-version pinning (avoid the "works locally, 500 in prod" trap)
+
+The `*.joblib` artifacts are **pickled scikit-learn objects**, and pickles are
+**not portable across scikit-learn versions**. If you train a model with a
+different scikit-learn than the one the server runs, the server can fail to
+load/run it at inference time.
+
+A real example we hit: the Kinyarwanda model was trained on a dev box running
+**scikit-learn 1.8.0** (which removed `LogisticRegression.multi_class`), but
+`requirements.txt` pins **scikit-learn==1.6.1**. On the 1.6.1 server,
+`predict_proba()` raised `AttributeError: 'LogisticRegression' object has no
+attribute 'multi_class'` → the analysis task retried and surfaced as **HTTP 500**
+(English models were unaffected — only the sklearn `LogisticRegression` model
+broke).
+
+**Rule: always train models in an environment whose scikit-learn (and numpy/
+scipy) versions match `requirements.txt`.** Before committing any retrained
+`*.joblib`, verify:
+
+```bash
+# dev sklearn must equal the pinned version
+python -c "import sklearn; assert sklearn.__version__ == '1.6.1', sklearn.__version__"
+```
+
+If you must re-pickle an existing model into the pinned version without
+retraining, load it under the pinned scikit-learn and `joblib.dump()` it again
+there (binary `LogisticRegression` needs `clf.multi_class = 'ovr'` set before the
+re-dump so 1.6.1's `predict_proba` works). The analysis pipeline now also wraps
+inference so a version mismatch is recorded as a **clean "failed" result with an
+actionable message instead of a 500** ([analysis/tasks.py](../backend/analysis/tasks.py)).

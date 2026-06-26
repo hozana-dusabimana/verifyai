@@ -87,7 +87,20 @@ def run_analysis_pipeline(self, result_id):
                 )
             _update_stage(result, 4, 'Feature Extraction')
             _update_stage(result, 5, 'Model Inference')
-            prediction = predict_kinyarwanda(content, title)
+            try:
+                prediction = predict_kinyarwanda(content, title)
+            except Exception as exc:
+                # A load/inference failure here (e.g. a scikit-learn version
+                # mismatch between the trained joblib and the deployed runtime)
+                # is deterministic — retrying is pointless and would surface as a
+                # 500. Re-raise as RuntimeError so the handler below records a
+                # clean "failed" status with an actionable message instead.
+                raise RuntimeError(
+                    f'Kinyarwanda model failed to run ({exc}). The deployed '
+                    'scikit-learn version may not match the one used to train the '
+                    'model; retrain/re-pickle the model in the deployment '
+                    'environment.'
+                ) from exc
         elif lang == 'en':
             if not model_info['all_ready']:
                 raise RuntimeError(
@@ -99,7 +112,15 @@ def run_analysis_pipeline(self, result_id):
             _update_stage(result, 4, 'Feature Extraction')
             _update_stage(result, 5, 'Model Inference')
             # Run ensemble prediction (preprocessing, features, and all 3 models)
-            prediction = predict_ensemble(content, title)
+            try:
+                prediction = predict_ensemble(content, title)
+            except Exception as exc:
+                # Same rationale as the Kinyarwanda branch: a model load/inference
+                # failure is deterministic, so fail cleanly rather than retry→500.
+                raise RuntimeError(
+                    f'English ensemble failed to run ({exc}). Check that the '
+                    'deployed model artifacts match the runtime library versions.'
+                ) from exc
         else:
             raise ValueError(
                 'Analysis currently supports English and Kinyarwanda content only.'
