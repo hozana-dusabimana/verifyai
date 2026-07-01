@@ -99,6 +99,7 @@ When a user submits an article (text, URL, or file), the system runs a Celery as
 
 ### Model Architectures
 
+
 #### 1. Naive Bayes (MultinomialNB)
 
 - **Input:** TF-IDF vectors (10,000 features, unigrams + bigrams, sublinear TF)
