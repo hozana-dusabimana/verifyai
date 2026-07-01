@@ -35,7 +35,7 @@ const DashboardLayout = ({ children }) => {
   const baseLinks = [
     { name: 'Dashboard', label: t('dashboardLayout.nav.dashboard'), path: '/dashboard', icon: <LayoutDashboard className="w-5 h-5 flex-shrink-0" /> },
     { name: 'Analyze Content', label: t('dashboardLayout.nav.analyzeContent'), path: '/analyze', icon: <Search className="w-5 h-5 flex-shrink-0" /> },
-    { name: 'Community News', label: t('dashboardLayout.nav.communityNews'), path: '/news', icon: <Newspaper className="w-5 h-5 flex-shrink-0" /> },
+    // { name: 'Community News', label: t('dashboardLayout.nav.communityNews'), path: '/news', icon: <Newspaper className="w-5 h-5 flex-shrink-0" /> },
     ...(!isCitizen ? [
       { name: 'History', label: t('dashboardLayout.nav.history'), path: '/history', icon: <History className="w-5 h-5 flex-shrink-0" /> },
       { name: 'Analytics', label: t('dashboardLayout.nav.analytics'), path: '/analytics', icon: <BarChart2 className="w-5 h-5 flex-shrink-0" /> },
