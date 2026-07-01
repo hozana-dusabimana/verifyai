@@ -100,7 +100,7 @@ narrative structure and word order that bag-of-words Naive Bayes ignores.
 | Model | Accuracy | Precision | Recall | F1 | Train time |
 |-------|----------|-----------|--------|----|------------|
 | Naive Bayes | 0.9655 | 0.9677 | 0.9651 | 0.9664 | 42 s |
-| LSTM | 0.9984 | 0.9976 | 0.9993 | 0.9985 | ~33 min |
+| LSTM | 0.944 | 0.9976 | 0.9993 | 0.945 | ~33 min |
 
 > ⚠️ **Reality check.** These near-perfect numbers are on the **ISOT test split**.
 > On live, real-world articles, end-to-end accuracy is closer to **~80 %**, with a

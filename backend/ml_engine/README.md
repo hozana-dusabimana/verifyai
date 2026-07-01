@@ -47,7 +47,7 @@ Reported metrics on the held-out test split (see [models_store/model_metrics.jso
 | Model       | Accuracy | F1     | Train time |
 | ----------- | -------- | ------ | ---------- |
 | Naive Bayes | 0.9655   | 0.9664 | 42 s       |
-| LSTM        | 0.9984   | 0.9985 | 33 min     |
+| LSTM        | 0.944   | 0.945 | 33 min     |
 | DistilBERT  | 0.9995   | 0.9995 | 115 min    |
 
 > Note: Headline numbers reflect performance on the ISOT distribution. Real-world performance is lower, which is precisely why the ensemble is weighted toward NB.
