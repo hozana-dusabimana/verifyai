@@ -114,7 +114,17 @@
             <p class="font-bold text-emerald-800" data-i18n="connected">Connected ✓</p>
             <p id="connectedAs" class="text-emerald-700 text-xs mt-0.5"></p>
           </div>
-          <button id="disconnectBtn" class="mt-3 w-full border border-stone-300 text-stone-600 rounded-lg py-2 text-sm font-semibold hover:bg-stone-50" data-i18n="disconnect">Disconnect</button>
+          <p class="text-[11px] text-stone-500 mt-2 leading-relaxed" data-i18n="verifyOnHint">Every submitted story is fact-checked by the AI before it can publish.</p>
+          <button id="disconnectBtn" class="mt-3 w-full border border-stone-300 text-stone-600 rounded-lg py-2 text-sm font-semibold hover:bg-stone-50" data-i18n="disconnect">Disconnect API (record without checking)</button>
+        </div>
+
+        <!-- Verification OFF: the portal records stories raw, with no AI analysis. -->
+        <div id="offBox" class="hidden">
+          <div class="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm">
+            <p class="font-bold text-amber-800" data-i18n="verifyOff">Verification disconnected</p>
+            <p class="text-amber-700 text-xs mt-0.5" data-i18n="verifyOffDesc">Submitted stories are recorded and published as-is — no AI fact-check, no filtering.</p>
+          </div>
+          <button id="reconnectBtn" class="mt-3 w-full bg-emerald-600 text-white rounded-lg py-2.5 text-sm font-bold hover:bg-emerald-700 transition-colors" data-i18n="reconnect">Connect API for verifying</button>
         </div>
       </div>
     </div>
@@ -157,7 +167,15 @@
         connect: 'Connect',
         demoNote: 'Demo accounts (seeded): <code>journalist@verifyai.demo</code> / <code>JournoDemo!2026</code> · also <code>citizen@verifyai.demo</code>, <code>gov@verifyai.demo</code>, <code>admin@verifyai.demo</code> (passwords follow the same <code>RoleDemo!2026</code> pattern).',
         connected: 'Connected ✓',
-        disconnect: 'Disconnect',
+        verifyOnHint: 'Every submitted story is fact-checked by the AI before it can publish.',
+        disconnect: 'Disconnect API (record without checking)',
+        verifyOff: 'Verification disconnected',
+        verifyOffDesc: 'Submitted stories are recorded and published as-is — no AI fact-check, no filtering.',
+        reconnect: 'Connect API for verifying',
+        verifyOffStatus: 'Verification off',
+        unverifiedBadge: 'UNVERIFIED',
+        recordedTitle: 'Recorded without verification.',
+        recordedBody: 'Verification is disconnected, so this story was published to the wire as-is — no AI fact-check was run.',
         footer: 'The Civic Wire is a demonstration external client of the VerifyAI fact-checking API.',
         // Dynamic / JS messages
         enterCreds: 'Enter email and password.',
@@ -210,7 +228,15 @@
         connect: 'Huza',
         demoNote: 'Konti z\'igeragezwa (zashyizweho): <code>journalist@verifyai.demo</code> / <code>JournoDemo!2026</code> · n\'izindi <code>citizen@verifyai.demo</code>, <code>gov@verifyai.demo</code>, <code>admin@verifyai.demo</code> (amajambobanga akurikiza uburyo bumwe bwa <code>RoleDemo!2026</code>).',
         connected: 'Wahujwe ✓',
-        disconnect: 'Hagarika ihuza',
+        verifyOnHint: 'Buri nkuru yoherejwe igenzurwa na AI mbere yuko itangazwa.',
+        disconnect: 'Hagarika API (wandike utagenzuye)',
+        verifyOff: 'Igenzura ryahagaritswe',
+        verifyOffDesc: 'Inkuru zoherejwe zandikwa kandi zigatangazwa uko zimeze — nta genzura rya AI, nta gutoranya.',
+        reconnect: 'Huza API kugira ngo ugenzure',
+        verifyOffStatus: 'Igenzura rirazimye',
+        unverifiedBadge: 'ITAGENZUWE',
+        recordedTitle: 'Yanditswe itagenzuwe.',
+        recordedBody: 'Igenzura ryahagaritswe, bityo iyi nkuru yatangajwe ku rubuga uko imeze — nta genzura rya AI ryakozwe.',
         footer: 'The Civic Wire ni urugero rw\'umukoresha wo hanze wa API ya VerifyAI igenzura ukuri kw\'amakuru.',
         // Dynamic / JS messages
         enterCreds: 'Andika imeyili n\'ijambobanga.',
@@ -276,6 +302,8 @@
       access: 'cw_access',
       refresh: 'cw_refresh',
       user: 'cw_user',
+      verify: 'cw_verify',        // 'off' when the API is disconnected
+      localPosts: 'cw_local_posts', // stories recorded while disconnected
     };
     const defaultBase = location.origin + '/api/v1';
     // Public, least-privilege account the portal auto-connects as (created by a
@@ -287,15 +315,34 @@
 
     const $ = (id) => document.getElementById(id);
 
+    // Verification is ON unless the user explicitly disconnected the API.
+    const verifyOn = () => localStorage.getItem(LS.verify) !== 'off';
+    function readLocalPosts() {
+      try { return JSON.parse(localStorage.getItem(LS.localPosts) || '[]'); }
+      catch { return []; }
+    }
+
     function openSettings() { $('settingsModal').classList.remove('hidden'); }
     function closeSettings() { $('settingsModal').classList.add('hidden'); }
 
-    function setConnected(isConn) {
-      $('loginForm').classList.toggle('hidden', isConn);
-      $('connectedBox').classList.toggle('hidden', !isConn);
-      $('needConnect').classList.toggle('hidden', isConn);
-      $('submitBtn').disabled = !isConn;
-      if (isConn && user) {
+    // Repaint every connection-dependent control from the current state. Three
+    // modes: verification OFF (record raw), connected (verify via API), and
+    // verify-on-but-not-connected (a non-portal session that needs re-login).
+    function setConnected() {
+      const off = !verifyOn();
+      const conn = !!access;
+      $('offBox').classList.toggle('hidden', !off);
+      $('loginForm').classList.toggle('hidden', off || conn);
+      $('connectedBox').classList.toggle('hidden', off || !conn);
+      // In OFF mode stories are recorded without analysis, so submitting is
+      // always allowed; otherwise a token is required.
+      $('needConnect').classList.toggle('hidden', off || conn);
+      $('submitBtn').disabled = !off && !conn;
+
+      if (off) {
+        $('connStatus').textContent = t('verifyOffStatus');
+        $('connStatus').className = 'text-xs text-amber-600 mt-2 font-semibold';
+      } else if (conn && user) {
         const label = (user.full_name || user.email) + ' · ' + (user.role || 'user');
         $('connectedAs').textContent = label;
         $('connStatus').textContent = t('connectedAs', { email: user.email || 'user' });
@@ -374,6 +421,8 @@
     // Auto-connect: silently log in as the public portal account on load so the
     // external app is ready to post without a manual sign-in step.
     async function autoConnect() {
+      // Respect an explicit disconnect: stay in record-without-analysis mode.
+      if (!verifyOn()) { setConnected(); return; }
       if (access && !tokenExpired(access)) return;
       // Never silently switch identity: if a non-portal account's session
       // expired, surface "Not connected" and let them reconnect via Settings.
@@ -407,7 +456,22 @@
       localStorage.removeItem(LS.access);
       localStorage.removeItem(LS.refresh);
       localStorage.removeItem(LS.user);
-      setConnected(false);
+      setConnected();
+    }
+
+    // Turn the API off: from now on stories are recorded without any AI analysis.
+    function disconnectApi() {
+      localStorage.setItem(LS.verify, 'off');
+      disconnect();
+      closeSettings();
+    }
+
+    // Turn verification back on and reconnect the public portal account.
+    async function reconnectApi() {
+      localStorage.removeItem(LS.verify);
+      await autoConnect();
+      loadFeed();
+      closeSettings();
     }
 
     // ---- Submit story ----
@@ -420,6 +484,9 @@
       const source_url = $('sourceUrl').value.trim();
       const source_name = $('source').value.trim();
       if (content.length < 50) { showVerdict('error', t('tooShort')); return; }
+
+      // Verification disconnected: record the story as-is, no AI analysis.
+      if (!verifyOn()) { recordWithoutAnalysis({ title, content, source_url, source_name }); return; }
 
       $('submitBtn').disabled = true;
       $('submitBtn').textContent = t('verifying');
@@ -445,6 +512,26 @@
         $('submitBtn').disabled = false;
         $('submitBtn').textContent = t('submitBtn');
       }
+    }
+
+    // Save a story locally and publish it straight to the wire — the "no
+    // VerifyAI" path. Nothing is fact-checked; anything the user types appears.
+    function recordWithoutAnalysis({ title, content, source_url, source_name }) {
+      const posts = readLocalPosts();
+      posts.unshift({
+        id: 'local-' + Date.now(),
+        title,
+        excerpt: content.slice(0, 240) + (content.length > 240 ? '…' : ''),
+        source_url,
+        source_name,
+        submitted_by: (user && (user.full_name || user.email)) || t('communityFallback'),
+        published_at: new Date().toISOString(),
+        unverified: true,
+      });
+      localStorage.setItem(LS.localPosts, JSON.stringify(posts.slice(0, 50)));
+      $('title').value = ''; $('content').value = ''; $('source').value = ''; $('sourceUrl').value = '';
+      showVerdict('warn', `<b>${t('recordedTitle')}</b><br>${t('recordedBody')}`);
+      loadFeed();
     }
 
     function renderVerdict(post) {
@@ -491,36 +578,54 @@
       try { return new Date(d).toLocaleDateString(locale, { year: 'numeric', month: 'short', day: 'numeric' }); } catch { return ''; }
     }
 
+    function renderArticle(p) {
+      const badge = p.unverified
+        ? `<span class="inline-flex items-center gap-1 text-[10px] font-bold text-amber-700 bg-amber-100 border border-amber-200 rounded-full px-2 py-0.5">⚠ ${t('unverifiedBadge')}</span>`
+        : '';
+      const border = p.unverified ? 'border-amber-300' : 'border-stone-200';
+      return `
+        <article class="bg-white rounded-xl border ${border} shadow-sm p-5 flex flex-col gap-2">
+          ${badge ? `<div>${badge}</div>` : ''}
+          <h3 class="font-bold text-lg leading-snug">${esc(p.title)}</h3>
+          <p class="text-sm text-stone-600 leading-relaxed flex-1">${esc(p.excerpt)}</p>
+          <div class="ui flex items-center justify-between text-[11px] text-stone-400 pt-2 border-t border-stone-100">
+            <span>${p.source_url
+              ? `<a href="${esc(p.source_url)}" target="_blank" rel="noopener" class="underline hover:text-stone-700">${esc(p.source_name || hostOf(p.source_url) || t('sourceFallback'))}</a>`
+              : esc(p.source_name || p.submitted_by || t('communityFallback'))}</span>
+            <span>${fmtDate(p.published_at)}</span>
+          </div>
+        </article>`;
+    }
+
     async function loadFeed() {
       const feed = $('feed');
+      // Stories recorded while disconnected live only in the browser; they
+      // always lead the wire so the "no verification" effect is visible.
+      const local = readLocalPosts();
+      let published = [];
+      let apiFailed = false;
       try {
         const res = await fetch(apiBase + '/newsfeed/feed', { headers: { 'Accept-Language': lang } });
         const body = await res.json();
-        const posts = body.data || [];
-        if (!posts.length) {
-          feed.innerHTML = '<p class="text-stone-400 text-sm">' + t('feedEmpty') + '</p>';
-          return;
-        }
-        feed.innerHTML = posts.map((p) => `
-          <article class="bg-white rounded-xl border border-stone-200 shadow-sm p-5 flex flex-col gap-2">
-            <h3 class="font-bold text-lg leading-snug">${esc(p.title)}</h3>
-            <p class="text-sm text-stone-600 leading-relaxed flex-1">${esc(p.excerpt)}</p>
-            <div class="ui flex items-center justify-between text-[11px] text-stone-400 pt-2 border-t border-stone-100">
-              <span>${p.source_url
-                ? `<a href="${esc(p.source_url)}" target="_blank" rel="noopener" class="underline hover:text-stone-700">${esc(p.source_name || hostOf(p.source_url) || t('sourceFallback'))}</a>`
-                : esc(p.source_name || p.submitted_by || t('communityFallback'))}</span>
-              <span>${fmtDate(p.published_at)}</span>
-            </div>
-          </article>`).join('');
+        published = body.data || [];
       } catch (e) {
-        feed.innerHTML = '<p class="text-red-500 text-sm">' + t('feedLoadError', { base: esc(apiBase) }) + '</p>';
+        apiFailed = true;
       }
+      const all = local.concat(published);
+      if (!all.length) {
+        feed.innerHTML = apiFailed
+          ? '<p class="text-red-500 text-sm">' + t('feedLoadError', { base: esc(apiBase) }) + '</p>'
+          : '<p class="text-stone-400 text-sm">' + t('feedEmpty') + '</p>';
+        return;
+      }
+      feed.innerHTML = all.map(renderArticle).join('');
     }
 
     // ---- Init ----
     $('apiBase').value = apiBase;
     $('connectBtn').addEventListener('click', connect);
-    $('disconnectBtn').addEventListener('click', disconnect);
+    $('disconnectBtn').addEventListener('click', disconnectApi);
+    $('reconnectBtn').addEventListener('click', reconnectApi);
     $('submitForm').addEventListener('submit', submitStory);
     $('refreshBtn').addEventListener('click', loadFeed);
     $('settingsBtn').addEventListener('click', openSettings);
