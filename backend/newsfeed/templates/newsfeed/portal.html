@@ -124,7 +124,13 @@
             <p class="font-bold text-amber-800" data-i18n="verifyOff">Verification disconnected</p>
             <p class="text-amber-700 text-xs mt-0.5" data-i18n="verifyOffDesc">Submitted stories are recorded and published as-is — no AI fact-check, no filtering.</p>
           </div>
-          <button id="reconnectBtn" class="mt-3 w-full bg-emerald-600 text-white rounded-lg py-2.5 text-sm font-bold hover:bg-emerald-700 transition-colors" data-i18n="reconnect">Connect API for verifying</button>
+
+          <label class="block text-xs font-semibold text-stone-600 mt-4" data-i18n="apiKeyLabel">API key</label>
+          <input id="apiKeyInput" type="text" autocomplete="off" spellcheck="false" placeholder="vai_…" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm font-mono" />
+          <p id="apiKeyError" class="text-xs text-red-600 hidden mt-1"></p>
+          <p class="text-[11px] text-stone-400 leading-relaxed mt-1" data-i18n="apiKeyHint">Paste a key generated in VerifyAI → Settings → API Keys. Keys not issued by this system are rejected.</p>
+
+          <button id="reconnectBtn" class="mt-3 w-full bg-emerald-600 text-white rounded-lg py-2.5 text-sm font-bold hover:bg-emerald-700 transition-colors disabled:bg-stone-300 disabled:cursor-not-allowed" data-i18n="reconnect">Connect API for verifying</button>
         </div>
       </div>
     </div>
@@ -172,6 +178,13 @@
         verifyOff: 'Verification disconnected',
         verifyOffDesc: 'Submitted stories are recorded and published as-is — no AI fact-check, no filtering.',
         reconnect: 'Connect API for verifying',
+        apiKeyLabel: 'API key',
+        apiKeyHint: 'Paste a key generated in VerifyAI → Settings → API Keys. Keys not issued by this system are rejected.',
+        apiKeyRequired: 'Enter an API key.',
+        apiKeyBadFormat: 'API keys start with "vai_".',
+        apiKeyInvalid: 'Invalid API key — it was not issued by this system.',
+        apiKeyChecking: 'Verifying key…',
+        apiKeyNetwork: 'Could not reach the API to validate the key.',
         verifyOffStatus: 'Verification off',
         unverifiedBadge: 'UNVERIFIED',
         recordedTitle: 'Recorded without verification.',
@@ -233,6 +246,13 @@
         verifyOff: 'Igenzura ryahagaritswe',
         verifyOffDesc: 'Inkuru zoherejwe zandikwa kandi zigatangazwa uko zimeze — nta genzura rya AI, nta gutoranya.',
         reconnect: 'Huza API kugira ngo ugenzure',
+        apiKeyLabel: 'Urufunguzo rwa API',
+        apiKeyHint: 'Andika urufunguzo rwakozwe muri VerifyAI → Igenamiterere → API Keys. Impfunguzo zitakozwe na sisitemu zirangizwa.',
+        apiKeyRequired: 'Andika urufunguzo rwa API.',
+        apiKeyBadFormat: 'Impfunguzo za API zitangira na "vai_".',
+        apiKeyInvalid: 'Urufunguzo rwa API ntabwo ari urukwiye — ntirwakozwe na sisitemu.',
+        apiKeyChecking: 'Kugenzura urufunguzo…',
+        apiKeyNetwork: 'Ntibyashobotse kugera kuri API kugira ngo hagenzurwe urufunguzo.',
         verifyOffStatus: 'Igenzura rirazimye',
         unverifiedBadge: 'ITAGENZUWE',
         recordedTitle: 'Yanditswe itagenzuwe.',
@@ -317,6 +337,8 @@
 
     // Verification is ON unless the user explicitly disconnected the API.
     const verifyOn = () => localStorage.getItem(LS.verify) !== 'off';
+    // A VerifyAI API key (issued from Settings → API Keys) is a `vai_` token.
+    const isApiKey = (tok) => !!tok && tok.startsWith('vai_');
     function readLocalPosts() {
       try { return JSON.parse(localStorage.getItem(LS.localPosts) || '[]'); }
       catch { return []; }
@@ -413,7 +435,9 @@
     }
 
     // True when a stored JWT is missing, malformed, or within 30s of expiry.
+    // API keys don't expire client-side, so they're never treated as stale.
     function tokenExpired(tok) {
+      if (isApiKey(tok)) return false;
       try { return JSON.parse(atob(tok.split('.')[1])).exp * 1000 < Date.now() + 30000; }
       catch { return true; }
     }
@@ -423,6 +447,9 @@
     async function autoConnect() {
       // Respect an explicit disconnect: stay in record-without-analysis mode.
       if (!verifyOn()) { setConnected(); return; }
+      // A user-supplied API key is the session — keep it; never silently
+      // replace it with the public portal account.
+      if (isApiKey(access)) { setConnected(); return; }
       if (access && !tokenExpired(access)) return;
       // Never silently switch identity: if a non-portal account's session
       // expired, surface "Not connected" and let them reconnect via Settings.
@@ -466,12 +493,50 @@
       closeSettings();
     }
 
-    // Turn verification back on and reconnect the public portal account.
+    // Turn verification back on using a user-supplied API key. The key must be
+    // a real, active key issued by this system — we prove that by calling an
+    // authenticated endpoint with it; anything the backend rejects is refused.
     async function reconnectApi() {
-      localStorage.removeItem(LS.verify);
-      await autoConnect();
-      loadFeed();
-      closeSettings();
+      $('apiKeyError').classList.add('hidden');
+      apiBase = $('apiBase').value.trim() || apiBase;
+      const key = $('apiKeyInput').value.trim();
+      if (!key) { showKeyError(t('apiKeyRequired')); return; }
+      if (!isApiKey(key)) { showKeyError(t('apiKeyBadFormat')); return; }
+
+      const btn = $('reconnectBtn');
+      const label = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = t('apiKeyChecking');
+      try {
+        const res = await fetch(apiBase + '/users/me', {
+          headers: { 'Authorization': 'Bearer ' + key, 'Accept-Language': lang },
+        });
+        if (!res.ok) { showKeyError(t('apiKeyInvalid')); return; }
+        const body = await res.json().catch(() => ({}));
+        // Valid, system-issued key — adopt it as the session token.
+        localStorage.removeItem(LS.verify);
+        localStorage.removeItem(LS.refresh);
+        access = key;
+        user = body.data || null;
+        localStorage.setItem(LS.base, apiBase);
+        localStorage.setItem(LS.access, access);
+        localStorage.setItem(LS.user, JSON.stringify(user));
+        $('apiKeyInput').value = '';
+        setConnected();
+        loadFeed();
+        closeSettings();
+      } catch (e) {
+        showKeyError(t('apiKeyNetwork'));
+      } finally {
+        btn.disabled = false;
+        btn.textContent = label;
+      }
+    }
+
+    function showKeyError(msg) {
+      const el = $('apiKeyError');
+      el.textContent = msg;
+      el.classList.remove('hidden');
     }
 
     // ---- Submit story ----
